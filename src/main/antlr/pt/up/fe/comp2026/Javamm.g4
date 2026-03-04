@@ -59,7 +59,7 @@ methodDecl locals[boolean isStatic=false]
     ;
 
 stmt
-    : ID '=' expr ';' #AssignStmt
+    : var=ID '=' expr ';' #AssignStmt
     | '{' stmt* '}' #Block
     | IF expr stmt #IfStmt
     | ELSE  stmt #ElseStmt
