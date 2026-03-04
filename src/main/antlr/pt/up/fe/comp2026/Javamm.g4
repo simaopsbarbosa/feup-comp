@@ -6,17 +6,25 @@ grammar Javamm;
 
 CLASS : 'class' ;
 INT : 'int' ;
+CHAR: 'char';
+//STRING:'string';
+VOID:'void';
+ARRAY:'['']';
 STATIC : 'static' ;
 RETURN : 'return' ;
 PACKAGE : 'package';
 IMPORT: 'import';
 PUBLIC : 'public' ;
+PRIVATE : 'private' ;
+PROTECTED:'protected';
 BOOLEAN:'boolean';
 IF:'if';
 ELSE:'else';
 TRUE: 'true';
 FALSE:'false';
 INTEGER : '0' | [1-9][0-9]* ;
+fragment CHARECTER:'\''.'\'';
+//STR: CHARECTER ;
 ID : [a-zA-Z_$][a-zA-Z_$0-9]*;
 WS : [ \t\n\r\f]+ -> skip ;
 
@@ -35,27 +43,34 @@ importDecl
     ;
 
 classDecl
-    : CLASS name=ID '{' methodDecl '}'
+    :  visibility=(PUBLIC|PRIVATE|PROTECTED)? CLASS name=ID ('extends' ID)? '{' varDecl* methodDecl* '}'
     ;
 
 varDecl
     : typeNode = type name=ID ';'
     ;
 
+
 param
     : typeNode = type name = ID
     ;
 
+array
+    : type (ARRAY);
+
 type
     : name = INT
     | name= BOOLEAN
+    | name= VOID
+    | name=ID
+    | name=CHAR
     ;
 
 methodDecl locals[boolean isStatic=false]
-    : visibility=PUBLIC (STATIC {$isStatic=true;})?
+    : visibility=(PUBLIC|PRIVATE|PROTECTED) (STATIC {$isStatic=true;})?
       returnType = type name=ID
       '(' params = param ')'
-      '{' varDecl* stmt* '}'
+      '{' (varDecl|stmt)*'}'
     ;
 
 stmt
@@ -71,6 +86,7 @@ expr
     | '(' expr ')' #Parenteses
     | expr op='+' expr #BinaryExpr
     | value=INTEGER #IntegerLiteral
+    | value= CHAR #Charecter
     | expr op='&&' expr #LogicalExpr
     | expr op='<' expr #LogicalExpr
     | op='!' expr #LogicalExpr

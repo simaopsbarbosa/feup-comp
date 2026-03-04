@@ -1,0 +1,14 @@
+package pt.up.fe.comp;
+import org.antlr.v4.runtime.ANTLRInputStream;
+
+class Calculator {
+    public static int calc(int a) {
+        int b;
+        int c;
+        b = 3;
+        int d;
+        d=4;
+
+        return c;
+    }
+}
