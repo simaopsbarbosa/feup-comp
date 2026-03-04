@@ -48,7 +48,7 @@ fieldDecl
 
 
 varDecl
-    :  typeNode =type name=ID ';'
+    :  typeNode =type name=ID ('='expr)? ';'
     ;
 
 param
@@ -66,15 +66,16 @@ type
     ;
 
 methodDecl locals[boolean isStatic=false]
-    : visibility=(PUBLIC|PRIVATE|PROTECTED) (STATIC {$isStatic=true;})?
+    : visibility=(PUBLIC|PRIVATE|PROTECTED)? (STATIC {$isStatic=true;})?
       returnType = type name=ID
-      '(' params = param ')'
+      '(' (param(','param)*)? ')'
       '{' varDecl* stmt*'}'
     ;
 
 stmt
     : var=ID '=' expr ';' #AssignStmt
     | '{' stmt* '}' #Block
+    | expr ';'#Expression
     | IF expr stmt #IfStmt
     | ELSE  stmt #ElseStmt
     | RETURN (expr)? ';' #ReturnStmt
@@ -86,6 +87,7 @@ expr
     | expr op='*' expr #BinaryExpr
     | expr op='+' expr #BinaryExpr
     | value=INTEGER #IntegerLiteral
+    | expr '.' ID '(' ( expr ( ',' expr )* )? ')' #FunctionCall
     | expr op='<' expr #LogicalExpr
     | expr op='&&' expr #LogicalExpr
     | bool= (TRUE|FALSE) # BoolLiteral
