@@ -67,14 +67,14 @@ stmt
     ;
 
 expr
-    : expr op='*' expr #BinaryExpr
-    | '(' expr ')' #Parenteses
-    | expr op='+' expr #BinaryExpr
-    | value=INTEGER #IntegerLiteral
-    | expr op='&&' expr #LogicalExpr
-    | expr op='<' expr #LogicalExpr
+    : '(' expr ')' #Parenteses
     | op='!' expr #LogicalExpr
-    | bool= (TRUE|FALSE) # BoolValues
+    | expr op='*' expr #BinaryExpr
+    | expr op='+' expr #BinaryExpr
+    | expr op='<' expr #LogicalExpr
+    | expr op='&&' expr #LogicalExpr
+    | value=INTEGER #IntegerLiteral
+    | bool= (TRUE|FALSE) # BoolLiteral
     | name=ID #VarRefExpr
     ;
 
