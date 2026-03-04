@@ -6,7 +6,6 @@ class Calculator {
         int b;
         int c;
         b = 3;
-        int d;
         d=4;
 
         return c;
