@@ -39,11 +39,16 @@ importDecl
     ;
 
 classDecl
-    :  visibility=(PUBLIC|PRIVATE|PROTECTED)? CLASS name=ID ('extends' ID)? '{' varDecl* methodDecl* '}'
+    :  visibility=(PUBLIC|PRIVATE|PROTECTED)? CLASS name=ID ('extends' ID)? '{' (fieldDecl|methodDecl)* '}'
     ;
 
+fieldDecl
+    : visibility=(PUBLIC|PRIVATE|PROTECTED)? varDecl
+    ;
+
+
 varDecl
-    : typeNode = type name=ID ';'
+    :  typeNode =type name=ID ';'
     ;
 
 param
