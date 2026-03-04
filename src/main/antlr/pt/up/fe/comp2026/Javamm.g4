@@ -50,7 +50,6 @@ varDecl
     : typeNode = type name=ID ';'
     ;
 
-
 param
     : typeNode = type name = ID
     ;
@@ -82,15 +81,16 @@ stmt
     ;
 
 expr
-    : expr op='*' expr #BinaryExpr
-    | '(' expr ')' #Parenteses
+    : '(' expr ')' #Parenteses
+    | op='!' expr #LogicalExpr
+    | expr op='*' expr #BinaryExpr
     | expr op='+' expr #BinaryExpr
     | value=INTEGER #IntegerLiteral
     | value= CHAR #Charecter
-    | expr op='&&' expr #LogicalExpr
     | expr op='<' expr #LogicalExpr
-    | op='!' expr #LogicalExpr
-    | bool= (TRUE|FALSE) # BoolValues
+    | expr op='&&' expr #LogicalExpr
+    | value=INTEGER #IntegerLiteral
+    | bool= (TRUE|FALSE) # BoolLiteral
     | name=ID #VarRefExpr
     ;
 
