@@ -20,6 +20,8 @@ IF:'if';
 ELSE:'else';
 TRUE: 'true';
 FALSE:'false';
+WHILE:'while';
+LENGTH:'length';
 INTEGER : '0' | [1-9][0-9]* ;
 ID : [a-zA-Z_$][a-zA-Z_$0-9]*;
 WS : [ \t\n\r\f]+ -> skip ;
@@ -76,19 +78,21 @@ stmt
     : var=ID '=' expr ';' #AssignStmt
     | '{' stmt* '}' #Block
     | expr ';'#Expression
-    | IF expr stmt #IfStmt
-    | ELSE  stmt #ElseStmt
+    | IF expr stmt (ELSE IF expr stmt)* (ELSE  stmt)? #ElseifBlockStmt
+    | WHILE '('expr')' stmt #WhileStmt
+    | var=ID '['expr']''=' expr';'# ArrayAssignment
     | RETURN (expr)? ';' #ReturnStmt
     ;
 
 expr
     : '(' expr ')' #Parenteses
     | op='!' expr #LogicalExpr
-    | expr op='*' expr #BinaryExpr
-    | expr op='+' expr #BinaryExpr
+    | expr op=('*'|'/') expr #BinaryExpr
+    | expr op=('+'|'-') expr #BinaryExpr
+    | expr op=('<'|'>') expr #LogicalExpr
     | value=INTEGER #IntegerLiteral
+    | expr '.' LENGTH #Length
     | expr '.' ID '(' ( expr ( ',' expr )* )? ')' #FunctionCall
-    | expr op='<' expr #LogicalExpr
     | expr op='&&' expr #LogicalExpr
     | bool= (TRUE|FALSE) # BoolLiteral
     | name=ID #VarRefExpr
