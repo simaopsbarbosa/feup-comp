@@ -7,6 +7,7 @@ grammar Javamm;
 CLASS : 'class' ;
 INT : 'int' ;
 VOID:'void';
+ARRAY:'['']';
 THIS:'this';
 NEW: 'new';
 STATIC : 'static' ;
@@ -56,28 +57,27 @@ varDecl
     ;
 
 param
-    : typeNode = type name = ID
+    : typeNode=type name=ID
     ;
 
 
 type
-    : name = INT
-    | name= BOOLEAN
-    | name= VOID
-    | name=ID
-    | type ('['']')+
+    : baseType dims+=ARRAY*
     ;
 
-
+baseType
+    : name=INT
+    | name=BOOLEAN
+    | name=VOID
+    | name=ID
+    ;
 
 methodDecl locals[boolean isStatic=false]
     : visibility=(PUBLIC|PRIVATE|PROTECTED)? (STATIC {$isStatic=true;})?
-      returnType = type name=ID
+      returnType=type name=ID
       '(' (param(','param)*)? ')'
       '{' varDecl* stmt*'}'
     ;
-
-
 
 stmt
     : '{' stmt* '}' #Block
@@ -89,6 +89,16 @@ stmt
     | RETURN (expr)? ';' #ReturnStmt
     ;
 
+arrayInitializer
+    : '{' (arrayElement (',' arrayElement)*)? '}'
+    ;
+
+arrayElement
+    : expr
+    | arrayInitializer
+    ;
+
+
 expr
     : expr op=('*'|'/') expr #BinaryExpr
     | expr op=('+'|'-') expr #BinaryExpr
@@ -98,7 +108,8 @@ expr
     | expr '[' expr ']' #ArrayDecl
     | expr '.' LENGTH #Length
     | expr '.' ID '(' ( expr ( ',' expr )* )? ')' #FunctionCall
-    | NEW type '[' expr ']' #NewArray
+    | NEW baseType '[' expr ']' #NewArray
+    | NEW baseType (dims+=ARRAY)+ arrayInitializer  #ArrayInit
     | NEW ID '(' ')' #ClassInitialization
     |'(' expr ')' #Parenteses
     | value=INTEGER #IntegerLiteral

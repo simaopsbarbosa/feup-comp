@@ -23,6 +23,10 @@ public class MyParserTest extends JmmTestEnv {
                 import util.ioPlus;
                 class HelloWorld {
                     void main() {
+                        int[][] arr = new int[2][2];
+                        arr = new int[][] {{1,2}, {3,4}};
+                        arr[1] = new int[] {0,0};
+                        arr[1][0] = 9;
                         ioPlus.printHelloWorld();
                     }
                 }""");
