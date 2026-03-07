@@ -7,7 +7,8 @@ grammar Javamm;
 CLASS : 'class' ;
 INT : 'int' ;
 VOID:'void';
-ARRAY:'['']';
+THIS:'this';
+NEW: 'new';
 STATIC : 'static' ;
 RETURN : 'return' ;
 PACKAGE : 'package';
@@ -21,6 +22,7 @@ ELSE:'else';
 TRUE: 'true';
 FALSE:'false';
 WHILE:'while';
+FOR:'for';
 LENGTH:'length';
 INTEGER : '0' | [1-9][0-9]* ;
 ID : [a-zA-Z_$][a-zA-Z_$0-9]*;
@@ -37,7 +39,7 @@ packageDecl
     : PACKAGE path += ID ('.' path += ID)* ';'
     ;
 importDecl
-    : IMPORT path+= ID('.' ID)* ';'
+    : IMPORT path+= ID('.' ID)+ ';'
     ;
 
 classDecl
@@ -57,15 +59,16 @@ param
     : typeNode = type name = ID
     ;
 
-array
-    : type (ARRAY);
 
 type
     : name = INT
     | name= BOOLEAN
     | name= VOID
     | name=ID
+    | type ('['']')+
     ;
+
+
 
 methodDecl locals[boolean isStatic=false]
     : visibility=(PUBLIC|PRIVATE|PROTECTED)? (STATIC {$isStatic=true;})?
@@ -74,28 +77,34 @@ methodDecl locals[boolean isStatic=false]
       '{' varDecl* stmt*'}'
     ;
 
+
+
 stmt
-    : var=ID '=' expr ';' #AssignStmt
-    | '{' stmt* '}' #Block
-    | expr ';'#Expression
+    : '{' stmt* '}' #Block
     | IF expr stmt (ELSE IF expr stmt)* (ELSE  stmt)? #ElseifBlockStmt
     | WHILE '('expr')' stmt #WhileStmt
+    | expr ';'#Expression
+    | var=ID '=' expr ';' #AssignStmt
     | var=ID '['expr']''=' expr';'# ArrayAssignment
     | RETURN (expr)? ';' #ReturnStmt
     ;
 
 expr
-    : '(' expr ')' #Parenteses
-    | op='!' expr #LogicalExpr
-    | expr op=('*'|'/') expr #BinaryExpr
+    : expr op=('*'|'/') expr #BinaryExpr
     | expr op=('+'|'-') expr #BinaryExpr
     | expr op=('<'|'>') expr #LogicalExpr
-    | value=INTEGER #IntegerLiteral
+    | op='!' expr #LogicalExpr
+    | expr op=('&&'|'||') expr #LogicalExpr
+    | expr '[' expr ']' #ArrayDecl
     | expr '.' LENGTH #Length
     | expr '.' ID '(' ( expr ( ',' expr )* )? ')' #FunctionCall
-    | expr op='&&' expr #LogicalExpr
+    | NEW type '[' expr ']' #NewArray
+    | NEW ID '(' ')' #ClassInitialization
+    |'(' expr ')' #Parenteses
+    | value=INTEGER #IntegerLiteral
     | bool= (TRUE|FALSE) # BoolLiteral
     | name=ID #VarRefExpr
+    | THIS #This
     ;
 
 
