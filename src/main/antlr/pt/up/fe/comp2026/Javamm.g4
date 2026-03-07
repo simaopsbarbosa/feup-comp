@@ -62,7 +62,7 @@ param
 
 
 type
-    : baseType dims+=ARRAY*
+    : baseType (dims+=ARRAY)*
     ;
 
 baseType
@@ -85,7 +85,7 @@ stmt
     | WHILE '('expr')' stmt #WhileStmt
     | expr ';'#Expression
     | var=ID '=' expr ';' #AssignStmt
-    | var=ID '['expr']''=' expr';'# ArrayAssignment
+    | var=ID ('['expr']')+'=' expr';'#ArrayAssignment
     | RETURN (expr)? ';' #ReturnStmt
     ;
 
@@ -105,10 +105,10 @@ expr
     | expr op=('<'|'>') expr #LogicalExpr
     | op='!' expr #LogicalExpr
     | expr op=('&&'|'||') expr #LogicalExpr
-    | expr '[' expr ']' #ArrayDecl
     | expr '.' LENGTH #Length
     | expr '.' ID '(' ( expr ( ',' expr )* )? ')' #FunctionCall
-    | NEW baseType '[' expr ']' #NewArray
+    | expr ('[' expr ']')+ #ArrayAccess
+    | NEW baseType ('[' sizes+=expr ']')+ #NewArray
     | NEW baseType (dims+=ARRAY)+ arrayInitializer  #ArrayInit
     | NEW ID '(' ')' #ClassInitialization
     |'(' expr ')' #Parenteses
