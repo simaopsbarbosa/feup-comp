@@ -36,10 +36,10 @@ program
     ;
 
 packageDecl
-    : PACKAGE path += ID ('.' path += ID)* ';'
+    : PACKAGE path+=ID ('.' path+=ID)* ';'
     ;
 importDecl
-    : IMPORT path+= ID('.' path+=ID)* ';'
+    : IMPORT path+=ID ('.' path+=ID)* ';'
     ;
 
 classDecl
@@ -57,11 +57,11 @@ varDecl
     ;
 
 param
-    : typeNode = type name = ID
+    : typeNode=type name=ID
     ;
 
 type
-    : baseType (name=ARRAY)*
+    : baseType dims+=ARRAY*
     ;
 
 baseType
@@ -73,19 +73,19 @@ baseType
 
 methodDecl locals[boolean isStatic=false]
     : visibility=(PUBLIC|PRIVATE|PROTECTED)? (STATIC {$isStatic=true;})?
-      returnType = type name=ID
+      returnType=type name=ID
       '(' (param(','param)*)? ')'
       '{' varDecl* stmt*'}'
     ;
 
 stmt
-    : var=ID '=' expr ';' #AssignStmt
-    | '{' stmt* '}' #Block
-    | expr ';'#Expression
-    | IF expr stmt (ELSE IF expr stmt)* (ELSE  stmt)? #ElseifBlockStmt
-    | WHILE '('expr')' stmt #WhileStmt
-    | var=ID ('['expr']')+ '=' expr';'# ArrayAssignment
-    | RETURN (expr)? ';' #ReturnStmt
+    : var=ID '=' expr ';'                               #AssignStmt
+    | '{' stmt* '}'                                     #Block
+    | expr ';'                                          #Expression
+    | IF expr stmt (ELSE IF expr stmt)* (ELSE  stmt)?   #ElseifBlockStmt
+    | WHILE '('expr')' stmt                             #WhileStmt
+    | var=ID ('['expr']')+ '=' expr';'                  #ArrayAssignment
+    | RETURN (expr)? ';'                                #ReturnStmt
     ;
 
 arrayInitializer
@@ -99,18 +99,18 @@ arrayElement
 
 
 expr
-    : '(' expr ')' #Parenteses
-    | op='!' expr #LogicalExpr
-    | expr op=('*'|'/') expr #BinaryExpr
-    | expr op=('+'|'-') expr #BinaryExpr
-    | expr op=('<'|'>') expr #LogicalExpr
-    | expr '.' LENGTH #Length
-    | expr '.' ID '(' ( expr ( ',' expr )* )? ')' #FunctionCall
-    | expr op='&&' expr #LogicalExpr
-    | expr ('[' expr ']')+ #ArrayAccess
-    | NEW baseType ('[' expr ']')+ #ArrayDecl
-    | NEW baseType (ARRAY)+ arrayInitializer #ArrayInit
-    | value=INTEGER #IntegerLiteral
-    | bool= (TRUE|FALSE) # BoolLiteral
-    | name=ID #VarRefExpr
+    : '(' expr ')'                                  #Parenteses
+    | op='!' expr                                   #LogicalExpr
+    | expr op=('*'|'/') expr                        #BinaryExpr
+    | expr op=('+'|'-') expr                        #BinaryExpr
+    | expr op=('<'|'>') expr                        #LogicalExpr
+    | expr '.' LENGTH                               #Length
+    | expr '.' ID '(' ( expr ( ',' expr )* )? ')'   #FunctionCall
+    | expr op='&&' expr                             #LogicalExpr
+    | expr ('[' expr ']')+                          #ArrayAccess
+    | NEW baseType ('[' sizes+=expr ']')+           #ArrayDecl
+    | NEW baseType (dims+=ARRAY)+ arrayInitializer  #ArrayInit
+    | value=INTEGER                                 #IntegerLiteral
+    | bool=(TRUE|FALSE)                             #BoolLiteral
+    | name=ID                                       #VarRefExpr
     ;
