@@ -81,7 +81,7 @@ methodDecl locals[boolean isStatic=false]
 
 stmt
     : '{' stmt* '}' #Block
-    | IF expr stmt (ELSE IF expr stmt)* (ELSE  stmt)? #ElseifBlockStmt
+    | IF '('expr ')' stmt (ELSE  stmt)? #ElseifBlockStmt
     | WHILE '('expr')' stmt #WhileStmt
     | expr ';'#Expression
     | var=ID '=' expr ';' #AssignStmt
