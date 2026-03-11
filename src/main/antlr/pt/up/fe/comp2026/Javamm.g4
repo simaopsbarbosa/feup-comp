@@ -7,7 +7,18 @@ grammar Javamm;
 CLASS : 'class' ;
 INT : 'int' ;
 VOID:'void';
-ARRAY:'['']';
+EQUALS:'=';
+LSB:'[';
+RSB:']';
+LCB:'{';
+RCB:'}';
+LP:'(';
+RP:')';
+COMMA:',';
+DOT:'.';
+SEMICOLON:';';
+COLON:':';
+EXTENDS:'extends';
 THIS:'this';
 NEW: 'new';
 STATIC : 'static' ;
@@ -38,14 +49,14 @@ program
     ;
 
 packageDecl
-    : PACKAGE path += ID ('.' path += ID)* ';'
+    : PACKAGE path += ID (DOT path += ID)* SEMICOLON
     ;
 importDecl
-    : IMPORT path+= ID('.' ID)+ ';'
+    : IMPORT path+= ID(DOT ID)+ SEMICOLON
     ;
 
 classDecl
-    :  visibility=(PUBLIC|PRIVATE|PROTECTED)? CLASS name=ID ('extends' ID)? '{' (fieldDecl|methodDecl)* '}'
+    :  visibility=(PUBLIC|PRIVATE|PROTECTED)? CLASS name=ID (EXTENDS ID)? LCB (fieldDecl|methodDecl)* RCB
     ;
 
 fieldDecl
@@ -54,7 +65,7 @@ fieldDecl
 
 
 varDecl
-    :  typeNode =type name=ID ('='expr)? ';'
+    :  typeNode =type name=ID (EQUALS expr)? SEMICOLON
     ;
 
 param
@@ -63,7 +74,7 @@ param
 
 
 type
-    : baseType (dims+=ARRAY)*
+    : baseType (dims+=LSB RSB)*
     ;
 
 baseType
@@ -76,28 +87,28 @@ baseType
 methodDecl locals[boolean isStatic=false]
     : visibility=(PUBLIC|PRIVATE|PROTECTED)? (STATIC {$isStatic=true;})?
       returnType=type name=ID
-      '(' (param(','param)*)? ')'
-      '{' varDecl* stmt*'}'
+      LP (param(COMMA param)*)? RP
+      LCB varDecl* stmt*RCB
     ;
 
 stmt
-    : '{' stmt* '}' #Block
-    | IF '(' expr ')' stmt (ELSE stmt)? #ElseifBlockStmt
-    | WHILE '(' expr ')' stmt #WhileStmt
-    | FOR '(' (assignment(',' assignment)*)?';' (expr(','expr)*)? ';'(assignment(','assignment)*)?')' body=stmt #ForStmt
-    | DO (expr|stmt) WHILE '(' expr ')' ';'#DoWhileStmt
-    | expr ';' #Expression
-    | var=ID '=' expr ';' #AssignStmt
-    | var=ID ('[' expr ']')+ '=' expr ';' #ArrayAssignment
-    | RETURN (expr)? ';' #ReturnStmt
+    : LCB stmt* RCB #Block
+    | IF LP expr RP stmt (ELSE stmt)? #ElseifBlockStmt
+    | WHILE LP expr RP stmt #WhileStmt
+    | FOR LP (assignment(COMMA assignment)*)?SEMICOLON (expr(COMMA expr)*)? SEMICOLON(assignment(COMMA assignment)*)? RP body=stmt #ForStmt
+    | DO (expr|stmt) WHILE LP expr RP SEMICOLON #DoWhileStmt
+    | expr SEMICOLON #Expression
+    | var=ID EQUALS expr SEMICOLON #AssignStmt
+    | var=ID (LSB expr RSB)+ EQUALS expr SEMICOLON #ArrayAssignment
+    | RETURN (expr)? SEMICOLON #ReturnStmt
     ;
 
 assignment
-    : ID '=' expr
+    : ID EQUALS expr
     ;
 
 arrayInitializer
-    : '{' (arrayElement (',' arrayElement)*)? '}'
+    : LCB (arrayElement (COMMA arrayElement)*)? RCB
     ;
 
 arrayElement
@@ -107,7 +118,7 @@ arrayElement
 
 
 expr
-    :'(' expr ')'                                               #Parenteses      //16
+    :LP expr RP                                               #Parenteses      //16
     | expr op=('++'|'--')                                       #RightUnaryExpr  //15
     | op=('!'|'+'|'-'|'++'|'--') expr                           #LeftUnaryExpr   //14
     | expr op=('*'|'/'|'%') expr                                #BinaryExpr      //12
@@ -116,13 +127,13 @@ expr
     | expr op=('=='|'!=') expr                                  #EqualityExpr    //8
     | expr op='&&' expr                                         #LogicalExpr     // 4
     | expr op='||' expr                                         #LogicalExpr     // 3
-    | expr '.' LENGTH                                           #Length
-    | ID '(' ( expr ( ',' expr )* )? ')'                        #ImplicitClassAttribute
-    | expr '.' ID ('(' ( expr ( ',' expr )* )? ')')?            #ExplicitClassAttribute
-    | expr ('[' expr ']')+                                      #ArrayAccess
-    | NEW baseType ('[' sizes+=expr ']')+                       #NewArray
-    | NEW baseType (dims+=ARRAY)+ arrayInitializer              #ArrayInit
-    | NEW ID '(' ( expr ( ',' expr )* )? ')'                    #ClassInitialization
+    | expr DOT LENGTH                                           #Length
+    | ID LP ( expr ( COMMA expr )* )? RP                        #ImplicitClassAttribute
+    | expr DOT ID (LP ( expr ( COMMA expr )* )? RP)?            #ExplicitClassAttribute
+    | expr (LSB expr RSB)+                                      #ArrayAccess
+    | NEW baseType (LSB sizes+=expr RSB)+                       #NewArray
+    | NEW baseType (dims+=LSB RSB)+ arrayInitializer              #ArrayInit
+    | NEW ID LP ( expr ( COMMA expr )* )? RP                    #ClassInitialization
     | value=INTEGER                                             #IntegerLiteral
     | bool= (TRUE|FALSE)                                        #BoolLiteral
     | name=ID                                                   #VarRefExpr
