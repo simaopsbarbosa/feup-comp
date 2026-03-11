@@ -81,12 +81,17 @@ methodDecl locals[boolean isStatic=false]
 
 stmt
     : '{' stmt* '}' #Block
-    | IF '('expr ')' stmt (ELSE  stmt)? #ElseifBlockStmt
-    | WHILE '('expr')' stmt #WhileStmt
-    | expr ';'#Expression
+    | IF '(' expr ')' stmt (ELSE stmt)? #ElseifBlockStmt
+    | WHILE '(' expr ')' stmt #WhileStmt
+    | FOR '(' (assignment(',' assignment)*)?';' (expr(','expr)*)? ';'(assignment(','assignment)*)?')' body=stmt #ForStmt
+    | expr ';' #Expression
     | var=ID '=' expr ';' #AssignStmt
-    | var=ID ('['expr']')+'=' expr';'#ArrayAssignment
+    | var=ID ('[' expr ']')+ '=' expr ';' #ArrayAssignment
     | RETURN (expr)? ';' #ReturnStmt
+    ;
+
+assignment
+    : ID '=' expr
     ;
 
 arrayInitializer
