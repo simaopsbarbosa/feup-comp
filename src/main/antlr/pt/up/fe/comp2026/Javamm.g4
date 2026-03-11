@@ -24,6 +24,7 @@ TRUE: 'true';
 FALSE:'false';
 WHILE:'while';
 FOR:'for';
+DO:'do';
 LENGTH:'length';
 INTEGER : '0' | [1-9][0-9]* ;
 ID : [a-zA-Z_$][a-zA-Z_$0-9]*;
@@ -84,6 +85,7 @@ stmt
     | IF '(' expr ')' stmt (ELSE stmt)? #ElseifBlockStmt
     | WHILE '(' expr ')' stmt #WhileStmt
     | FOR '(' (assignment(',' assignment)*)?';' (expr(','expr)*)? ';'(assignment(','assignment)*)?')' body=stmt #ForStmt
+    | DO (expr|stmt) WHILE '(' expr ')' ';'#DoWhileStmt
     | expr ';' #Expression
     | var=ID '=' expr ';' #AssignStmt
     | var=ID ('[' expr ']')+ '=' expr ';' #ArrayAssignment
