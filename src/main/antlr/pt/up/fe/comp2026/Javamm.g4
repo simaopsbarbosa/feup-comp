@@ -100,7 +100,6 @@ arrayElement
 
 
 expr
-<<<<<<< HEAD
     :'(' expr ')'                                               #Parenteses      //16
     | expr op=('++'|'--')                                       #RightUnaryExpr  //15
     | op=('!'|'+'|'-'|'++'|'--') expr                           #LeftUnaryExpr   //14
@@ -121,5 +120,5 @@ expr
     | bool= (TRUE|FALSE)                                        #BoolLiteral
     | name=ID                                                   #VarRefExpr
     | THIS                                                      #This
-    
+    ;
 
