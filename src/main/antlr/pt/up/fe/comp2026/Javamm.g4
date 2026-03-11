@@ -110,8 +110,8 @@ expr
     | expr op='&&' expr                                         #LogicalExpr     // 4
     | expr op='||' expr                                         #LogicalExpr     // 3
     | expr '.' LENGTH                                           #Length
-    | expr '.' ID '(' ( expr ( ',' expr )* )? ')'               #FunctionCall
-    | expr '.' ID ('(' ( expr ( ',' expr )* )? ')')?            #ClassAttributeAcess
+    | ID '(' ( expr ( ',' expr )* )? ')'                        #ImplicitClassAttribute
+    | expr '.' ID ('(' ( expr ( ',' expr )* )? ')')?            #ExplicitClassAttribute
     | expr ('[' expr ']')+                                      #ArrayAccess
     | NEW baseType ('[' sizes+=expr ']')+                       #NewArray
     | NEW baseType (dims+=ARRAY)+ arrayInitializer              #ArrayInit
