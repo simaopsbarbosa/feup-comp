@@ -110,7 +110,7 @@ expr
     | expr ('[' expr ']')+ #ArrayAccess
     | NEW baseType ('[' sizes+=expr ']')+ #NewArray
     | NEW baseType (dims+=ARRAY)+ arrayInitializer  #ArrayInit
-    | NEW ID '(' ')' #ClassInitialization
+    | NEW ID '(' ( expr ( ',' expr )* )? ')' #ClassInitialization
     |'(' expr ')' #Parenteses
     | value=INTEGER #IntegerLiteral
     | bool= (TRUE|FALSE) # BoolLiteral
