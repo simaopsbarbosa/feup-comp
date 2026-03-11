@@ -100,6 +100,7 @@ arrayElement
 
 
 expr
+<<<<<<< HEAD
     :'(' expr ')'                                               #Parenteses      //16
     | expr op=('++'|'--')                                       #RightUnaryExpr  //15
     | op=('!'|'+'|'-'|'++'|'--') expr                           #LeftUnaryExpr   //14
@@ -111,6 +112,7 @@ expr
     | expr op='||' expr                                         #LogicalExpr     // 3
     | expr '.' LENGTH                                           #Length
     | expr '.' ID '(' ( expr ( ',' expr )* )? ')'               #FunctionCall
+    | expr '.' ID ('(' ( expr ( ',' expr )* )? ')')?            #ClassAttributeAcess
     | expr ('[' expr ']')+                                      #ArrayAccess
     | NEW baseType ('[' sizes+=expr ']')+                       #NewArray
     | NEW baseType (dims+=ARRAY)+ arrayInitializer              #ArrayInit
@@ -119,6 +121,5 @@ expr
     | bool= (TRUE|FALSE)                                        #BoolLiteral
     | name=ID                                                   #VarRefExpr
     | THIS                                                      #This
-    ;
-
+    
 
