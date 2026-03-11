@@ -100,22 +100,25 @@ arrayElement
 
 
 expr
-    : expr op=('*'|'/') expr #BinaryExpr
-    | expr op=('+'|'-') expr #BinaryExpr
-    | expr op=('<'|'>') expr #LogicalExpr
-    | op='!' expr #LogicalExpr
-    | expr op=('&&'|'||') expr #LogicalExpr
-    | expr '.' LENGTH #Length
-    | expr '.' ID '(' ( expr ( ',' expr )* )? ')' #FunctionCall
-    | expr ('[' expr ']')+ #ArrayAccess
-    | NEW baseType ('[' sizes+=expr ']')+ #NewArray
-    | NEW baseType (dims+=ARRAY)+ arrayInitializer  #ArrayInit
-    | NEW ID '(' ')' #ClassInitialization
-    |'(' expr ')' #Parenteses
-    | value=INTEGER #IntegerLiteral
-    | bool= (TRUE|FALSE) # BoolLiteral
-    | name=ID #VarRefExpr
-    | THIS #This
+    :'(' expr ')'                                               #Parenteses      //16
+    | expr op=('++'|'--')                                       #RightUnaryExpr  //15
+    | op=('!'|'+'|'-'|'++'|'--') expr                           #LeftUnaryExpr   //14
+    | expr op=('*'|'/'|'%') expr                                #BinaryExpr      //12
+    | expr op=('+'|'-') expr                                    #BinaryExpr      //11
+    | expr op=('<'|'>'|'<='|'>=') expr                          #LogicalExpr     //9
+    | expr op=('=='|'!=') expr                                  #EqualityExpr    //8
+    | expr op='&&' expr                                         #LogicalExpr     // 4
+    | expr op='||' expr                                         #LogicalExpr     // 3
+    | expr '.' LENGTH                                           #Length
+    | expr '.' ID '(' ( expr ( ',' expr )* )? ')'               #FunctionCall
+    | expr ('[' expr ']')+                                      #ArrayAccess
+    | NEW baseType ('[' sizes+=expr ']')+                       #NewArray
+    | NEW baseType (dims+=ARRAY)+ arrayInitializer              #ArrayInit
+    | NEW ID '(' ')'                                            #ClassInitialization
+    | value=INTEGER                                             #IntegerLiteral
+    | bool= (TRUE|FALSE)                                        #BoolLiteral
+    | name=ID                                                   #VarRefExpr
+    | THIS                                                      #This
     ;
 
 
