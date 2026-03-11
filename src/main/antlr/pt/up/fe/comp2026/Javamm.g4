@@ -115,7 +115,7 @@ expr
     | expr ('[' expr ']')+                                      #ArrayAccess
     | NEW baseType ('[' sizes+=expr ']')+                       #NewArray
     | NEW baseType (dims+=ARRAY)+ arrayInitializer              #ArrayInit
-    | NEW ID '(' ')'                                            #ClassInitialization
+    | NEW ID '(' ( expr ( ',' expr )* )? ')'                    #ClassInitialization
     | value=INTEGER                                             #IntegerLiteral
     | bool= (TRUE|FALSE)                                        #BoolLiteral
     | name=ID                                                   #VarRefExpr
