@@ -107,6 +107,7 @@ expr
     | expr op=('&&'|'||') expr #LogicalExpr
     | expr '.' LENGTH #Length
     | expr '.' ID '(' ( expr ( ',' expr )* )? ')' #FunctionCall
+    | expr '.' ID ('(' ( expr ( ',' expr )* )? ')')?#ClassAttributeAcess
     | expr ('[' expr ']')+ #ArrayAccess
     | NEW baseType ('[' sizes+=expr ']')+ #NewArray
     | NEW baseType (dims+=ARRAY)+ arrayInitializer  #ArrayInit
