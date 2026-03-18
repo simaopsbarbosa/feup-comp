@@ -57,7 +57,6 @@ public class JmmSymbolTableBuilder {
 
     private SymbolTableBuilderResult buildInternal() {
 
-
         var packageDecl = root.getChildren(PACKAGE_DECL).getFirst();
         var packagePathList = packageDecl.getObjectAsList("path", String.class);
         var packagePath = String.join(".", packagePathList);
@@ -68,10 +67,17 @@ public class JmmSymbolTableBuilder {
         this.className = classDecl.get("name");
         var fullyQualifiedName = packagePath + "." + className;
 
+        //get imports
         var importDecls = root.getChildren(IMPORT_DECL);
         buildimports(importDecls);
+        System.out.println("Imports: " + imports);
 
-        System.out.println("Imports: "+imports);
+        //get super qualified name
+        var superName = classDecl.getOptional("supername");
+        var superQualified = "";
+        for(var importStr : imports) {
+            if (importStr.contains(superName.get())) superQualified = importStr;
+        }
 
         // Check if className is available
         if (declaredClasses.containsKey(className)) {
@@ -82,7 +88,7 @@ public class JmmSymbolTableBuilder {
 
         var methods = buildMethods(classDecl);
 
-        var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, null, Collections.emptyList(), methods, importer);
+        var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, superQualified, Collections.emptyList(), methods, importer);
 
         return new SymbolTableBuilderResult(symbolTable, reports);
     }

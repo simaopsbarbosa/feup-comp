@@ -56,7 +56,7 @@ importDecl
     ;
 
 classDecl
-    :  visibility=(PUBLIC|PRIVATE|PROTECTED)? CLASS name=ID (EXTENDS ID)? LCB (fieldDecl|methodDecl)* RCB
+    :  visibility=(PUBLIC|PRIVATE|PROTECTED)? CLASS name=ID (EXTENDS supername=ID)? LCB (fieldDecl|methodDecl)* RCB
     ;
 
 fieldDecl
