@@ -46,16 +46,20 @@ public class TypeUtils {
         var name = typeNode.getChild(0).get("name");
         var dims=typeNode.getObjectAsList("dims");
 
-        var type=JmmPrimitiveType.fromString(name).orElseGet(()->{
-                return  new JmmClassType(name,false,false).asPrimitive();
-        });
-        if(dims.isEmpty()){
-            System.out.println(type);
-            return  type;
+        var type=JmmPrimitiveType.fromString(name);
+        if(type.isEmpty()){
+            var typeclass = new JmmClassType(name,false,false);
+            if(dims.isEmpty()){
+                return typeclass ;
+            }
+            return  new JmmArrayType(typeclass, dims.size());
         }
-        System.out.println(type);
-        System.out.println(dims.size());
-        return  new JmmArrayType(type, dims.size());
+        if(dims.isEmpty()){
+            return type.get();
+        }
+        return  new JmmArrayType(type.get(), dims.size());
+
+
     }
 
 

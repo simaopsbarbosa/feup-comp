@@ -106,11 +106,13 @@ public class JmmSymbolTableBuilder {
         var returnType = TypeUtils.convertType(method.getChild(0));
 
 
-        var params = List.of(new Symbol(TypeUtils.intType(), method.getChildren(PARAM).getFirst().get(JmmAttributes.PARAM.NAME)));
 
-        System.out.println("[TODO] JmmSymbolTableBuilder.buildMethod(): Assuming all VarDecls are ints, needs to be expanded");
+        var params = method.getChildren(PARAM).stream()
+                .map(param -> new Symbol(TypeUtils.convertType(param.getChild(0)),param.get(JmmAttributes.VAR_DECL.NAME)))
+                .toList();
+
         var locals = method.getChildren(VAR_DECL).stream()
-                .map(varDecl -> new Symbol(TypeUtils.intType(), varDecl.get(JmmAttributes.VAR_DECL.NAME)))
+                .map(varDecl -> new Symbol(TypeUtils.convertType(varDecl.getChild(0)), varDecl.get(JmmAttributes.VAR_DECL.NAME)))
                 .toList();
 
         var visibility =  Visibility.PUBLIC;
