@@ -38,7 +38,7 @@ public class Launcher {
 
 
 
-//        // Semantic Analysis stage
+        // Semantic Analysis stage
         JmmAnalysisImpl sema = new JmmAnalysisImpl();
         JmmSemanticsResult semanticsResult = sema.semanticAnalysis(parserResult);
 

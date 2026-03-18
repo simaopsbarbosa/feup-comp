@@ -8,7 +8,6 @@ import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
-import pt.up.fe.comp.jmm.ast.AJmmNode;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
@@ -18,7 +17,6 @@ import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.specs.util.SpecsCheck;
 
-import java.lang.reflect.Type;
 import java.util.*;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
@@ -70,6 +68,14 @@ public class JmmSymbolTableBuilder {
         this.className = classDecl.get("name");
         var fullyQualifiedName = packagePath + "." + className;
 
+        //get imports
+        var importDecls = root.getChildren(IMPORT_DECL);
+        buildimports(importDecls);
+        System.out.println("Imports: " + imports);
+
+        //get super qualified name
+        var superQualified = this.getSuperQualifiedName(classDecl);
+
         // Check if className is available
         if (declaredClasses.containsKey(className)) {
             reports.add(newError(root, "'" + className + "' is already defined in this compilation unit"));
@@ -79,13 +85,10 @@ public class JmmSymbolTableBuilder {
 
         var methods = buildMethods(classDecl);
 
-
-        var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, null, Collections.emptyList(), methods, importer);
+        var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, superQualified, Collections.emptyList(), methods, importer);
 
         return new SymbolTableBuilderResult(symbolTable, reports);
     }
-
-
 
     private List<MethodSymbol> buildMethods(JmmNode classDecl) {
 
@@ -113,6 +116,52 @@ public class JmmSymbolTableBuilder {
         var visibility =  Visibility.PUBLIC;
         var isStatic = method.getBoolean(JmmAttributes.METHOD_DECL.IS_STATIC, false);
         return new MethodSymbol(methodName, returnType, params, locals, isStatic, visibility);
+    }
+
+
+    private void buildimports(List<JmmNode> importDecls) {
+        var nameToPath = new HashMap<String, String>();
+
+        for (var importDecl : importDecls) {
+            var path = importDecl.getObjectAsList("path", String.class);
+            var real_path = String.join(".", path);
+            var className = path.getLast();
+
+            if (!nameToPath.containsKey(className)) {
+                nameToPath.put(className, real_path);
+                imports.add(real_path);
+                continue;
+            }
+
+            if(!nameToPath.get(className).equals(real_path)) {
+                reports.add(newError(importDecl, "'"+real_path+"."+className+"' is already defined"));
+            }
+        }
+    }
+
+    private String getSuperQualifiedName(JmmNode classDecl) {
+        var superName = classDecl.getOptional("supername");
+        String superQualified = null;
+
+        if (superName.isPresent()) {
+            for(var importStr : imports) {
+                if (importStr.contains(superName.get())) superQualified = importStr;
+            }
+        }
+
+        //should probably do in import Visitor
+
+        //if (superName.isPresent() && JmmSymbolTable::isImplicitImport(superName.get())) {
+        //    return superQualified;
+        //}
+//
+//
+        //if (superName.isPresent() && superQualified == null) {
+        //    reports.add(newError(classDecl, "'" + superName.get() +  "' has no import declaration "));
+        //}
+
+        return superQualified;
+
     }
 
 

@@ -52,11 +52,11 @@ packageDecl
     : PACKAGE path += ID (DOT path += ID)* SEMICOLON
     ;
 importDecl
-    : IMPORT path+= ID(DOT ID)+ SEMICOLON
+    : IMPORT path+= ID(DOT path+=ID)+ SEMICOLON
     ;
 
 classDecl
-    :  visibility=(PUBLIC|PRIVATE|PROTECTED)? CLASS name=ID (EXTENDS ID)? LCB (fieldDecl|methodDecl)* RCB
+    :  visibility=(PUBLIC|PRIVATE|PROTECTED)? CLASS name=ID (EXTENDS supername=ID)? LCB (fieldDecl|methodDecl)* RCB
     ;
 
 fieldDecl
@@ -132,7 +132,7 @@ expr
     | expr DOT ID (LP ( expr ( COMMA expr )* )? RP)?            #ExplicitClassAttribute
     | expr (LSB expr RSB)+                                      #ArrayAccess
     | NEW baseType (LSB sizes+=expr RSB)+                       #NewArray
-    | NEW baseType (dims+=LSB RSB)+ arrayInitializer              #ArrayInit
+    | NEW baseType (dims+=LSB RSB)+ arrayInitializer            #ArrayInit
     | NEW ID LP ( expr ( COMMA expr )* )? RP                    #ClassInitialization
     | value=INTEGER                                             #IntegerLiteral
     | bool= (TRUE|FALSE)                                        #BoolLiteral
