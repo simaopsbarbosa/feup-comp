@@ -1,0 +1,28 @@
+package pt.up.fe.comp.cp1.core.parser.integration.apps;
+
+import util.ioPlus;
+
+class FindMaximum {
+    int[] test_arr;
+
+    public int find_maximum(int[] arr) {
+        int i;
+        int maximum;
+        int value;
+
+        i = 1;
+        maximum = arr[0];
+        while (i < arr.length) {
+            value = arr[i];
+            if (maximum < value) {
+                maximum = value;
+            } else {
+            }
+            i = i + 1;
+        }
+
+        return maximum;
+    }
+
+
+}

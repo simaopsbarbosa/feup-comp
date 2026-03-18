@@ -40,12 +40,28 @@ public class TypeUtils {
         return JmmPrimitiveType.INT;
     }
 
+
     public JmmType convertType(JmmNode typeNode) {
         assert (TYPE.check(typeNode));
 
         System.out.println("[TODO] TypeUtils.convertType(): Implement for classes and arrays");
-        var name = typeNode.get("name");
-        return JmmPrimitiveType.fromString(name).orElseThrow();
+        var name = typeNode.getChild(0).get("name");
+        var dims=typeNode.getChild(0).getObjectAsList("dims");
+
+        var type=JmmPrimitiveType.fromString(name).orElseGet(()->{
+                boolean isImported=this.table.getImports().contains(name);
+                return  new JmmClassType(name,isImported,false).asPrimitive();
+        });
+
+        if(dims.isEmpty()){
+            System.out.println(type);
+            return  type;
+
+        }
+        System.out.println(type);
+        System.out.println(dims.size());
+         return  new JmmArrayType(type, dims.size());
+
     }
 
 

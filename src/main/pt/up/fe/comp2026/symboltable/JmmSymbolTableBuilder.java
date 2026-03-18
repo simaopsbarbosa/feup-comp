@@ -8,6 +8,7 @@ import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
+import pt.up.fe.comp.jmm.ast.AJmmNode;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
@@ -17,6 +18,7 @@ import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.specs.util.SpecsCheck;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
@@ -77,10 +79,20 @@ public class JmmSymbolTableBuilder {
 
         var methods = buildMethods(classDecl);
 
-        var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, null, Collections.emptyList(), methods, importer);
+        var  returnTypes=new HashMap<String,Type>();
+        var  locals=new HashMap<String, List<Symbol>>();
+        var  params= new HashMap<String, List<Symbol>>();
+        for(MethodSymbol m:methods){
+                returnTypes.put(m.name(), (Type) m.returnType());
+
+
+        }
+        var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, null, Collections.emptyList(), methods, importer,returnTypes,params, locals);
 
         return new SymbolTableBuilderResult(symbolTable, reports);
     }
+
+
 
     private List<MethodSymbol> buildMethods(JmmNode classDecl) {
 
@@ -93,8 +105,9 @@ public class JmmSymbolTableBuilder {
     private MethodSymbol buildMethod(JmmNode method) {
         var methodName = method.get("name");
 
-        System.out.println("[TODO] JmmSymbolTableBuilder.buildMethod(): Assuming return type of method is always int, and always has a single int parameter, needs to be expanded");
-        var returnType = TypeUtils.intType();
+
+        TypeUtils typeUtils = new TypeUtils(null);
+        var returnType = typeUtils.convertType(method.getChild(1));
 
 
         var params = List.of(new Symbol(TypeUtils.intType(), method.getChildren(PARAM).getFirst().get(JmmAttributes.PARAM.NAME)));
