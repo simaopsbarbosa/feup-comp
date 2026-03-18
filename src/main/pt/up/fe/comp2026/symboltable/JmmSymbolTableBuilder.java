@@ -189,27 +189,25 @@ public class JmmSymbolTableBuilder {
 
     private String getSuperQualifiedName(JmmNode classDecl) {
         var superName = classDecl.getOptional("supername");
-        String superQualified = null;
 
-        if (superName.isPresent()) {
-            for(var importStr : imports) {
-                if (importStr.contains(superName.get())) superQualified = importStr;
+        //confirm if extends any class
+        if (superName.isEmpty()) return null;
+
+        //confirm if implict import
+        if (importer.isImplicitImport(superName.get())) {
+            return "java.lang." + superName.get();
+        }
+
+        //confirm if has been imported
+        for(var importStr : imports) {
+            if (importStr.endsWith("." + superName.get()) || importStr.equals(superName.get())) {
+                return importStr;
             }
         }
 
-        //should probably do in import Visitor
-
-        //if (superName.isPresent() && JmmSymbolTable::isImplicitImport(superName.get())) {
-        //    return superQualified;
-        //}
-//
-//
-        //if (superName.isPresent() && superQualified == null) {
-        //    reports.add(newError(classDecl, "'" + superName.get() +  "' has no import declaration "));
-        //}
-
-        return superQualified;
-
+        //if has not found its import, report error
+        reports.add(newError(classDecl, "'" + superName.get() +  "' has no import declaration "));
+        return null;
     }
 
 
