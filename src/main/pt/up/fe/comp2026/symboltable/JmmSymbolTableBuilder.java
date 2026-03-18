@@ -79,15 +79,8 @@ public class JmmSymbolTableBuilder {
 
         var methods = buildMethods(classDecl);
 
-        var  returnTypes=new HashMap<String,Type>();
-        var  locals=new HashMap<String, List<Symbol>>();
-        var  params= new HashMap<String, List<Symbol>>();
-        for(MethodSymbol m:methods){
-                returnTypes.put(m.name(), (Type) m.returnType());
 
-
-        }
-        var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, null, Collections.emptyList(), methods, importer,returnTypes,params, locals);
+        var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, null, Collections.emptyList(), methods, importer);
 
         return new SymbolTableBuilderResult(symbolTable, reports);
     }
@@ -105,9 +98,9 @@ public class JmmSymbolTableBuilder {
     private MethodSymbol buildMethod(JmmNode method) {
         var methodName = method.get("name");
 
+        System.out.println(methodName + " " + method.getChildren());
 
-        TypeUtils typeUtils = new TypeUtils(null);
-        var returnType = typeUtils.convertType(method.getChild(1));
+        var returnType = TypeUtils.convertType(method.getChild(0));
 
 
         var params = List.of(new Symbol(TypeUtils.intType(), method.getChildren(PARAM).getFirst().get(JmmAttributes.PARAM.NAME)));

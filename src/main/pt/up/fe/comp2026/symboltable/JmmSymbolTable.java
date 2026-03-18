@@ -5,11 +5,7 @@ import pt.up.fe.comp.jmm.analysis.table.Signature;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.reflection.Importer;
-
 import pt.up.fe.specs.util.SpecsCheck;
-
-
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,9 +15,6 @@ public class JmmSymbolTable extends AJmmSymbolTable {
     private final String classQualifiedName;
     private final String superQualifiedName;
     private final Map<String, Symbol> fields;
-    private final Map<String, Type> returnTypes;
-    private final  Map<String, List<Symbol>> locals;
-    private final  Map<String, List<Symbol>> params;
     private final Map<Signature, MethodSymbol> methods;
 
 
@@ -33,19 +26,13 @@ public class JmmSymbolTable extends AJmmSymbolTable {
     public JmmSymbolTable(List<String> imports, String classQualifiedName,
                           String superQualifiedNameName, List<Symbol> fields,
                           List<MethodSymbol> methods,
-                          Importer importer,
-                          Map<String, Type> returnTypes,
-                          Map<String, List<Symbol>> params,
-                          Map<String, List<Symbol>> locals) {
+                          Importer importer) {
         super(importer);
         this.imports = imports;
         this.classQualifiedName = classQualifiedName;
         this.superQualifiedName = superQualifiedNameName;
         this.fields = fields.stream().collect(Collectors.toMap(Symbol::name, s -> s));
         this.methods = methods.stream().collect(Collectors.toMap(MethodSymbol::signature, m -> m));
-        this.returnTypes = returnTypes;
-        this.params = params;
-        this.locals = locals;
         this.importNames = calcImportNames(imports);
         this.attrs = new HashMap<>();
     }

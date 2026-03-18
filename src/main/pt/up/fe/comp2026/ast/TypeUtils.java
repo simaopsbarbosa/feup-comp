@@ -41,27 +41,21 @@ public class TypeUtils {
     }
 
 
-    public JmmType convertType(JmmNode typeNode) {
+    public static JmmType convertType(JmmNode typeNode) {
         assert (TYPE.check(typeNode));
-
-        System.out.println("[TODO] TypeUtils.convertType(): Implement for classes and arrays");
         var name = typeNode.getChild(0).get("name");
-        var dims=typeNode.getChild(0).getObjectAsList("dims");
+        var dims=typeNode.getObjectAsList("dims");
 
         var type=JmmPrimitiveType.fromString(name).orElseGet(()->{
-                boolean isImported=this.table.getImports().contains(name);
-                return  new JmmClassType(name,isImported,false).asPrimitive();
+                return  new JmmClassType(name,false,false).asPrimitive();
         });
-
         if(dims.isEmpty()){
             System.out.println(type);
             return  type;
-
         }
         System.out.println(type);
         System.out.println(dims.size());
-         return  new JmmArrayType(type, dims.size());
-
+        return  new JmmArrayType(type, dims.size());
     }
 
 
