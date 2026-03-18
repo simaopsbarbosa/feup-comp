@@ -38,15 +38,15 @@ public class Launcher {
 
 
 
-//        // Semantic Analysis stage
-//        JmmAnalysisImpl sema = new JmmAnalysisImpl();
-//        JmmSemanticsResult semanticsResult = sema.semanticAnalysis(parserResult);
-//
-//        System.out.println("Annotated AST:");
-//        System.out.println(semanticsResult.getRootNode().toTree());
-//
-//        semanticsResult.throwIfErrors();
-//
+        // Semantic Analysis stage
+        JmmAnalysisImpl sema = new JmmAnalysisImpl();
+        JmmSemanticsResult semanticsResult = sema.semanticAnalysis(parserResult);
+
+        System.out.println("Annotated AST:");
+        System.out.println(semanticsResult.getRootNode().toTree());
+
+        semanticsResult.throwIfErrors();
+
 //        // Optimization stage
 //        JmmOptimizationImpl ollirGen = new JmmOptimizationImpl();
 //

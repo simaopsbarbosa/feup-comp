@@ -68,6 +68,11 @@ public class JmmSymbolTableBuilder {
         this.className = classDecl.get("name");
         var fullyQualifiedName = packagePath + "." + className;
 
+        var importDecls = root.getChildren(IMPORT_DECL);
+        buildimports(importDecls);
+
+        System.out.println("Imports: "+imports);
+
         // Check if className is available
         if (declaredClasses.containsKey(className)) {
             reports.add(newError(root, "'" + className + "' is already defined in this compilation unit"));
@@ -107,6 +112,27 @@ public class JmmSymbolTableBuilder {
         var visibility =  Visibility.PUBLIC;
         var isStatic = method.getBoolean(JmmAttributes.METHOD_DECL.IS_STATIC, false);
         return new MethodSymbol(methodName, returnType, params, locals, isStatic, visibility);
+    }
+
+
+    private void buildimports(List<JmmNode> importDecls) {
+        var nameToPath = new HashMap<String, String>();
+
+        for (var importDecl : importDecls) {
+            var path = importDecl.getObjectAsList("path", String.class);
+            var real_path = String.join(".", path);
+            var className = path.getLast();
+
+            if (!nameToPath.containsKey(className)) {
+                nameToPath.put(className, real_path);
+                imports.add(real_path);
+                continue;
+            }
+
+            if(!nameToPath.get(className).equals(real_path)) {
+                reports.add(newError(importDecl, "'"+real_path+"."+className+"' is already defined"));
+            }
+        }
     }
 
 
