@@ -19,6 +19,7 @@ import pt.up.fe.specs.util.SpecsCheck;
 
 import java.util.*;
 
+import static java.util.Collections.frequency;
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
 public class JmmSymbolTableBuilder {
@@ -57,6 +58,7 @@ public class JmmSymbolTableBuilder {
 
     private SymbolTableBuilderResult buildInternal() {
 
+
         var packageDecl = root.getChildren(PACKAGE_DECL).getFirst();
         var packagePathList = packageDecl.getObjectAsList("path", String.class);
         var packagePath = String.join(".", packagePathList);
@@ -83,36 +85,84 @@ public class JmmSymbolTableBuilder {
 
 
         var methods = buildMethods(classDecl);
+        var fields= buildFields(classDecl);
 
-        var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, superQualified, Collections.emptyList(), methods, importer);
+        var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, superQualified, fields, methods, importer);
 
         return new SymbolTableBuilderResult(symbolTable, reports);
     }
+    private List<Symbol> buildFields(JmmNode classDecl){
+        var seen=new HashSet<>();
+        return classDecl.getChildren(FIELD_DECL).stream()
+                .filter(decl ->{
+                    var name=decl.getChild(0).get("name");
+                    System.out.println(name+"sucks");
+                    if(seen.contains(name)){
+                        reports.add(newError(decl,"Same name Variables"));
+                        return  false;
+                    }
+                    seen.add(name);
+                    return true;
+                })
+                .map(decl -> new Symbol(TypeUtils.convertType(decl.getChild(0).getChild(0)), decl.getChild(0).get(JmmAttributes.VAR_DECL.NAME)))
+                .toList();
+    }
 
     private List<MethodSymbol> buildMethods(JmmNode classDecl) {
-
-        return classDecl.getChildren(METHOD_DECL).stream()
+        var seen=new HashSet<>();
+        return  classDecl.getChildren(METHOD_DECL).stream()
                 .map(this::buildMethod)
+                .filter(methodSymbol ->{
+                    String signature=methodSymbol.signature().toString();
+                    if(seen.contains(signature)){
+                       reports.add(newError(classDecl,"Methods with same signature"));
+                       return  false;
+                    }
+                    seen.add(signature);
+                    return true;
+                })
                 .toList();
+
+
 
     }
 
     private MethodSymbol buildMethod(JmmNode method) {
         var methodName = method.get("name");
 
-        System.out.println("[TODO] JmmSymbolTableBuilder.buildMethod(): Assuming return type of method is always int, and always has a single int parameter, needs to be expanded");
-        var returnType = TypeUtils.intType();
+        System.out.println(methodName + " " + method.getChildren());
 
-
-        var params = List.of(new Symbol(TypeUtils.intType(), method.getChildren(PARAM).getFirst().get(JmmAttributes.PARAM.NAME)));
-
-        System.out.println("[TODO] JmmSymbolTableBuilder.buildMethod(): Assuming all VarDecls are ints, needs to be expanded");
-        var locals = method.getChildren(VAR_DECL).stream()
-                .map(varDecl -> new Symbol(TypeUtils.intType(), varDecl.get(JmmAttributes.VAR_DECL.NAME)))
+        var returnType = TypeUtils.convertType(method.getChild(0));
+        var seenParams=new HashSet<>();
+        var params = method.getChildren(PARAM).stream()
+                .filter(param->{
+                    String name=param.get(JmmAttributes.PARAM.NAME);
+                    if(seenParams.contains(name)){
+                        reports.add(newError(param,"Duplicate parameters"));
+                        return  false;
+                    }
+                    seenParams.add(name);
+                    return true;
+                })
+                .map(param -> new Symbol(TypeUtils.convertType(param.getChild(0)),param.get(JmmAttributes.VAR_DECL.NAME)))
                 .toList();
+        var seenLocals=new HashSet<>();
+        var locals = method.getChildren(VAR_DECL).stream()
+                .filter(decl ->{
+                    String name=decl.get(JmmAttributes.VAR_DECL.NAME);
+                    if(seenLocals.contains(name)||seenParams.contains(name)){
+                        reports.add(newError(decl,"Same name Variables"));
+                        return  false;
+                    }
+                    seenLocals.add(name);
+                    return true;
+                })
+                .map(varDecl -> new Symbol(TypeUtils.convertType(varDecl.getChild(0)), varDecl.get(JmmAttributes.VAR_DECL.NAME)))
+                .toList();
+        var visibility = Visibility.fromString(method.getOptional("visibility").orElse("PUBLIC"));
 
-        var visibility =  Visibility.PUBLIC;
         var isStatic = method.getBoolean(JmmAttributes.METHOD_DECL.IS_STATIC, false);
+
         return new MethodSymbol(methodName, returnType, params, locals, isStatic, visibility);
     }
 

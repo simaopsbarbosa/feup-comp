@@ -6,7 +6,6 @@ import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.reflection.Importer;
 import pt.up.fe.specs.util.SpecsCheck;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -28,18 +27,12 @@ public class JmmSymbolTable extends AJmmSymbolTable {
                           String superQualifiedNameName, List<Symbol> fields,
                           List<MethodSymbol> methods,
                           Importer importer) {
-//                          Map<String, Type> returnTypes,
-//                          Map<String, List<Symbol>> params,
-//                          Map<String, List<Symbol>> locals) {
         super(importer);
         this.imports = imports;
         this.classQualifiedName = classQualifiedName;
         this.superQualifiedName = superQualifiedNameName;
         this.fields = fields.stream().collect(Collectors.toMap(Symbol::name, s -> s));
         this.methods = methods.stream().collect(Collectors.toMap(MethodSymbol::signature, m -> m));
-//        this.returnTypes = returnTypes;
-//        this.params = params;
-//        this.locals = locals;
         this.importNames = calcImportNames(imports);
         this.attrs = new HashMap<>();
     }
