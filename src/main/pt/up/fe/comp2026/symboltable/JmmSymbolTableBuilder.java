@@ -73,11 +73,7 @@ public class JmmSymbolTableBuilder {
         System.out.println("Imports: " + imports);
 
         //get super qualified name
-        var superName = classDecl.getOptional("supername");
-        var superQualified = "";
-        for(var importStr : imports) {
-            if (importStr.contains(superName.get())) superQualified = importStr;
-        }
+        var superQualified = this.getSuperQualifiedName(classDecl);
 
         // Check if className is available
         if (declaredClasses.containsKey(className)) {
@@ -139,6 +135,31 @@ public class JmmSymbolTableBuilder {
                 reports.add(newError(importDecl, "'"+real_path+"."+className+"' is already defined"));
             }
         }
+    }
+
+    private String getSuperQualifiedName(JmmNode classDecl) {
+        var superName = classDecl.getOptional("supername");
+        String superQualified = null;
+
+        if (superName.isPresent()) {
+            for(var importStr : imports) {
+                if (importStr.contains(superName.get())) superQualified = importStr;
+            }
+        }
+
+        //should probably do in import Visitor
+
+        //if (superName.isPresent() && JmmSymbolTable::isImplicitImport(superName.get())) {
+        //    return superQualified;
+        //}
+//
+//
+        //if (superName.isPresent() && superQualified == null) {
+        //    reports.add(newError(classDecl, "'" + superName.get() +  "' has no import declaration "));
+        //}
+
+        return superQualified;
+
     }
 
 
