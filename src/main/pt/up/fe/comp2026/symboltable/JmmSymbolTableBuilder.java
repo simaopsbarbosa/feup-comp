@@ -159,8 +159,8 @@ public class JmmSymbolTableBuilder {
                 })
                 .map(varDecl -> new Symbol(TypeUtils.convertType(varDecl.getChild(0)), varDecl.get(JmmAttributes.VAR_DECL.NAME)))
                 .toList();
+        var visibility = Visibility.fromString(method.getOptional("visibility").orElse("PUBLIC"));
 
-        var visibility =  Visibility.PUBLIC;
         var isStatic = method.getBoolean(JmmAttributes.METHOD_DECL.IS_STATIC, false);
 
         return new MethodSymbol(methodName, returnType, params, locals, isStatic, visibility);
