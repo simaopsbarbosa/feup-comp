@@ -85,10 +85,27 @@ public class JmmSymbolTableBuilder {
 
 
         var methods = buildMethods(classDecl);
+        var fields= buildFields(classDecl);
 
-        var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, superQualified, Collections.emptyList(), methods, importer);
+        var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, superQualified, fields, methods, importer);
 
         return new SymbolTableBuilderResult(symbolTable, reports);
+    }
+    private List<Symbol> buildFields(JmmNode classDecl){
+        var seen=new HashSet<>();
+        return classDecl.getChildren(FIELD_DECL).stream()
+                .filter(decl ->{
+                    var name=decl.getChild(0).get("name");
+                    System.out.println(name+"sucks");
+                    if(seen.contains(name)){
+                        reports.add(newError(decl,"Same name Variables"));
+                        return  false;
+                    }
+                    seen.add(name);
+                    return true;
+                })
+                .map(decl -> new Symbol(TypeUtils.convertType(decl.getChild(0).getChild(0)), decl.getChild(0).get(JmmAttributes.VAR_DECL.NAME)))
+                .toList();
     }
 
     private List<MethodSymbol> buildMethods(JmmNode classDecl) {
@@ -116,8 +133,6 @@ public class JmmSymbolTableBuilder {
         System.out.println(methodName + " " + method.getChildren());
 
         var returnType = TypeUtils.convertType(method.getChild(0));
-
-
         var seenParams=new HashSet<>();
         var params = method.getChildren(PARAM).stream()
                 .filter(param->{
@@ -147,6 +162,7 @@ public class JmmSymbolTableBuilder {
 
         var visibility =  Visibility.PUBLIC;
         var isStatic = method.getBoolean(JmmAttributes.METHOD_DECL.IS_STATIC, false);
+
         return new MethodSymbol(methodName, returnType, params, locals, isStatic, visibility);
     }
 
