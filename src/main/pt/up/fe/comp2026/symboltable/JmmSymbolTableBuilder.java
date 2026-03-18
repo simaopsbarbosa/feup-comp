@@ -19,6 +19,7 @@ import pt.up.fe.specs.util.SpecsCheck;
 
 import java.util.*;
 
+import static java.util.Collections.frequency;
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
 public class JmmSymbolTableBuilder {
@@ -91,10 +92,21 @@ public class JmmSymbolTableBuilder {
     }
 
     private List<MethodSymbol> buildMethods(JmmNode classDecl) {
-
-        return classDecl.getChildren(METHOD_DECL).stream()
+        var seen=new HashSet<>();
+        return  classDecl.getChildren(METHOD_DECL).stream()
                 .map(this::buildMethod)
+                .filter(methodSymbol ->{
+                    String signature=methodSymbol.signature().toString();
+                    if(seen.contains(signature)){
+                       reports.add(newError(classDecl,"Methods with same signature"));
+                       return  false;
+                    }
+                    seen.add(signature);
+                    return true;
+                })
                 .toList();
+
+
 
     }
 
@@ -106,12 +118,30 @@ public class JmmSymbolTableBuilder {
         var returnType = TypeUtils.convertType(method.getChild(0));
 
 
-
+        var seenParams=new HashSet<>();
         var params = method.getChildren(PARAM).stream()
+                .filter(param->{
+                    String name=param.get(JmmAttributes.PARAM.NAME);
+                    if(seenParams.contains(name)){
+                        reports.add(newError(param,"Duplicate parameters"));
+                        return  false;
+                    }
+                    seenParams.add(name);
+                    return true;
+                })
                 .map(param -> new Symbol(TypeUtils.convertType(param.getChild(0)),param.get(JmmAttributes.VAR_DECL.NAME)))
                 .toList();
-
+        var seenLocals=new HashSet<>();
         var locals = method.getChildren(VAR_DECL).stream()
+                .filter(decl ->{
+                    String name=decl.get(JmmAttributes.VAR_DECL.NAME);
+                    if(seenLocals.contains(name)||seenParams.contains(name)){
+                        reports.add(newError(decl,"Same name Variables"));
+                        return  false;
+                    }
+                    seenLocals.add(name);
+                    return true;
+                })
                 .map(varDecl -> new Symbol(TypeUtils.convertType(varDecl.getChild(0)), varDecl.get(JmmAttributes.VAR_DECL.NAME)))
                 .toList();
 
