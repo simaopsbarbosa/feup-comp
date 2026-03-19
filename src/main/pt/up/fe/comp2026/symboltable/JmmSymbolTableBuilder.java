@@ -176,6 +176,9 @@ public class JmmSymbolTableBuilder {
             var className = path.getLast();
 
             if (!nameToPath.containsKey(className)) {
+                if (importer.tryClassOf(real_path).isEmpty()) {
+                    reports.add(newError(importDecl, "'"+real_path+"."+className+"' imported class does not exist"));
+                }
                 nameToPath.put(className, real_path);
                 imports.add(real_path);
                 continue;
