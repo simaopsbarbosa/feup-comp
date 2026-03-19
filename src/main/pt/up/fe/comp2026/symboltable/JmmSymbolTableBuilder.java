@@ -158,7 +158,7 @@ public class JmmSymbolTableBuilder {
                 })
                 .map(varDecl -> new Symbol(TypeUtils.convertType(varDecl.getChild(0)), varDecl.get(JmmAttributes.VAR_DECL.NAME)))
                 .toList();
-        var visibility = Visibility.fromString(method.getOptional("visibility").orElse("PUBLIC"));
+        var visibility = Visibility.fromString(method.getOptional("visibility").orElse("PACKAGE_PROTECTED"));
 
         var isStatic = method.getBoolean(JmmAttributes.METHOD_DECL.IS_STATIC, false);
 
