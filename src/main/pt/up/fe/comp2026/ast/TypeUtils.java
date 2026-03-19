@@ -2,22 +2,13 @@ package pt.up.fe.comp2026.ast;
 
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.Signature;
-import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
-import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
-import pt.up.fe.specs.util.SpecsCheck;
-import pt.up.fe.specs.util.exceptions.NotImplementedException;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
@@ -92,7 +83,7 @@ public class TypeUtils {
     public JmmType getExprType(JmmNode expr) {
         return switch (expr.getKind()) {
             case INTEGER_LITERAL -> intType();
-            case BOOL_LITERAL, LOGICAL_NOT -> JmmPrimitiveType.BOOLEAN;
+            case BOOL_LITERAL -> JmmPrimitiveType.BOOLEAN;
             case BINARY_EXPR, EQUALITY_EXPR, LOGICAL_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr);
             case PARENTESES -> getParentesesExprType(expr);
