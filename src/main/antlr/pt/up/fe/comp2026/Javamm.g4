@@ -136,7 +136,7 @@ expr
     | NEW ID LP ( expr ( COMMA expr )* )? RP                    #ClassInitialization
     | value=INTEGER                                             #IntegerLiteral
     | bool= (TRUE|FALSE)                                        #BoolLiteral
-    | name=ID                                                   #VarRefExpr
     | THIS                                                      #This
+    | name=ID                                                   #VarRefExpr
     ;
 

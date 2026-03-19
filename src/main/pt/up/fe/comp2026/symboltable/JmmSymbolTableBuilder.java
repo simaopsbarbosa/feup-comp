@@ -58,7 +58,6 @@ public class JmmSymbolTableBuilder {
 
     private SymbolTableBuilderResult buildInternal() {
 
-
         var packageDecl = root.getChildren(PACKAGE_DECL).getFirst();
         var packagePathList = packageDecl.getObjectAsList("path", String.class);
         var packagePath = String.join(".", packagePathList);
