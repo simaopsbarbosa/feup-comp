@@ -5,6 +5,7 @@ import pt.up.fe.comp.jmm.analysis.table.Signature;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp.jmm.ast.Kind;
 import pt.up.fe.comp.jmm.ast.NodeAttribute;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
@@ -28,6 +29,9 @@ public class UndeclaredVariable extends AnalysisVisitor {
         addVisit(JmmKind.VAR_REF_EXPR, this::visitVarRefExpr);
         addVisit(JmmKind.ASSIGN_STMT, this::visitAssignStmt);
         addVisit(JmmKind.ARRAY_ASSIGNMENT, this::visitArrayAssignment);
+        addVisit(JmmKind.ARRAY_ASSIGNMENT, this::visitArrayAssignment);
+        addVisit(JmmKind.FIELD_ACESS, this::visitFieldAccess);
+
     }
 
 
@@ -46,6 +50,9 @@ public class UndeclaredVariable extends AnalysisVisitor {
             return null;
 
         if (table.getField(varRefName).isPresent())
+            return null;
+
+        if (table.getImports().stream().anyMatch(s -> s.endsWith(varRefName)))
             return null;
 
         var message = String.format("Variable '%s' does not exist.", varRefName);
@@ -67,6 +74,22 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
     private Void visitArrayAssignment(JmmNode assignStmt, SymbolTable table) {
         return this.verifyVarExists("var", assignStmt, table);
+    }
+
+    private Void visitFieldAccess(JmmNode fieldAccessStmt, SymbolTable table) {
+        var varRefName = fieldAccessStmt.get("name");
+        var fstChild = fieldAccessStmt.getChild(0);
+
+        //check if this.var access is declared
+        if (JmmKind.check(fstChild, JmmKind.THIS) && !table.getField(fieldAccessStmt.get("name")).isPresent()) {
+            var message = String.format("Field variable '%s' does not exist in this class.", varRefName);
+            addReport(Report.newError(Stage.SEMANTIC, NodeUtils.getLine(fieldAccessStmt),
+                    NodeUtils.getColumn(fieldAccessStmt), message, null)
+            );
+            return null;
+        }
+
+        return null;
     }
 
 }
