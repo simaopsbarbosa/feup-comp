@@ -62,7 +62,6 @@ public class ArithmeticLogic extends AnalysisVisitor {
     private Void visitNotExpr(JmmNode notExpr, SymbolTable table) {
         TypeUtils type = new TypeUtils((JmmSymbolTable) table);
 
-        System.out.println();
         JmmType restType = type.getExprType(notExpr.getChild(0));
 
         if (restType != JmmPrimitiveType.BOOLEAN) {

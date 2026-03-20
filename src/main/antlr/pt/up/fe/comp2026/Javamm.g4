@@ -118,7 +118,7 @@ arrayElement
 
 
 expr
-    :LP rest=expr RP                                            #Parenteses      //16
+    :LP expr RP                                                 #Parenteses      //16
     | expr DOT LENGTH                                           #Length
     | expr DOT name=ID                                          #FieldAcess
     | expr DOT ID LP ( expr ( COMMA expr )* )? RP               #ExplicitMethodcall
@@ -127,12 +127,12 @@ expr
     | expr op=('++'|'--')                                       #RightUnaryExpr  //15
     | op='!' rest=expr                                          #LogicalNot   //14
     | op=('+'|'-'|'++'|'--') expr                               #LeftUnaryExpr   //14
-    | left=expr op=('*'|'/'|'%') right=expr                     #BinaryExpr      //12
-    | left=expr op=('+'|'-') right=expr                         #BinaryExpr      //11
-    | left=expr op=('<'|'>'|'<='|'>=') right=expr               #LogicalExpr     //9
-    | left=expr op=('=='|'!=') right=expr                       #EqualityExpr    //8
-    | left=expr op='&&' right=expr                              #LogicalExpr     // 4
-    | left=expr op='||' right=expr                              #LogicalExpr     // 3
+    | expr op=('*'|'/'|'%') expr                                #BinaryExpr      //12
+    | expr op=('+'|'-') expr                                    #BinaryExpr      //11
+    | expr op=('<'|'>'|'<='|'>=') expr                          #LogicalExpr     //9
+    | expr op=('=='|'!=') expr                                  #EqualityExpr    //8
+    | expr op='&&' expr                                         #LogicalExpr     // 4
+    | expr op='||' expr                                         #LogicalExpr     // 3
     | NEW baseType (LSB sizes+=expr RSB)+                       #NewArray
     | NEW baseType (dims+='[]')+ arrayInitializer               #ArrayInit
     | NEW ID LP ( expr ( COMMA expr )* )? RP                    #ClassInitialization

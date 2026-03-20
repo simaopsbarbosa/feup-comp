@@ -136,6 +136,11 @@ public class TypeUtils {
     private JmmType getVarExprType(JmmNode varRefExpr) {
         var varRefName = varRefExpr.get("name");
 
+        //verify if implicit field
+        if (table.getField(varRefName).isPresent()) {
+            return table.getField(varRefName).get().type();
+        }
+
         //get method of variable
         var methodDecl = varRefExpr.getAncestor(METHOD_DECL);
         if (methodDecl.isEmpty()) return null;
@@ -145,6 +150,7 @@ public class TypeUtils {
 
         JmmType varType;
 
+        //verify if a parameter
         if (method.getParameter(varRefName).isPresent()) {
             varType = method.getParameter(varRefName).get().type();
         }
@@ -152,6 +158,7 @@ public class TypeUtils {
 
         return varType;
     }
+
 
     public JmmType getParentesesExprType(JmmNode parentesesExpr) {
         return getExprType(parentesesExpr.getChild(0));
