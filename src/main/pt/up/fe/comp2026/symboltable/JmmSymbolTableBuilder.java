@@ -20,6 +20,7 @@ import pt.up.fe.specs.util.SpecsCheck;
 import java.util.*;
 
 import static java.util.Collections.frequency;
+import static java.util.Collections.list;
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
 public class JmmSymbolTableBuilder {
@@ -30,6 +31,8 @@ public class JmmSymbolTableBuilder {
     private final List<Report> reports;
     private final List<String> imports;
     private final Map<String, String> declaredClasses;
+
+    private TypeUtils type;
 
     /**
      * Only build() can create new instances, this ensures that each instance is used only once,
@@ -68,6 +71,12 @@ public class JmmSymbolTableBuilder {
         this.className = classDecl.get("name");
         var fullyQualifiedName = packagePath + "." + className;
 
+        // Check if className is available
+        if (declaredClasses.containsKey(className)) {
+            reports.add(newError(root, "'" + className + "' is already defined in this compilation unit"));
+        }
+        declaredClasses.put(className, fullyQualifiedName);
+
         //get imports
         var importDecls = root.getChildren(IMPORT_DECL);
         buildimports(importDecls);
@@ -76,11 +85,10 @@ public class JmmSymbolTableBuilder {
         //get super qualified name
         var superQualified = this.getSuperQualifiedName(classDecl);
 
-        // Check if className is available
-        if (declaredClasses.containsKey(className)) {
-            reports.add(newError(root, "'" + className + "' is already defined in this compilation unit"));
-        }
-        declaredClasses.put(className, fullyQualifiedName);
+
+        //create temporary symbol table to properly idnetify class object types
+        var tempSymbolTable = new JmmSymbolTable(imports, fullyQualifiedName, superQualified, Collections.emptyList(), Collections.emptyList(), importer);
+        type = new TypeUtils(tempSymbolTable);
 
 
         var methods = buildMethods(classDecl);
@@ -92,6 +100,7 @@ public class JmmSymbolTableBuilder {
     }
     private List<Symbol> buildFields(JmmNode classDecl){
         var seen=new HashSet<>();
+
         return classDecl.getChildren(FIELD_DECL).stream()
                 .filter(decl ->{
                     var name=decl.getChild(0).get("name");
@@ -103,7 +112,7 @@ public class JmmSymbolTableBuilder {
                     seen.add(name);
                     return true;
                 })
-                .map(decl -> new Symbol(TypeUtils.convertType(decl.getChild(0).getChild(0)), decl.getChild(0).get(JmmAttributes.VAR_DECL.NAME)))
+                .map(decl -> new Symbol(type.convertType(decl.getChild(0).getChild(0)), decl.getChild(0).get(JmmAttributes.VAR_DECL.NAME)))
                 .toList();
     }
 
@@ -131,7 +140,7 @@ public class JmmSymbolTableBuilder {
 
         System.out.println(methodName + " " + method.getChildren());
 
-        var returnType = TypeUtils.convertType(method.getChild(0));
+        var returnType = type.convertType(method.getChild(0));
         var seenParams=new HashSet<>();
         var params = method.getChildren(PARAM).stream()
                 .filter(param->{
@@ -143,8 +152,9 @@ public class JmmSymbolTableBuilder {
                     seenParams.add(name);
                     return true;
                 })
-                .map(param -> new Symbol(TypeUtils.convertType(param.getChild(0)),param.get(JmmAttributes.VAR_DECL.NAME)))
+                .map(param -> new Symbol(type.convertType(param.getChild(0)),param.get(JmmAttributes.VAR_DECL.NAME)))
                 .toList();
+
         var seenLocals=new HashSet<>();
         var locals = method.getChildren(VAR_DECL).stream()
                 .filter(decl ->{
@@ -156,8 +166,9 @@ public class JmmSymbolTableBuilder {
                     seenLocals.add(name);
                     return true;
                 })
-                .map(varDecl -> new Symbol(TypeUtils.convertType(varDecl.getChild(0)), varDecl.get(JmmAttributes.VAR_DECL.NAME)))
+                .map(varDecl -> new Symbol(type.convertType(varDecl.getChild(0)), varDecl.get(JmmAttributes.VAR_DECL.NAME)))
                 .toList();
+
         var visibility = Visibility.fromString(method.getOptional("visibility").orElse("PACKAGE_PROTECTED"));
 
         var isStatic = method.getBoolean(JmmAttributes.METHOD_DECL.IS_STATIC, false);

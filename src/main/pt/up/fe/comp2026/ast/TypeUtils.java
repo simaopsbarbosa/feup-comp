@@ -41,25 +41,43 @@ public class TypeUtils {
     }
 
 
-    public static JmmType convertType(JmmNode typeNode) {
+    public JmmType convertType(JmmNode typeNode) {
         assert (TYPE.check(typeNode));
         var name = typeNode.getChild(0).get("name");
         var dims=typeNode.getObjectAsList("dims");
-
         var type=JmmPrimitiveType.fromString(name);
-        if(type.isEmpty()){
-            var typeclass = new JmmClassType(name,false,false);
-            if(dims.isEmpty()){
-                return typeclass ;
+
+        boolean isPrimitive = type.isPresent();
+        boolean isArray = !dims.isEmpty();
+        boolean isImported = false;
+        var superName = table.getSuperFullyQualifiedName();
+
+        if(!isPrimitive){
+
+            //if is an imported class get qualifed name
+            if (table.getImportNames().contains(name)) {
+                name = table.getImportedFullyQualifiedName(name).get();
+                isImported = true;
             }
-            return  new JmmArrayType(typeclass, dims.size());
-        }
-        if(dims.isEmpty()){
-            return type.get();
-        }
-        return  new JmmArrayType(type.get(), dims.size());
+            // if its the class itself
+            else if (table.getClassName().equals(name)) {
+                name = table.getFullyQualifiedName();
+            }
+            // if it is the extended object
+            else if (superName != null && (superName.endsWith("."+name))) {
+                name = table.getSuperFullyQualifiedName();
+                isImported = true;
+            }
 
+            //TODO verify static context
+            var typeclass = new JmmClassType(name,isImported,false);
 
+            if(isArray) return new JmmArrayType(typeclass, dims.size());
+            else return typeclass;
+        }
+
+        if(isArray) return new JmmArrayType(type.get(), dims.size());
+        else return type.get();
     }
 
 
