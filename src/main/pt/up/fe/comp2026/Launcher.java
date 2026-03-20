@@ -33,8 +33,8 @@ public class Launcher {
         var parser = new JmmParserImpl();
         var parserResult = parser.parse(lexerResult, config);
         parserResult.throwIfErrors();
-        //System.out.println("AST:");
-        //System.out.println(parserResult.rootNode().toTree());
+        System.out.println("AST:");
+        System.out.println(parserResult.rootNode().toTree());
 
 
 
@@ -42,8 +42,8 @@ public class Launcher {
         JmmAnalysisImpl sema = new JmmAnalysisImpl();
         JmmSemanticsResult semanticsResult = sema.semanticAnalysis(parserResult);
 
-        //System.out.println("Annotated AST:");
-        //System.out.println(semanticsResult.getRootNode().toTree());
+        System.out.println("Annotated AST:");
+        System.out.println(semanticsResult.getRootNode().toTree());
 
         semanticsResult.throwIfErrors();
 

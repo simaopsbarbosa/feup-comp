@@ -74,7 +74,7 @@ param
 
 
 type
-    : baseType (dims+=LSB RSB)*
+    : baseType (dims+='[]')*
     ;
 
 baseType
@@ -118,7 +118,7 @@ arrayElement
 
 
 expr
-    :LP expr RP                                               #Parenteses      //16
+    :LP expr RP                                                 #Parenteses      //16
     | expr op=('++'|'--')                                       #RightUnaryExpr  //15
     | op=('!'|'+'|'-'|'++'|'--') expr                           #LeftUnaryExpr   //14
     | expr op=('*'|'/'|'%') expr                                #BinaryExpr      //12
@@ -132,7 +132,7 @@ expr
     | expr DOT ID (LP ( expr ( COMMA expr )* )? RP)?            #ExplicitClassAttribute
     | expr (LSB expr RSB)+                                      #ArrayAccess
     | NEW baseType (LSB sizes+=expr RSB)+                       #NewArray
-    | NEW baseType (dims+=LSB RSB)+ arrayInitializer            #ArrayInit
+    | NEW baseType (dims+='[]')+ arrayInitializer               #ArrayInit
     | NEW ID LP ( expr ( COMMA expr )* )? RP                    #ClassInitialization
     | value=INTEGER                                             #IntegerLiteral
     | bool= (TRUE|FALSE)                                        #BoolLiteral
