@@ -20,8 +20,9 @@ public class ArithmeticLogic extends AnalysisVisitor {
         addVisit(JmmKind.LOGICAL_EXPR, this::visitBinExpr);
         addVisit(JmmKind.EQUALITY_EXPR, this::visitBinExpr);
         addVisit(JmmKind.LOGICAL_EXPR, this::visitBinExpr);
-
         addVisit(JmmKind.LOGICAL_NOT, this::visitNotExpr);
+        addVisit(JmmKind.ELSEIF_BLOCK_STMT, this::visitIfStmt);
+        addVisit(JmmKind.WHILE_STMT, this::visitWhileStmt);
     }
 
 
@@ -33,7 +34,7 @@ public class ArithmeticLogic extends AnalysisVisitor {
         String op = binaryExpr.get("op");
         var opType = type.getExprType(binaryExpr);
 
-        switch(op) {
+        switch (op) {
             case "+", "-", "*", "/":
                 if (leftType != JmmPrimitiveType.INT || rightType != JmmPrimitiveType.INT) {
                     addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, binaryExpr,
@@ -44,13 +45,13 @@ public class ArithmeticLogic extends AnalysisVisitor {
             case "&&", "||":
                 if (leftType != JmmPrimitiveType.BOOLEAN || rightType != JmmPrimitiveType.BOOLEAN) {
                     addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, binaryExpr,
-                           "Logical operands must be Booleans. Left is " + leftType + " and Right is " + rightType));
+                            "Logical operands must be Booleans. Left is " + leftType + " and Right is " + rightType));
                 }
                 break;
             case "<", ">", "<=", ">=":
                 if (leftType != JmmPrimitiveType.INT || rightType != JmmPrimitiveType.INT) {
                     addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, binaryExpr,
-                            "Comparison operands must be Integers. Left is"  + leftType + " and Right is " + rightType));
+                            "Comparison operands must be Integers. Left is" + leftType + " and Right is " + rightType));
                 }
                 break;
 
@@ -69,6 +70,28 @@ public class ArithmeticLogic extends AnalysisVisitor {
                     "Logical Not operand must be boolean. Rest of expression is " + restType));
         }
 
+        return null;
+    }
+
+    private Void visitIfStmt(JmmNode ifStmt, SymbolTable table) {
+        TypeUtils type = new TypeUtils((JmmSymbolTable) table);
+        var condition = ifStmt.getChild(0);
+        var conditionType = type.getExprType(condition);
+
+        if (conditionType != JmmPrimitiveType.BOOLEAN) {
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, condition, "If condition must be boolean. Expression is " + conditionType));
+        }
+        return null;
+    }
+
+    private Void visitWhileStmt(JmmNode whileStmt, SymbolTable table) {
+        TypeUtils type = new TypeUtils((JmmSymbolTable) table);
+        var condition = whileStmt.getChild(0);
+        var conditionType = type.getExprType(condition);
+
+        if (conditionType != JmmPrimitiveType.BOOLEAN) {
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, condition, "While condition must be boolean. Expression is " + conditionType));
+        }
         return null;
     }
 
