@@ -1,5 +1,7 @@
 package pt.up.fe.comp2026.analysis.passes;
 
+import pt.up.fe.comp.jmm.analysis.table.Signature;
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
@@ -19,10 +21,11 @@ public class ArithmeticLogic extends AnalysisVisitor {
         addVisit(JmmKind.BINARY_EXPR, this::visitBinExpr);
         addVisit(JmmKind.LOGICAL_EXPR, this::visitBinExpr);
         addVisit(JmmKind.EQUALITY_EXPR, this::visitBinExpr);
-        addVisit(JmmKind.LOGICAL_EXPR, this::visitBinExpr);
         addVisit(JmmKind.LOGICAL_NOT, this::visitNotExpr);
         addVisit(JmmKind.ELSEIF_BLOCK_STMT, this::visitIfStmt);
         addVisit(JmmKind.WHILE_STMT, this::visitWhileStmt);
+        addVisit(JmmKind.RETURN_STMT, this::visitReturnStmt);
+        addVisit(JmmKind.METHOD_DECL, this::visitMethodDecl);
     }
 
 
@@ -37,21 +40,18 @@ public class ArithmeticLogic extends AnalysisVisitor {
         switch (op) {
             case "+", "-", "*", "/":
                 if (leftType != JmmPrimitiveType.INT || rightType != JmmPrimitiveType.INT) {
-                    addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, binaryExpr,
-                            "Arithmetic operands must be Integers. Left is " + leftType + " and Right is " + rightType));
+                    addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, binaryExpr, "Arithmetic operands must be Integers. Left is " + leftType + " and Right is " + rightType));
                 }
                 break;
 
             case "&&", "||":
                 if (leftType != JmmPrimitiveType.BOOLEAN || rightType != JmmPrimitiveType.BOOLEAN) {
-                    addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, binaryExpr,
-                            "Logical operands must be Booleans. Left is " + leftType + " and Right is " + rightType));
+                    addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, binaryExpr, "Logical operands must be Booleans. Left is " + leftType + " and Right is " + rightType));
                 }
                 break;
             case "<", ">", "<=", ">=":
                 if (leftType != JmmPrimitiveType.INT || rightType != JmmPrimitiveType.INT) {
-                    addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, binaryExpr,
-                            "Comparison operands must be Integers. Left is" + leftType + " and Right is " + rightType));
+                    addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, binaryExpr, "Comparison operands must be Integers. Left is" + leftType + " and Right is " + rightType));
                 }
                 break;
 
@@ -66,8 +66,7 @@ public class ArithmeticLogic extends AnalysisVisitor {
         JmmType restType = type.getExprType(notExpr.getChild(0));
 
         if (restType != JmmPrimitiveType.BOOLEAN) {
-            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, notExpr,
-                    "Logical Not operand must be boolean. Rest of expression is " + restType));
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, notExpr, "Logical Not operand must be boolean. Rest of expression is " + restType));
         }
 
         return null;
@@ -95,4 +94,39 @@ public class ArithmeticLogic extends AnalysisVisitor {
         return null;
     }
 
+    private Void visitReturnStmt(JmmNode returnStmt, SymbolTable table) {
+        TypeUtils type = new TypeUtils((JmmSymbolTable) table);
+
+        var methodNode = returnStmt.getAncestor(JmmKind.METHOD_DECL).get();
+        JmmType expectedType = type.convertType(methodNode.getChild(0));
+
+        if (returnStmt.getNumChildren() == 0) {
+            if (!expectedType.toString().equalsIgnoreCase("void")) {
+                addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, returnStmt, "Missing return value"));
+            } else {
+                 addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, returnStmt, "Return statement cannot exist in void method"));
+            }
+            return null;
+        }
+
+        var returnExpr = returnStmt.getChild(0);
+        var actualType = type.getExprType(returnExpr);
+
+        if (!actualType.equals(expectedType)) {
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, returnExpr, "Incompatible return type. Expected " + expectedType + " but got " + actualType));
+        }
+        return null;
+    }
+
+    private Void visitMethodDecl(JmmNode method, SymbolTable table) {
+        TypeUtils typeUtils = new TypeUtils(table);
+        JmmType returnType = typeUtils.convertType(method.getChild(0));
+
+        if (!returnType.toString().equalsIgnoreCase("void")) {
+            if (method.getDescendants(JmmKind.RETURN_STMT).isEmpty()) {
+                addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, method, "Method " + method.get("name") + " must return a value of type " + returnType));
+            }
+        }
+        return null;
+    }
 }

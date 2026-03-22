@@ -87,6 +87,8 @@ public class TypeUtils {
             case BINARY_EXPR, EQUALITY_EXPR, LOGICAL_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr);
             case PARENTESES -> getParentesesExprType(expr);
+            case LOGICAL_NOT -> JmmPrimitiveType.BOOLEAN;
+            case LEFT_UNARY_EXPR -> intType();
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
         };
