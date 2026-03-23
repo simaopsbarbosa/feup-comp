@@ -21,7 +21,7 @@ public class ImportLogic extends AnalysisVisitorWithTable {
     @Override
     protected void buildVisitor() {
         addVisit(JmmKind.CLASS_INITIALIZATION, this::visitClass);
-        addVisit(JmmKind.EXPLICIT_METHODCALL,this::visitMethod);
+        addVisit(JmmKind.EXPLICIT_METHOD_CALL,this::visitMethod);
     }
     private Void visitClass(JmmNode classInit,SymbolTable table){
         var name=classInit.get("name");
