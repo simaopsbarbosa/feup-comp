@@ -22,10 +22,10 @@ public class ImportLogic extends AnalysisVisitorWithTable {
     private Void visitClass(JmmNode classInit,SymbolTable table){
         var name=classInit.get("name");
         boolean implicit=super.table.isImplicitImport(name);
-        boolean isExplicit=super.table.getImports().contains(name);
+        boolean isExplicit=super.table.getImportNames().contains(name);
         boolean currentClass=super.table.getClassName().equals(name);
         if(!implicit && !isExplicit && !currentClass){
-            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, classInit, "Class is not defined or imported" + name));
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, classInit, "Class is not defined or imported " + name));
         }
         return  null;
     }
