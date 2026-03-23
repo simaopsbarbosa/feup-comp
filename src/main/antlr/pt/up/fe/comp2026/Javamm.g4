@@ -134,7 +134,7 @@ expr
     | expr op='||' expr                                         #LogicalExpr     // 3
     | NEW baseType (LSB sizes+=expr RSB)+                       #NewArray
     | NEW baseType (dims+='[]')+ arrayInitializer               #ArrayInit
-    | NEW ID LP ( expr ( COMMA expr )* )? RP                    #ClassInitialization
+    | NEW name=ID LP ( expr ( COMMA expr )* )? RP                    #ClassInitialization
     | ID LP (expr (COMMA expr)*)? RP                            #ImplicitMethodCall
     | value=INTEGER                                             #IntegerLiteral
     | bool= (TRUE|FALSE)                                        #BoolLiteral

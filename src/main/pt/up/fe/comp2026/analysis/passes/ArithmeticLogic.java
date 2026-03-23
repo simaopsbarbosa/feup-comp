@@ -34,7 +34,7 @@ public class ArithmeticLogic extends AnalysisVisitorWithTable {
     }
 
 
-    private Void visitBinExpr(JmmNode binaryExpr, SymbolTable table) {
+    private Void visitBinExpr(JmmNode binaryExpr,SymbolTable table) {
         var leftType = super.types.getExprType(binaryExpr.getChild(0));
         var rightType = super.types.getExprType(binaryExpr.getChild(1));
         String op = binaryExpr.get("op");
@@ -56,10 +56,10 @@ public class ArithmeticLogic extends AnalysisVisitorWithTable {
     }
 
 
-    private Void visitNotExpr(JmmNode notExpr, SymbolTable table) {
-        TypeUtils type = new TypeUtils((JmmSymbolTable) table);
+    private Void visitNotExpr(JmmNode notExpr,SymbolTable table) {
 
-        JmmType restType = type.getExprType(notExpr.getChild(0));
+
+        JmmType restType = super.types.getExprType(notExpr.getChild(0));
 
         if (restType != JmmPrimitiveType.BOOLEAN) {
             addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, notExpr, "Logical Not operand must be boolean. Rest of expression is " + restType));
@@ -88,6 +88,7 @@ public class ArithmeticLogic extends AnalysisVisitorWithTable {
         }
         return null;
     }
+
 
     private Void visitReturnStmt(JmmNode returnStmt, SymbolTable table) {
 

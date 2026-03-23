@@ -1,28 +1,16 @@
-package pt.up.fe.comp.cp1.core.parser.integration.apps;
+    package pt.up.fe.comp.cp1.core.semantics.calls.semanticanalysis;
 
-import util.ioPlus;
+    class InstantiateImportedClassFail {
+        int method1() {
+            Date d;
+            int i;
+            boolean b;
+            Exception e;
 
-class FindMaximum {
-    int[] test_arr;
-
-    public int find_maximum(int[] arr) {
-        int i;
-        int maximum;
-        int value;
-
-        i = 1;
-        maximum = arr[0];
-        while (i < arr.length) {
-            value = arr[i];
-            if (maximum < value) {
-                maximum = value;
-            } else {
-            }
-            i = i + 1;
+            d = new Date();
+            i = 2;
+            b = false;
+            e = new Exception();
+            return i;
         }
-
-        return maximum;
     }
-
-
-}

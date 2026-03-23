@@ -13,6 +13,9 @@ import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
 import javax.naming.Name;
 
 import java.lang.reflect.AccessFlag;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
@@ -46,32 +49,13 @@ public class TypeUtils {
 
         boolean isPrimitive = type.isPresent();
         boolean isArray = !dims.isEmpty();
-        boolean isImported = false;
-        var superName = table.getSuperFullyQualifiedName();
+
 
         if(!isPrimitive){
-
-            //if is an imported class get qualifed name
-            if (table.getImportNames().contains(name)) {
-                name = table.getImportedFullyQualifiedName(name).get();
-                isImported = true;
-            }
-            // if its the class itself
-            else if (table.getClassName().equals(name)) {
-                name = table.getFullyQualifiedName();
-            }
-            // if it is the extended object
-            else if (superName != null && (superName.endsWith("."+name))) {
-                name = table.getSuperFullyQualifiedName();
-                isImported = true;
-            }
-
-            //TODO verify static context
-            var staticRef =false;
-            var typeclass = new JmmClassType(name,isImported,staticRef);
-
+            var typeclass=resolveClass(name);
             if(isArray) return new JmmArrayType(typeclass, dims.size());
             else return typeclass;
+
         }
 
         if(isArray) return new JmmArrayType(type.get(), dims.size());
@@ -92,6 +76,10 @@ public class TypeUtils {
             case BINARY_EXPR, EQUALITY_EXPR, LOGICAL_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr);
             case PARENTESES -> getParentesesExprType(expr);
+            case CLASS_INITIALIZATION ->{
+                var name=expr.get("name");
+                yield resolveClass(name);
+            }
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
         };
@@ -153,6 +141,29 @@ public class TypeUtils {
         else varType = method.getLocalVariable(varRefName).get().type();
 
         return varType;
+    }
+    private JmmType resolveClass(String name){
+        boolean isImported = false;
+        var superName = table.getSuperFullyQualifiedName();
+        //if is an imported class get qualifed name
+        if (table.getImportNames().contains(name)) {
+            name = table.getImportedFullyQualifiedName(name).get();
+            isImported = true;
+
+        }
+        // if its the class itself
+        else if (table.getClassName().equals(name)) {
+            name = table.getFullyQualifiedName();
+        }
+        // if it is the extended object
+        else if (superName != null && (superName.endsWith("."+name))) {
+            name = table.getSuperFullyQualifiedName();
+            isImported = true;
+        }
+        //TODO verify static context
+        var staticRef =false;
+        return new JmmClassType(name,isImported,staticRef);
+
     }
 
 
