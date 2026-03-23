@@ -41,30 +41,30 @@ public class ImportLogic extends AnalysisVisitorWithTable {
         Signature methodsignature=new Signature(methodName,argTypes);
         boolean exists=false;
         var type= methodCall.getChild(0);
-        System.out.println("before fAILS");
         if(type.getKind()!= JmmKind.THIS) {
-            System.out.println("sUCKS");
             var receiverType = super.types.getExprType(type);
-            System.out.println(receiverType);
-            if(receiverType==null){
-                if (receiverType instanceof JmmClassType classType && (classType.isImported() || super.table.isImplicitImport(classType.name()))) {
-                    var importTable = super.table.getImportedSymbolTable(classType.fullyQualifiedName());
-                    System.out.println("this fails");
-                    if(importTable.isPresent()){
-                        System.out.println("this fails");
-                        exists=importTable.get().getMethod(methodsignature).isPresent();
-                    }
-                    if (!exists) {
+            if (receiverType instanceof JmmClassType classType && (classType.isImported() || super.table.isImplicitImport(classType.name()))) {
+                var importTable = super.table.getImportedSymbolTable(classType.fullyQualifiedName());
+                if(importTable.isPresent()){
+                    var all_methods=importTable.get().getMethods();
+                    var methods=importTable.get().getMethods(methodName);
+                    if(methods.isEmpty()){
                         addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method is not present in import "));
                     }
+                    else exists=methods.stream().anyMatch(m->m.signature().equals(methodsignature));
+                    if (!exists) {
+                        addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method does not have the correct signature"));
+                    }
+
                 }
+
+
             }
         }
         else{
             if(super.table.getMethod(methodsignature).isEmpty()){
                 addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method is not present in the class "));
             }
-
         }
         return null;
     }
