@@ -30,7 +30,7 @@ public class JmmAnalysisImpl implements JmmAnalysis {
     private List<AnalysisPass> buildPasses(SymbolTable table) {
         return List.of(
                 new UndeclaredVariable(),
-                new ArithmeticLogic()
+                new ArithmeticLogic(table)
         );
     }
 

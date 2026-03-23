@@ -9,12 +9,17 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2026.analysis.AnalysisVisitor;
+import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
 import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
 import pt.up.fe.comp2026.utils.ReportUtils;
 
-public class ArithmeticLogic extends AnalysisVisitor {
+public class ArithmeticLogic extends AnalysisVisitorWithTable {
+
+    public ArithmeticLogic(SymbolTable table) {
+        super(table);
+    }
 
     @Override
     public void buildVisitor() {
@@ -30,15 +35,11 @@ public class ArithmeticLogic extends AnalysisVisitor {
 
 
     private Void visitBinExpr(JmmNode binaryExpr, SymbolTable table) {
-        TypeUtils type = new TypeUtils((JmmSymbolTable) table);
-
-        var leftType = type.getExprType(binaryExpr.getChild(0));
-        var rightType = type.getExprType(binaryExpr.getChild(1));
+        var leftType = super.types.getExprType(binaryExpr.getChild(0));
+        var rightType = super.types.getExprType(binaryExpr.getChild(1));
         String op = binaryExpr.get("op");
-        var opType = type.getExprType(binaryExpr);
-
         switch (op) {
-            case "+", "-", "*", "/":
+            case "+", "-", "*", "/","<", ">", "<=", ">=":
                 if (leftType != JmmPrimitiveType.INT || rightType != JmmPrimitiveType.INT) {
                     addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, binaryExpr, "Arithmetic operands must be Integers. Left is " + leftType + " and Right is " + rightType));
                 }
@@ -47,11 +48,6 @@ public class ArithmeticLogic extends AnalysisVisitor {
             case "&&", "||":
                 if (leftType != JmmPrimitiveType.BOOLEAN || rightType != JmmPrimitiveType.BOOLEAN) {
                     addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, binaryExpr, "Logical operands must be Booleans. Left is " + leftType + " and Right is " + rightType));
-                }
-                break;
-            case "<", ">", "<=", ">=":
-                if (leftType != JmmPrimitiveType.INT || rightType != JmmPrimitiveType.INT) {
-                    addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, binaryExpr, "Comparison operands must be Integers. Left is" + leftType + " and Right is " + rightType));
                 }
                 break;
 
@@ -73,9 +69,8 @@ public class ArithmeticLogic extends AnalysisVisitor {
     }
 
     private Void visitIfStmt(JmmNode ifStmt, SymbolTable table) {
-        TypeUtils type = new TypeUtils((JmmSymbolTable) table);
         var condition = ifStmt.getChild(0);
-        var conditionType = type.getExprType(condition);
+        var conditionType = super.types.getExprType(condition);
 
         if (conditionType != JmmPrimitiveType.BOOLEAN) {
             addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, condition, "If condition must be boolean. Expression is " + conditionType));
@@ -84,9 +79,9 @@ public class ArithmeticLogic extends AnalysisVisitor {
     }
 
     private Void visitWhileStmt(JmmNode whileStmt, SymbolTable table) {
-        TypeUtils type = new TypeUtils((JmmSymbolTable) table);
+
         var condition = whileStmt.getChild(0);
-        var conditionType = type.getExprType(condition);
+        var conditionType = super.types.getExprType(condition);
 
         if (conditionType != JmmPrimitiveType.BOOLEAN) {
             addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, condition, "While condition must be boolean. Expression is " + conditionType));
@@ -95,10 +90,10 @@ public class ArithmeticLogic extends AnalysisVisitor {
     }
 
     private Void visitReturnStmt(JmmNode returnStmt, SymbolTable table) {
-        TypeUtils type = new TypeUtils((JmmSymbolTable) table);
+
 
         var methodNode = returnStmt.getAncestor(JmmKind.METHOD_DECL).get();
-        JmmType expectedType = type.convertType(methodNode.getChild(0));
+        JmmType expectedType = super.types.convertType(methodNode.getChild(0));
 
         if (returnStmt.getNumChildren() == 0) {
             if (!expectedType.toString().equalsIgnoreCase("void")) {
@@ -110,7 +105,7 @@ public class ArithmeticLogic extends AnalysisVisitor {
         }
 
         var returnExpr = returnStmt.getChild(0);
-        var actualType = type.getExprType(returnExpr);
+        var actualType = super.types.getExprType(returnExpr);
 
         if (!actualType.equals(expectedType)) {
             addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, returnExpr, "Incompatible return type. Expected " + expectedType + " but got " + actualType));
@@ -119,8 +114,7 @@ public class ArithmeticLogic extends AnalysisVisitor {
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
-        TypeUtils typeUtils = new TypeUtils(table);
-        JmmType returnType = typeUtils.convertType(method.getChild(0));
+        JmmType returnType = super.types.convertType(method.getChild(0));
 
         if (!returnType.toString().equalsIgnoreCase("void")) {
             if (method.getDescendants(JmmKind.RETURN_STMT).isEmpty()) {

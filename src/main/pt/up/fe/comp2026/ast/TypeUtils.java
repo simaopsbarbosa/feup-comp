@@ -10,6 +10,10 @@ import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
 
+import javax.naming.Name;
+
+import java.lang.reflect.AccessFlag;
+
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
 
@@ -63,7 +67,8 @@ public class TypeUtils {
             }
 
             //TODO verify static context
-            var typeclass = new JmmClassType(name,isImported,false);
+            var staticRef =false;
+            var typeclass = new JmmClassType(name,isImported,staticRef);
 
             if(isArray) return new JmmArrayType(typeclass, dims.size());
             else return typeclass;
@@ -82,13 +87,11 @@ public class TypeUtils {
      */
     public JmmType getExprType(JmmNode expr) {
         return switch (expr.getKind()) {
-            case INTEGER_LITERAL -> intType();
-            case BOOL_LITERAL -> JmmPrimitiveType.BOOLEAN;
+            case INTEGER_LITERAL, LEFT_UNARY_EXPR, RIGHT_UNARY_EXPR, LENGTH -> JmmPrimitiveType.INT;
+            case BOOL_LITERAL,LOGICAL_NOT -> JmmPrimitiveType.BOOLEAN;
             case BINARY_EXPR, EQUALITY_EXPR, LOGICAL_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr);
             case PARENTESES -> getParentesesExprType(expr);
-            case LOGICAL_NOT -> JmmPrimitiveType.BOOLEAN;
-            case LEFT_UNARY_EXPR -> intType();
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
         };
@@ -118,7 +121,7 @@ public class TypeUtils {
         String operator = binaryExpr.get("op");
 
         return switch (operator) {
-            case "+", "-", "*", "/", "%" -> intType();
+            case "+", "-", "*", "/", "%" -> JmmPrimitiveType.INT;
             case "<", ">", "<=", ">=", "==", "!=", "&&", "||" -> JmmPrimitiveType.BOOLEAN;
             default ->
                     throw new RuntimeException("Unknown operator '" + operator + "' of expression '" + binaryExpr + "'");
