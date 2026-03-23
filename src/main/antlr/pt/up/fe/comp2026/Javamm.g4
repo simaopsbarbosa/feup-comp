@@ -121,7 +121,7 @@ expr
     :LP expr RP                                                 #Parenteses      //16
     | expr DOT LENGTH                                           #Length
     | expr DOT name=ID                                          #FieldAcess
-    | expr DOT ID LP ( expr ( COMMA expr )* )? RP               #ExplicitMethodcall
+    | expr DOT methodname=ID LP ( expr ( COMMA expr )* )? RP               #ExplicitMethodcall
     | expr (LSB expr RSB)+                                      #ArrayAccess
     | expr op=('++'|'--')                                       #RightUnaryExpr  //15
     | op='!' rest=expr                                          #LogicalNot  //14
@@ -135,7 +135,7 @@ expr
     | NEW baseType (LSB sizes+=expr RSB)+                       #NewArray
     | NEW baseType (dims+='[]')+ arrayInitializer               #ArrayInit
     | NEW name=ID LP ( expr ( COMMA expr )* )? RP                    #ClassInitialization
-    | ID LP (expr (COMMA expr)*)? RP                            #ImplicitMethodCall
+    | methodname=ID LP (expr (COMMA expr)*)? RP                            #ImplicitMethodCall
     | value=INTEGER                                             #IntegerLiteral
     | bool= (TRUE|FALSE)                                        #BoolLiteral
     | THIS                                                      #This

@@ -136,12 +136,14 @@ public class TypeUtils {
 
         //verify if a parameter
         if (method.getParameter(varRefName).isPresent()) {
-            varType = method.getParameter(varRefName).get().type();
+            return varType = method.getParameter(varRefName).get().type();
         }
-        else varType = method.getLocalVariable(varRefName).get().type();
-
-        return varType;
+        if(method.getLocalVariable(varRefName).isPresent()){
+           return method.getLocalVariable(varRefName).get().type();
+        }
+        return null;
     }
+
     private JmmType resolveClass(String name){
         boolean isImported = false;
         var superName = table.getSuperFullyQualifiedName();
