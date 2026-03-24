@@ -1,6 +1,5 @@
 package pt.up.fe.comp2026.analysis.passes;
 
-import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Report;
@@ -22,6 +21,8 @@ public class CallsLogic extends AnalysisVisitorWithTable {
 
     private Void visitMethodCall(JmmNode methodCall, SymbolTable table) {
         String methodName = methodCall.get("methodname");
+
+        System.out.println(methodName);
 
         var matchingMethods = table.getMethods().stream()
                 .filter(m -> m.name().equals(methodName))
@@ -47,7 +48,9 @@ public class CallsLogic extends AnalysisVisitorWithTable {
         // assuming no method overloading for now
         var methodData = matchingMethods.get(0);
 
-        var providedArguments = methodCall.getChildren();
+        var children = methodCall.getChildren();
+
+        var providedArguments = children.subList(1, children.size());
         var expectedParameters = methodData.parameters();
 
         if (providedArguments.size() != expectedParameters.size()) {
@@ -59,6 +62,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                             ". Expected " + expectedParameters.size() + ", got " + providedArguments.size(),
                     null
             ));
+            return null;
         }
 
         // TODO: compare the data types of providedArguments against expectedParameters
