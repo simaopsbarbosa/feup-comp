@@ -62,9 +62,15 @@ public class ImportLogic extends AnalysisVisitorWithTable {
             }
         }
         else{
-            if(super.table.getMethod(methodsignature).isEmpty()){
+            var methods=super.table.getMethods(methodName);
+            if(methods.isEmpty()){
                 addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method is not present in the class "));
             }
+            else exists=methods.stream().anyMatch(m->m.signature().equals(methodsignature));
+            if (!exists) {
+                addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method does not have the correct signature"));
+            }
+
         }
         return null;
     }
