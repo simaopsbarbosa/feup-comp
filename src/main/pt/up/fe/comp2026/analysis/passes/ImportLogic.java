@@ -9,6 +9,8 @@ import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.utils.ReportUtils;
+import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
+import java.util.Optional;
 
 
 
@@ -33,6 +35,19 @@ public class ImportLogic extends AnalysisVisitorWithTable {
         }
         return  null;
     }
+    private boolean existsInHierarchy(SymbolTable currentTable, Signature signature) {
+        if (currentTable.getMethod(signature).isPresent()) return true;
+
+        String superName = currentTable.getSuperFullyQualifiedName();
+        if (superName != null && !superName.isEmpty()) {
+            var superTable = table.getImportedSymbolTable(superName);
+            if (superTable.isPresent()) {
+                return existsInHierarchy(superTable.get(), signature);
+            }
+        }
+        return false;
+    }
+
     private Void visitMethod(JmmNode methodCall ,SymbolTable table){
         String methodName=methodCall.get("methodname");
         var argTypes = methodCall.getChildren().stream().skip(1)
@@ -46,23 +61,15 @@ public class ImportLogic extends AnalysisVisitorWithTable {
             if (receiverType instanceof JmmClassType classType && (classType.isImported() || super.table.isImplicitImport(classType.name()))) {
                 var importTable = super.table.getImportedSymbolTable(classType.fullyQualifiedName());
                 if(importTable.isPresent()){
-                    var all_methods=importTable.get().getMethods();
-                    var methods=importTable.get().getMethods(methodName);
-                    if(methods.isEmpty()){
-                        addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method is not present in import "));
+                    if(!existsInHierarchy(importTable.get(), methodsignature)){
+                         addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method is not present in import "));
                     }
-                    else exists=methods.stream().anyMatch(m->m.signature().equals(methodsignature));
-                    if (!exists) {
-                        addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method does not have the correct signature"));
-                    }
-
                 }
-
 
             }
         }
         else{
-            if(super.table.getMethod(methodsignature).isEmpty()){
+            if(!existsInHierarchy(super.table, methodsignature)){
                 addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method is not present in the class "));
             }
         }

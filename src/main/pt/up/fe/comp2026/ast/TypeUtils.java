@@ -76,16 +76,52 @@ public class TypeUtils {
             case BINARY_EXPR, EQUALITY_EXPR, LOGICAL_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr);
             case PARENTESES -> getParentesesExprType(expr);
-            case CLASS_INITIALIZATION ->{
-                var name=expr.get("name");
+            case CLASS_INITIALIZATION -> {
+                var name = expr.get("name");
                 yield resolveClass(name);
             }
+            case THIS -> resolveClass(table.getClassName());
+            case EXPLICIT_METHOD_CALL -> getMethodCallType(expr);
+            case IMPLICIT_METHOD_CALL -> getImplicitMethodCallType(expr);
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
         };
     }
 
+    private JmmType getMethodCallType(JmmNode methodCall) {
+        var receiver = methodCall.getChild(0);
+        String methodName = methodCall.get("methodname");
 
+        if (receiver.getKind() == THIS) {
+            return getLocalMethodReturnType(methodName);
+        }
+
+        return new JmmClassType("java.lang.Object", true, false);
+    }
+
+    private JmmType getImplicitMethodCallType(JmmNode methodCall) {
+        String methodName = methodCall.get("methodname");
+        return getLocalMethodReturnType(methodName);
+    }
+
+    private JmmType getLocalMethodReturnType(String methodName) {
+        var methods = table.getMethods(methodName);
+        if (methods.isEmpty()) {
+            // check superclass
+            String superName = table.getSuperFullyQualifiedName();
+            if (superName != null && !superName.isEmpty()) {
+                var superTable = table.getImportedSymbolTable(superName);
+                if (superTable.isPresent()) {
+                    var superMethods = superTable.get().getMethods(methodName);
+                    if (!superMethods.isEmpty()) {
+                        return superMethods.get(0).returnType();
+                    }
+                }
+            }
+            return new JmmClassType("java.lang.Object", true, false);
+        }
+        return methods.get(0).returnType();
+    }
 
     public Signature getMethodDeclSignature(JmmNode methodDecl) {
         // Ensure given node is a MethodDecl

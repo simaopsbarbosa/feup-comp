@@ -8,6 +8,12 @@ import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
 import pt.up.fe.comp2026.ast.NodeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 
+import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
+import java.util.Collections;
+import java.util.List;
+
+
+
 public class CallsLogic extends AnalysisVisitorWithTable {
 
     public CallsLogic(SymbolTable table) {
@@ -19,22 +25,31 @@ public class CallsLogic extends AnalysisVisitorWithTable {
         addVisit(JmmKind.EXPLICIT_METHOD_CALL, this::visitMethodCall);
     }
 
+    private List<MethodSymbol> getMethodsInHierarchy(SymbolTable currentTable, String methodName) {
+        var localMethods = currentTable.getMethods(methodName);
+        if (!localMethods.isEmpty()) return localMethods;
+
+        String superName = currentTable.getSuperFullyQualifiedName();
+        if (superName != null && !superName.isEmpty()) {
+            var superTable = table.getImportedSymbolTable(superName);
+            if (superTable.isPresent()) {
+                return getMethodsInHierarchy(superTable.get(), methodName);
+            }
+        }
+        return Collections.emptyList();
+    }
+
     private Void visitMethodCall(JmmNode methodCall, SymbolTable table) {
+        var receiver = methodCall.getChild(0);
+        if (receiver.getKind() != JmmKind.THIS) {
+            return null;
+        }
+
         String methodName = methodCall.get("methodname");
 
-        System.out.println(methodName);
+        var matchingMethods = getMethodsInHierarchy(table, methodName);
 
-        var matchingMethods = table.getMethods().stream()
-                .filter(m -> m.name().equals(methodName))
-                .toList();
-
-        if (matchingMethods.isEmpty()) { // if method does not exist locally
-            String superClass = table.getSuper();
-            if (superClass != null && !superClass.isEmpty()) {
-                if (table.getImports().contains(superClass)) { // is superclass imported?
-                    return null;
-                }
-            }
+        if (matchingMethods.isEmpty()) { // if method does not exist locally or in super class
             addReport(Report.newError(
                     Stage.SEMANTIC,
                     NodeUtils.getLine(methodCall),
