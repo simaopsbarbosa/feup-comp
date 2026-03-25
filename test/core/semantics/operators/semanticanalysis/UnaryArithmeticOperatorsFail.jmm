@@ -1,0 +1,25 @@
+package pt.up.fe.comp.cp1.core.semantics.calls.semanticanalysis;
+
+class UnaryArithmeticOperatorsFail {
+    public static void main(String[] args) {
+    }
+
+    public int testErrors() {
+        boolean b;
+        int i;
+        b = true;
+        i = 10;
+
+        // Unary Failures
+        i = +b;
+        i = -b;
+        b = ++b;
+        b = --b;
+
+        // Binary/Logic Failures
+        i = i || i;
+        b = i && b;
+
+        return 0;
+    }
+}
