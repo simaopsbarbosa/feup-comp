@@ -26,7 +26,8 @@ public class CallsLogic extends AnalysisVisitorWithTable {
 
     @Override
     protected void buildVisitor() {
-        addVisit(JmmKind.EXPLICIT_METHOD_CALL, this::visitMethodCall);
+        addVisit(JmmKind.EXPLICIT_METHOD_CALL, this::visitExplicitMethodCall);
+        // addVisit(JmmKind.IMPLICIT_METHOD_CALL,this::visitImplicitMethodCall);
     }
 
     private boolean getMethodsInHierarchy(SymbolTable currentTable, Signature methodSignature) {
@@ -44,7 +45,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
         return false;
     }
 
-    private Void visitMethodCall(JmmNode methodCall, SymbolTable table) {
+    private Void visitExplicitMethodCall(JmmNode methodCall, SymbolTable table) {
         var receiver = methodCall.getChild(0);
 
         String methodName=methodCall.get("methodname");
@@ -80,50 +81,6 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                 return null;
             }
         }
-
-
-
-        /*// assuming no method overloading for now
-        var methodData = matchingMethods.get(0);
-
-        var children = methodCall.getChildren();
-
-        var providedArguments = children.subList(1, children.size());
-        var expectedParameters = methodData.parameters();
-
-        if (providedArguments.size() != expectedParameters.size()) {
-            addReport(Report.newError(
-                    Stage.SEMANTIC,
-                    NodeUtils.getLine(methodCall),
-                    NodeUtils.getColumn(methodCall),
-                    "Invalid number of arguments for method " + methodName +
-                            ". Expected " + expectedParameters.size() + ", got " + providedArguments.size(),
-                    null
-            ));
-            return null;
-        }*/
-/*
-        // TODO: compare the data types of providedArguments against expectedParameters
-        for (int i = 0; i < providedArguments.size(); i++) {
-            JmmNode argNode = providedArguments.get(i);
-            pt.up.fe.comp.jmm.analysis.table.Symbol expectedParam = expectedParameters.get(i);
-
-            var expectedType = expectedParam.type();
-            var providedType = getTypes().getExprType(argNode);
-
-            if (expectedType.getClass().getName() != providedType.getClass().getName() ||
-                    expectedType.isArray() != providedType.isArray()) {
-                addReport(Report.newError(
-                        Stage.SEMANTIC,
-                        NodeUtils.getLine(argNode),
-                        NodeUtils.getColumn(argNode),
-                        "Type mismatch for argument " + (i + 1) + " of method '" + methodName + "'. " +
-                                "Expected " + expectedType + " but got " + providedType,
-                        null
-                ));
-            }*/
-        // }
-
         return null;
     }
 

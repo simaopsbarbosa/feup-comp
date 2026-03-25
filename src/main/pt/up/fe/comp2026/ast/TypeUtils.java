@@ -8,6 +8,7 @@ import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
 
 import javax.naming.Name;
@@ -83,6 +84,8 @@ public class TypeUtils {
             case THIS -> resolveClass(table.getClassName());
             case EXPLICIT_METHOD_CALL -> getMethodCallType(expr);
             case IMPLICIT_METHOD_CALL -> getImplicitMethodCallType(expr);
+            case ARRAY_ACCESS -> getVarExprType(expr.getChild(0));
+            case NEW_ARRAY -> convertType(expr);
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
         };
