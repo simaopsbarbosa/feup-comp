@@ -27,7 +27,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
     @Override
     protected void buildVisitor() {
         addVisit(JmmKind.EXPLICIT_METHOD_CALL, this::visitExplicitMethodCall);
-        // addVisit(JmmKind.IMPLICIT_METHOD_CALL,this::visitImplicitMethodCall);
+        addVisit(JmmKind.IMPLICIT_METHOD_CALL,this::visitImplicitMethodCall);
     }
 
     private boolean getMethodsInHierarchy(SymbolTable currentTable, Signature methodSignature) {
@@ -83,5 +83,25 @@ public class CallsLogic extends AnalysisVisitorWithTable {
         }
         return null;
     }
+    private Void visitImplicitMethodCall(JmmNode methodCall, SymbolTable table) {
 
+        String methodName = methodCall.get("methodname");
+        var argTypes = methodCall.getChildren().stream()
+                .map(arg -> super.types.getExprType(arg))
+                .toList();
+        Signature methodsignature = new Signature(methodName, argTypes);
+
+        var matchingMethods = getMethodsInHierarchy(table, methodsignature);
+
+        if (!matchingMethods) { // if method does not exist locally or in super class
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(methodCall),
+                    NodeUtils.getColumn(methodCall),
+                    "Method '" + methodName + "' does not exist locally and no valid superclass was found.",
+                    null
+            ));
+        }
+        return null;
+    }
 }
