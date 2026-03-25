@@ -121,7 +121,7 @@ expr
     :LP expr RP                                                 #Parenteses      //16
     | expr DOT LENGTH                                           #Length
     | expr DOT name=ID                                          #FieldAcess
-    | expr DOT methodname=ID LP ( expr ( COMMA expr )* )? RP               #ExplicitMethodcall
+    | expr DOT methodname=ID LP ( expr ( COMMA expr )* )? RP               #ExplicitMethodCall
     | expr (LSB expr RSB)+                                      #ArrayAccess
     | expr op=('++'|'--')                                       #RightUnaryExpr  //15
     | op='!' rest=expr                                          #LogicalNot  //14
