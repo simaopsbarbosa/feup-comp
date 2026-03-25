@@ -81,6 +81,7 @@ public class TypeUtils {
                 yield resolveClass(name);
             }
             case EXPLICIT_METHODCALL -> getExplicitMethodCallType(expr);
+            case THIS -> getThisType(expr);
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
         };
@@ -205,4 +206,9 @@ public class TypeUtils {
         return JmmPrimitiveType.INT;
     }
 
-}
+
+    private JmmType getThisType(JmmNode thisExpr) {
+        return new JmmClassType(table.getFullyQualifiedName(), false, false);
+    }
+
+    }
