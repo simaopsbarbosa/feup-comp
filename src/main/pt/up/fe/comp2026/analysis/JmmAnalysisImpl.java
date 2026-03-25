@@ -9,10 +9,7 @@ import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
-import pt.up.fe.comp2026.analysis.passes.ArithmeticLogic;
-import pt.up.fe.comp2026.analysis.passes.Assigment;
-import pt.up.fe.comp2026.analysis.passes.ImportLogic;
-import pt.up.fe.comp2026.analysis.passes.UndeclaredVariable;
+import pt.up.fe.comp2026.analysis.passes.*;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTableBuilder;
 
 import java.util.ArrayList;
@@ -35,6 +32,7 @@ public class JmmAnalysisImpl implements JmmAnalysis {
                 new UndeclaredVariable(),
                 new ArithmeticLogic(table),
                 new ImportLogic(table),
+                new CallsLogic(table),
                 new Assigment(table)
         );
     }

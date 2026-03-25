@@ -23,7 +23,7 @@ public class ImportLogic extends AnalysisVisitorWithTable {
     @Override
     protected void buildVisitor() {
         addVisit(JmmKind.CLASS_INITIALIZATION, this::visitClass);
-        addVisit(JmmKind.EXPLICIT_METHOD_CALL,this::visitMethod);
+
     }
     private Void visitClass(JmmNode classInit,SymbolTable table){
         var name=classInit.get("name");
@@ -34,45 +34,5 @@ public class ImportLogic extends AnalysisVisitorWithTable {
             addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, classInit, "Class is not defined or imported " + name));
         }
         return  null;
-    }
-    private boolean existsInHierarchy(SymbolTable currentTable, Signature signature) {
-        if (currentTable.getMethod(signature).isPresent()) return true;
-
-        String superName = currentTable.getSuperFullyQualifiedName();
-        if (superName != null && !superName.isEmpty()) {
-            var superTable = table.getImportedSymbolTable(superName);
-            if (superTable.isPresent()) {
-                return existsInHierarchy(superTable.get(), signature);
-            }
-        }
-        return false;
-    }
-
-    private Void visitMethod(JmmNode methodCall ,SymbolTable table){
-        String methodName=methodCall.get("methodname");
-        var argTypes = methodCall.getChildren().stream().skip(1)
-                .map(arg -> super.types.getExprType(arg))
-                .toList();
-        Signature methodsignature=new Signature(methodName,argTypes);
-        boolean exists=false;
-        var type= methodCall.getChild(0);
-        if(type.getKind()!= JmmKind.THIS) {
-            var receiverType = super.types.getExprType(type);
-            if (receiverType instanceof JmmClassType classType && (classType.isImported() || super.table.isImplicitImport(classType.name()))) {
-                var importTable = super.table.getImportedSymbolTable(classType.fullyQualifiedName());
-                if(importTable.isPresent()){
-                    if(!existsInHierarchy(importTable.get(), methodsignature)){
-                         addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method is not present in import "));
-                    }
-                }
-
-            }
-        }
-        else{
-            if(!existsInHierarchy(super.table, methodsignature)){
-                addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method is not present in the class "));
-            }
-        }
-        return null;
     }
 }
