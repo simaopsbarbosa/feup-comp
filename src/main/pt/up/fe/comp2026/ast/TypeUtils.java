@@ -81,8 +81,9 @@ public class TypeUtils {
                 var name = expr.get("name");
                 yield resolveClass(name);
             }
+            case EXPLICIT_METHOD_CALL -> getExplicitMethodCallType(expr);
             case THIS -> resolveClass(table.getClassName());
-            case EXPLICIT_METHOD_CALL -> getMethodCallType(expr);
+            //case EXPLICIT_METHOD_CALL -> getMethodCallType(expr);
             case IMPLICIT_METHOD_CALL -> getImplicitMethodCallType(expr);
             case ARRAY_ACCESS -> getVarExprType(expr.getChild(0));
             case NEW_ARRAY -> convertType(expr);
@@ -229,10 +230,12 @@ public class TypeUtils {
         if (!table.getMethods(explMethodCall.get("methodname")).isEmpty())
             return table.getMethod(methodSignature).get().returnType();
 
-        //verifies if imported call (need to check extended)
-        var callerType = getExprType(explMethodCall.getChild(0));
-        if (callerType instanceof JmmClassType jmmClass && (jmmClass.isImported() || table.isImplicitImport(jmmClass.name()))) {
+        //verifies if imported call (TODO: need to check extended)
+        var calleeType = getExprType(explMethodCall.getChild(0));
+        if (calleeType instanceof JmmClassType jmmClass && (jmmClass.isImported() || table.isImplicitImport(jmmClass.name()))) {
             var importTable = table.getImportedSymbolTable(jmmClass.fullyQualifiedName());
+
+            //checks if imported table contains method
             if (importTable.isPresent() && !importTable.get().getMethods().isEmpty()) {
                 return importTable.get().getMethod(methodSignature).get().returnType();
             }
@@ -243,4 +246,4 @@ public class TypeUtils {
         return JmmPrimitiveType.INT;
     }
 
-}
+    }
