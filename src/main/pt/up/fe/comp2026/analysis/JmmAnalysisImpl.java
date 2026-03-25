@@ -1,5 +1,6 @@
 package pt.up.fe.comp2026.analysis;
 
+import org.specs.comp.ollir.inst.AssignInstruction;
 import pt.up.fe.comp.jmm.analysis.JmmAnalysis;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
@@ -9,7 +10,7 @@ import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2026.analysis.passes.ArithmeticLogic;
-import pt.up.fe.comp2026.analysis.passes.CallsLogic;
+import pt.up.fe.comp2026.analysis.passes.Assigment;
 import pt.up.fe.comp2026.analysis.passes.ImportLogic;
 import pt.up.fe.comp2026.analysis.passes.UndeclaredVariable;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTableBuilder;
@@ -34,7 +35,7 @@ public class JmmAnalysisImpl implements JmmAnalysis {
                 new UndeclaredVariable(),
                 new ArithmeticLogic(table),
                 new ImportLogic(table),
-                new CallsLogic(table)
+                new Assigment(table)
         );
     }
 

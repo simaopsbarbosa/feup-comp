@@ -198,6 +198,10 @@ public class TypeUtils {
             name = table.getSuperFullyQualifiedName();
             isImported = true;
         }
+        else if (table.isImplicitImport(name)) {
+            name = "java.lang." + name;
+            isImported = true;
+        }
         //TODO verify static context
         var staticRef =false;
         return new JmmClassType(name,isImported,staticRef);
@@ -207,6 +211,33 @@ public class TypeUtils {
 
     public JmmType getParentesesExprType(JmmNode parentesesExpr) {
         return getExprType(parentesesExpr.getChild(0));
+    }
+
+    private JmmType getExplicitMethodCallType(JmmNode explMethodCall) {
+        String methodName = explMethodCall.get("methodname");
+
+        var argTypes = explMethodCall.getChildren().stream().skip(1)
+                .map(arg -> getExprType(arg))
+                .toList();
+
+        Signature methodSignature = new Signature(methodName, argTypes);
+
+        //verifies if calls class method
+        if (!table.getMethods(explMethodCall.get("methodname")).isEmpty())
+            return table.getMethod(methodSignature).get().returnType();
+
+        //verifies if imported call (need to check extended)
+        var callerType = getExprType(explMethodCall.getChild(0));
+        if (callerType instanceof JmmClassType jmmClass && (jmmClass.isImported() || table.isImplicitImport(jmmClass.name()))) {
+            var importTable = table.getImportedSymbolTable(jmmClass.fullyQualifiedName());
+            if (importTable.isPresent() && !importTable.get().getMethods().isEmpty()) {
+                return importTable.get().getMethod(methodSignature).get().returnType();
+            }
+        }
+
+
+        //default to int
+        return JmmPrimitiveType.INT;
     }
 
 }
