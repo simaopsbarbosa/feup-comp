@@ -1,16 +1,13 @@
-    package pt.up.fe.comp.cp1.core.semantics.calls.semanticanalysis;
+package pt.up.fe.comp.cp1.core.semantics.calls.semanticanalysis;
 
-    class InstantiateImportedClassFail {
-        int method1() {
-            Date d;
-            int i;
-            boolean b;
-            Exception e;
+import java.util.SplittableRandom;
 
-            d = new Date();
-            i = 2;
-            b = false;
-            e = new Exception();
-            return i;
-        }
+class ImportedMethodCorrectArgTypesOk {
+    int method1(int a, boolean b) {
+        int res;
+        SplittableRandom sr;
+        sr = new SplittableRandom();
+        res = sr.nextInt(a, a);
+        return res;
     }
+}
