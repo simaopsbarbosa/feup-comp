@@ -9,6 +9,8 @@ import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.utils.ReportUtils;
+import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
+import java.util.Optional;
 
 
 
@@ -21,7 +23,7 @@ public class ImportLogic extends AnalysisVisitorWithTable {
     @Override
     protected void buildVisitor() {
         addVisit(JmmKind.CLASS_INITIALIZATION, this::visitClass);
-        addVisit(JmmKind.EXPLICIT_METHODCALL,this::visitMethod);
+
     }
     private Void visitClass(JmmNode classInit,SymbolTable table){
         var name=classInit.get("name");
@@ -32,46 +34,5 @@ public class ImportLogic extends AnalysisVisitorWithTable {
             addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, classInit, "Class is not defined or imported " + name));
         }
         return  null;
-    }
-    private Void visitMethod(JmmNode methodCall ,SymbolTable table){
-        String methodName=methodCall.get("methodname");
-        var argTypes = methodCall.getChildren().stream().skip(1)
-                .map(arg -> super.types.getExprType(arg))
-                .toList();
-        Signature methodsignature=new Signature(methodName,argTypes);
-        boolean exists=false;
-        var type= methodCall.getChild(0);
-        if(type.getKind()!= JmmKind.THIS) {
-            var receiverType = super.types.getExprType(type);
-            if (receiverType instanceof JmmClassType classType && (classType.isImported() || super.table.isImplicitImport(classType.name()))) {
-                var importTable = super.table.getImportedSymbolTable(classType.fullyQualifiedName());
-                if(importTable.isPresent()){
-                    var all_methods=importTable.get().getMethods();
-                    var methods=importTable.get().getMethods(methodName);
-                    if(methods.isEmpty()){
-                        addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method is not present in import "));
-                    }
-                    else exists=methods.stream().anyMatch(m->m.signature().equals(methodsignature));
-                    if (!exists) {
-                        addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method does not have the correct signature"));
-                    }
-
-                }
-
-
-            }
-        }
-        else{
-            var methods=super.table.getMethods(methodName);
-            if(methods.isEmpty()){
-                addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method is not present in the class "));
-            }
-            else exists=methods.stream().anyMatch(m->m.signature().equals(methodsignature));
-            if (!exists) {
-                addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method does not have the correct signature"));
-            }
-
-        }
-        return null;
     }
 }

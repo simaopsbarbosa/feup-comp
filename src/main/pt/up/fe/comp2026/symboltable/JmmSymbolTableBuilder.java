@@ -138,9 +138,7 @@ public class JmmSymbolTableBuilder {
     private MethodSymbol buildMethod(JmmNode method) {
         var methodName = method.get("name");
 
-        System.out.println(methodName + " " + method.getChildren());
-
-        var returnType = type.convertType(method.getChild(0));
+        var returnType = type.convertType(method.getObject("returnType", JmmNode.class));
         var seenParams=new HashSet<>();
         var params = method.getChildren(PARAM).stream()
                 .filter(param->{
