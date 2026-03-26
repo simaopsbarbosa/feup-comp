@@ -31,6 +31,7 @@ public class JmmAnalysisImpl implements JmmAnalysis {
         return List.of(
                 new UndeclaredVariable(),
                 new ArithmeticLogic(table),
+                new StatementLogic(table),
                 new ImportLogic(table),
                 new CallsLogic(table),
                 new Assigment(table)
