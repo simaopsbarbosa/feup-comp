@@ -1,0 +1,15 @@
+package core.semantics.statements;
+
+class ReturnOk {
+    public int testInt() {
+        return 10;
+    }
+
+    public boolean testBool() {
+        return false;
+    }
+
+    public void testVoid() {
+        return;
+    }
+}

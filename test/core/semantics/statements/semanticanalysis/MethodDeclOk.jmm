@@ -1,0 +1,16 @@
+package core.semantics.statements;
+
+class MethodDeclOk {
+    public int foo(int a) {
+        int b;
+        b = a;
+        return b;
+    }
+
+    public boolean bar() {
+        return true;
+    }
+
+    public void baz() {
+    }
+}

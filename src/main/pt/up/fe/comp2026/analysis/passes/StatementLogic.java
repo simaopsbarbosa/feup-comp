@@ -4,6 +4,7 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp.jmm.ast.Kind;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
@@ -18,6 +19,8 @@ public class StatementLogic extends AnalysisVisitorWithTable {
     public void buildVisitor() {
         addVisit(JmmKind.ELSEIF_BLOCK_STMT, this::visitIfStmt);
         addVisit(JmmKind.WHILE_STMT, this::visitWhileStmt);
+        addVisit(JmmKind.DO_WHILE_STMT, this::visitDoWhileStmt);
+        addVisit(JmmKind.FOR_STMT, this::visitForStmt);
         addVisit(JmmKind.RETURN_STMT, this::visitReturnStmt);
         addVisit(JmmKind.METHOD_DECL, this::visitMethodDecl);
     }
@@ -43,6 +46,35 @@ public class StatementLogic extends AnalysisVisitorWithTable {
         return null;
     }
 
+    private Void visitDoWhileStmt(JmmNode jmmNode, SymbolTable table) {
+        var condition = jmmNode.getChild(1);
+        var conditionType = super.types.getExprType(condition);
+
+        if (conditionType != JmmPrimitiveType.BOOLEAN) {
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, condition, "Do While condition must be boolean. Expression is " + conditionType));
+        }
+
+        return null;
+    }
+
+    private Void visitForStmt(JmmNode jmmNode, SymbolTable table) {
+        var children = jmmNode.getChildren();
+        if (children.isEmpty()) return null;
+
+        children.stream()
+                .limit(children.size() - 1) // Ignore the last child (the body)
+                .filter(child -> child.getKind() != JmmKind.ASSIGNMENT) // Keep only conditions
+                .forEach(child -> { // Use forEach instead of map
+                    var conditionType = super.types.getExprType(child);
+                    if (conditionType != JmmPrimitiveType.BOOLEAN) {
+                        addReport(ReportUtils.buildErrorReport(
+                                Stage.SEMANTIC, child,
+                                "For loop condition must evaluate to a boolean. Found: " + conditionType
+                        ));
+                    }
+                });
+        return null;
+    }
 
     private Void visitReturnStmt(JmmNode returnStmt, SymbolTable table) {
 
@@ -52,8 +84,6 @@ public class StatementLogic extends AnalysisVisitorWithTable {
         if (returnStmt.getNumChildren() == 0) {
             if (!expectedType.toString().equalsIgnoreCase("void")) {
                 addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, returnStmt, "Missing return value"));
-            } else {
-                addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, returnStmt, "Return statement cannot exist in void method"));
             }
             return null;
         }

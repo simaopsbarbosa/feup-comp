@@ -1,0 +1,12 @@
+package core.semantics.statements;
+
+class DoWhileOk {
+    public int testSuccess() {
+        int i;
+        i = 10;
+        do {
+            i = i - 1;
+        } while (i > 0);
+        return i;
+    }
+}

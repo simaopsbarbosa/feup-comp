@@ -1,0 +1,11 @@
+package core.semantics.statements;
+
+class MethodDeclFail {
+    public int duplicateVars(int a) {
+        int a; // Error: Duplicate local variable (name already used by parameter)
+        return a;
+    }
+
+    public int foo() { return 0; }
+    public boolean foo() { return true; } // Error: Duplicate method name (overloading not supported in Java--)
+}

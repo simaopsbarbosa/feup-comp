@@ -1,0 +1,13 @@
+package core.semantics.statements;
+
+class ReturnFail {
+    public int testReturnMismatch() {
+        boolean b;
+        b = true;
+        return b; // Error: Return type mismatch
+    }
+
+    public void voidReturnExpr() {
+        return 1; // Error: Void method returning expression
+    }
+}

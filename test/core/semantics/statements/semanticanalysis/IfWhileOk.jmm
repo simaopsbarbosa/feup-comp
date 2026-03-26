@@ -1,0 +1,20 @@
+package core.semantics.statements;
+
+class IfWhileOk {
+    public int testSuccess() {
+        int i;
+        boolean b;
+        i = 10;
+        b = true;
+        if (i < 20) {
+            i = 1;
+        }
+        if (b) {
+            i = 2;
+        }
+        while (b && i < 10) {
+            i = i + 1;
+        }
+        return i;
+    }
+}

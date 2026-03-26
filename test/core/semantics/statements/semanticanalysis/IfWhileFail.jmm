@@ -1,0 +1,15 @@
+package core.semantics.statements;
+
+class IfWhileFail {
+    public int testErrors() {
+        int i;
+        i = 10;
+        if (i) { // Error: Condition must be boolean
+            i = 1;
+        }
+        while (i + 5) { // Error: Condition must be boolean
+            i = i - 1;
+        }
+        return 0;
+    }
+}

@@ -1,0 +1,12 @@
+package core.semantics.statements;
+
+class DoWhileFail {
+    public int testErrors() {
+        int i;
+        i = 10;
+        do {
+            i = i - 1;
+        } while (i + 5); // Error: Condition must be boolean
+        return 0;
+    }
+}
