@@ -1,13 +1,9 @@
-package pt.up.fe.comp.cp1.core.semantics.calls.semanticanalysis;
+package pt.up.fe.comp.cp1.core.semantics.arrays.semanticanalysis;
 
-import java.util.SplittableRandom;
-
-class ImportedMethodCorrectArgTypesOk {
-    int method1(int a, boolean b) {
-        int res;
-        SplittableRandom sr;
-        sr = new SplittableRandom();
-        res = sr.nextInt(a, a);
-        return res;
+class ArrayHasNewInitOk {
+    int createArray() {
+        int[] a;
+        a = new int[100];
+        return 1;
     }
 }

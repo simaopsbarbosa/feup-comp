@@ -8,15 +8,9 @@ import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
 
-import javax.naming.Name;
-
-import java.lang.reflect.AccessFlag;
 import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
@@ -44,23 +38,31 @@ public class TypeUtils {
 
     public JmmType convertType(JmmNode typeNode) {
         assert (TYPE.check(typeNode));
+
+
         var name = typeNode.getChild(0).get("name");
-        var dims=typeNode.getObjectAsList("dims");
-        var type=JmmPrimitiveType.fromString(name);
+
+        var size = 0;
+        var dims = Collections.emptyList();
+        dims = typeNode.getObjectAsList("dims");
+
+
+        var type = JmmPrimitiveType.fromString(name);
 
         boolean isPrimitive = type.isPresent();
         boolean isArray = !dims.isEmpty();
 
 
-        if(!isPrimitive){
-            var typeclass=resolveClass(name);
-            if(isArray) return new JmmArrayType(typeclass, dims.size());
+        if (!isPrimitive) {
+            var typeclass = resolveClass(name);
+            if (isArray) return new JmmArrayType(typeclass, dims.size());
             else return typeclass;
 
         }
 
-        if(isArray) return new JmmArrayType(type.get(), dims.size());
-        else return type.get();
+        if (isArray) {
+            return new JmmArrayType(type.get(), dims.size());
+        } else return type.get();
     }
 
 
@@ -73,7 +75,7 @@ public class TypeUtils {
     public JmmType getExprType(JmmNode expr) {
         return switch (expr.getKind()) {
             case INTEGER_LITERAL, LEFT_UNARY_EXPR, RIGHT_UNARY_EXPR, LENGTH -> JmmPrimitiveType.INT;
-            case BOOL_LITERAL,LOGICAL_NOT -> JmmPrimitiveType.BOOLEAN;
+            case BOOL_LITERAL, LOGICAL_NOT -> JmmPrimitiveType.BOOLEAN;
             case BINARY_EXPR, EQUALITY_EXPR, LOGICAL_EXPR -> getBinExprType(expr);
             case VAR_REF_EXPR -> getVarExprType(expr);
             case PARENTESES -> getParentesesExprType(expr);
@@ -83,10 +85,9 @@ public class TypeUtils {
             }
             case EXPLICIT_METHOD_CALL -> getExplicitMethodCallType(expr);
             case THIS -> resolveClass(table.getClassName());
-            //case EXPLICIT_METHOD_CALL -> getMethodCallType(expr);
             case IMPLICIT_METHOD_CALL -> getImplicitMethodCallType(expr);
             case ARRAY_ACCESS -> getVarExprType(expr.getChild(0));
-            case NEW_ARRAY -> convertType(expr);
+            case NEW_ARRAY -> getArrayType(expr);
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
         };
@@ -101,6 +102,19 @@ public class TypeUtils {
         }
 
         return new JmmClassType("java.lang.Object", true, false);
+    }
+
+    private JmmType getArrayType(JmmNode array) {
+        var name = array.getChild(0).get("name");
+        var type = JmmPrimitiveType.fromString(name);
+        var size = array.getObjectAsList("size").size();
+        if (type.isPresent()) {
+            return new JmmArrayType(type.get(), size);
+        } else {
+            var typeclass = resolveClass(name);
+            return new JmmArrayType(typeclass, size);
+        }
+
     }
 
     private JmmType getImplicitMethodCallType(JmmNode methodCall) {
@@ -178,13 +192,13 @@ public class TypeUtils {
         if (method.getParameter(varRefName).isPresent()) {
             return varType = method.getParameter(varRefName).get().type();
         }
-        if(method.getLocalVariable(varRefName).isPresent()){
-           return method.getLocalVariable(varRefName).get().type();
+        if (method.getLocalVariable(varRefName).isPresent()) {
+            return method.getLocalVariable(varRefName).get().type();
         }
         return null;
     }
 
-    private JmmType resolveClass(String name){
+    private JmmType resolveClass(String name) {
         boolean isImported = false;
         var superName = table.getSuperFullyQualifiedName();
         //if is an imported class get qualifed name
@@ -198,17 +212,16 @@ public class TypeUtils {
             name = table.getFullyQualifiedName();
         }
         // if it is the extended object
-        else if (superName != null && (superName.endsWith("."+name))) {
+        else if (superName != null && (superName.endsWith("." + name))) {
             name = table.getSuperFullyQualifiedName();
             isImported = true;
-        }
-        else if (table.isImplicitImport(name)) {
+        } else if (table.isImplicitImport(name)) {
             name = "java.lang." + name;
             isImported = true;
         }
         //TODO verify static context
-        var staticRef =false;
-        return new JmmClassType(name,isImported,staticRef);
+        var staticRef = false;
+        return new JmmClassType(name, isImported, staticRef);
 
     }
 
@@ -246,4 +259,4 @@ public class TypeUtils {
         return JmmPrimitiveType.INT;
     }
 
-    }
+}
