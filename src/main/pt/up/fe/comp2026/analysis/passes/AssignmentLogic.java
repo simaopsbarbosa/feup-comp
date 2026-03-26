@@ -8,14 +8,13 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
-import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
 import pt.up.fe.comp2026.utils.ReportUtils;
 
 import java.util.Optional;
 
-public class Assigment extends AnalysisVisitorWithTable {
+public class AssignmentLogic extends AnalysisVisitorWithTable {
 
-    public Assigment(SymbolTable table) {
+    public AssignmentLogic(SymbolTable table) {
         super(table);
     }
 

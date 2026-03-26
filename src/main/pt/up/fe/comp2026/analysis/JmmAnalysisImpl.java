@@ -1,6 +1,5 @@
 package pt.up.fe.comp2026.analysis;
 
-import org.specs.comp.ollir.inst.AssignInstruction;
 import pt.up.fe.comp.jmm.analysis.JmmAnalysis;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
@@ -34,7 +33,7 @@ public class JmmAnalysisImpl implements JmmAnalysis {
                 new StatementLogic(table),
                 new ImportLogic(table),
                 new CallsLogic(table),
-                new Assigment(table)
+                new AssignmentLogic(table)
         );
     }
 
