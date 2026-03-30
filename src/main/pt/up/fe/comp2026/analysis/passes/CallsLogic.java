@@ -20,14 +20,22 @@ import java.util.List;
 
 public class CallsLogic extends AnalysisVisitorWithTable {
 
+    private MethodSymbol currentMethod;
+
     public CallsLogic(SymbolTable table) {
         super(table);
     }
 
     @Override
     protected void buildVisitor() {
+        addVisit(JmmKind.METHOD_DECL, this::visitMethodDecl);
         addVisit(JmmKind.EXPLICIT_METHOD_CALL, this::visitExplicitMethodCall);
         addVisit(JmmKind.IMPLICIT_METHOD_CALL,this::visitImplicitMethodCall);
+    }
+
+    private Void visitMethodDecl(JmmNode method, SymbolTable table) {
+        currentMethod = table.getMethods(method.get("name")).getFirst();
+        return null;
     }
 
     private boolean getMethodsInHierarchy(SymbolTable currentTable, Signature methodSignature) {
@@ -102,6 +110,21 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                     null
             ));
         }
+
+
+        MethodSymbol calledMethod = table.getMethods(methodName).get(0);
+
+        // cant call non-static method from static method
+        if (currentMethod.isStatic() && !calledMethod.isStatic()) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(methodCall),
+                    NodeUtils.getColumn(methodCall),
+                    "Can't call non-static method '" + methodName + "' from a static context.",
+                    null
+            ));
+        }
+
         return null;
     }
 }
