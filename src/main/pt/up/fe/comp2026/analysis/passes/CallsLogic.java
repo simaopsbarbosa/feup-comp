@@ -62,23 +62,10 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                 .toList();
         Signature methodsignature=new Signature(methodName,argTypes);
 
-        var type= methodCall.getChild(0);
-        if (receiver.getKind() != JmmKind.THIS) {
-            var receiverType = super.types.getExprType(type);
-            if (receiverType instanceof JmmClassType classType && (classType.isImported() || super.table.isImplicitImport(classType.name()))) {
-                var importTable = super.table.getImportedSymbolTable(classType.fullyQualifiedName());
-                if(importTable.isPresent()){
-                    if(!importTable.get().getMethod(methodsignature).isPresent()){
-                        addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method is not present in import "));
-                    }
-                }
-
-            }
-        }
-        else {
+        if (receiver.getKind() == JmmKind.THIS) {
             var matchingMethods = getMethodsInHierarchy(table, methodsignature);
 
-            if (!matchingMethods) { // if method does not exist locally or in super class
+            if (!matchingMethods) {
                 addReport(Report.newError(
                         Stage.SEMANTIC,
                         NodeUtils.getLine(methodCall),
@@ -86,7 +73,59 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                         "Method '" + methodName + "' does not exist locally and no valid superclass was found.",
                         null
                 ));
-                return null;
+            }
+            return null;
+        }
+
+        // get the type of the receiver to check if its an object or a class name
+        var receiverType = super.types.getExprType(receiver);
+        if (receiverType instanceof JmmClassType classType) {
+            boolean isImported = classType.isImported() || super.table.isImplicitImport(classType.name());
+
+            if (isImported) {
+                // check if the method belongs to an external class
+                var importTable = super.table.getImportedSymbolTable(classType.fullyQualifiedName());
+                if (importTable.isPresent()) {
+                    var method = importTable.get().getMethod(methodsignature);
+                    
+                    // verify if the method actually exists in the imported class
+                    if (method.isEmpty()) {
+                        addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method '" + methodName + "' is not present in import " + classType.name()));
+                    } 
+                    // block instance methods called on a class name (static reference)
+                    else if (classType.staticRef() && !method.get().isStatic()) {
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                NodeUtils.getLine(methodCall),
+                                NodeUtils.getColumn(methodCall),
+                                "Non-static method '" + methodName + "' cannot be referenced from a static context.",
+                                null));
+                    }
+                }
+            } else {
+                var matchingMethods = getMethodsInHierarchy(table, methodsignature);
+
+                if (!matchingMethods) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(methodCall),
+                            NodeUtils.getColumn(methodCall),
+                            "Method '" + methodName + "' does not exist locally and no valid superclass was found.",
+                            null
+                    ));
+                }
+                // check static calls for local class names used as targets
+                else if (classType.staticRef()) {
+                    var localMethod = table.getMethods(methodName).stream().findFirst();
+                    if (localMethod.isPresent() && !localMethod.get().isStatic()) {
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                NodeUtils.getLine(methodCall),
+                                NodeUtils.getColumn(methodCall),
+                                "Non-static method '" + methodName + "' cannot be referenced from a static context.",
+                                null));
+                    }
+                }
             }
         }
         return null;

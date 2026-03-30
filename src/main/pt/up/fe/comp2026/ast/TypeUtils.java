@@ -195,10 +195,19 @@ public class TypeUtils {
         if (method.getLocalVariable(varRefName).isPresent()) {
             return method.getLocalVariable(varRefName).get().type();
         }
+
+        if (table.getClassName().equals(varRefName) || table.getImportNames().contains(varRefName)) {
+            return resolveClass(varRefName, true);
+        }
+
         return null;
     }
 
     private JmmType resolveClass(String name) {
+        return resolveClass(name, false);
+    }
+
+    private JmmType resolveClass(String name, Boolean isStatic) {
         boolean isImported = false;
         var superName = table.getSuperFullyQualifiedName();
         //if is an imported class get qualifed name
@@ -219,10 +228,9 @@ public class TypeUtils {
             name = "java.lang." + name;
             isImported = true;
         }
-        //TODO verify static context
-        var staticRef = false;
-        return new JmmClassType(name, isImported, staticRef);
 
+        var staticRef = isStatic;
+        return new JmmClassType(name, isImported, staticRef);
     }
 
 
