@@ -1,0 +1,12 @@
+package extensions.semantics.calls;
+
+class NonStaticOnClassFail {
+    int nonStatic() {
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        int x;
+        x = NonStaticOnClassFail.nonStatic();
+    }
+}

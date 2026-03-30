@@ -1,0 +1,12 @@
+package extensions.semantics.calls;
+
+class ImplicitNonStaticInStaticContextFail {
+    int nonStatic() {
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        int x;
+        x = nonStatic();
+    }
+}

@@ -1,0 +1,14 @@
+package extensions.semantics.calls;
+
+class StaticOnInstanceOk {
+    static int staticMethod() {
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        StaticOnInstanceOk obj;
+        int x;
+        obj = new StaticOnInstanceOk();
+        x = obj.staticMethod();
+    }
+}

@@ -1,0 +1,12 @@
+package extensions.semantics.calls;
+
+class StaticMethodWithArgumentsOk {
+    static int staticMethod(int a, boolean b) {
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        int x;
+        x = StaticMethodWithArgumentsOk.staticMethod(1, true);
+    }
+}

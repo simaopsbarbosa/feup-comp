@@ -1,0 +1,12 @@
+package extensions.semantics.calls;
+
+class StaticOnClassOk {
+    static int staticMethod() {
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        int x;
+        x = StaticOnClassOk.staticMethod();
+    }
+}
