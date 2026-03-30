@@ -1,0 +1,11 @@
+package pt.up.fe.comp.cp1.extensions.semantics.arrays.semanticanalysis;
+
+class SizeIsIntVariableOk {
+    int createArray() {
+        int[] a;
+        int b;
+        b = 100;
+        a = new int[b];
+        return 1;
+    }
+}
