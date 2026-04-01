@@ -1,0 +1,12 @@
+package extensions.semantics.calls;
+
+import java.util.Date;
+
+class ShadowedClassIdOk {
+    public static void main(String[] args) {
+        Date Date;
+        String s;
+        Date = new Date();
+        s = Date.toString();
+    }
+}

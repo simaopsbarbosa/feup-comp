@@ -1,0 +1,10 @@
+package extensions.semantics.calls;
+
+import java.util.Date;
+
+class ImportedNonStaticOnClassFail {
+    public static void main(String[] args) {
+        String s;
+        s = Date.toString();
+    }
+}

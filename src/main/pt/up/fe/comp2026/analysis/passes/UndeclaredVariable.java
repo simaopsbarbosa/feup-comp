@@ -55,6 +55,9 @@ public class UndeclaredVariable extends AnalysisVisitor {
         if (table.getImports().stream().anyMatch(s -> s.endsWith(varRefName)))
             return null;
 
+        if (table.getClassName().equals(varRefName))
+            return null;
+
         var message = String.format("Variable '%s' does not exist.", varRefName);
         addReport(Report.newError(Stage.SEMANTIC, NodeUtils.getLine(varRefExpr),
                 NodeUtils.getColumn(varRefExpr), message, null)

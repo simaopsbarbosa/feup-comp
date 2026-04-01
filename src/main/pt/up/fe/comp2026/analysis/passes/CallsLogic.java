@@ -13,12 +13,10 @@ import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp2026.utils.ReportUtils;
 
-import java.util.Collections;
-import java.util.List;
-
-
 
 public class CallsLogic extends AnalysisVisitorWithTable {
+
+    private MethodSymbol currentMethod;
 
     public CallsLogic(SymbolTable table) {
         super(table);
@@ -26,11 +24,17 @@ public class CallsLogic extends AnalysisVisitorWithTable {
 
     @Override
     protected void buildVisitor() {
+        addVisit(JmmKind.METHOD_DECL, this::visitMethodDecl);
         addVisit(JmmKind.EXPLICIT_METHOD_CALL, this::visitExplicitMethodCall);
         addVisit(JmmKind.IMPLICIT_METHOD_CALL,this::visitImplicitMethodCall);
     }
 
-    private boolean getMethodsInHierarchy(SymbolTable currentTable, Signature methodSignature) {
+    private Void visitMethodDecl(JmmNode method, SymbolTable table) {
+        currentMethod = table.getMethods(method.get("name")).getFirst();
+        return null;
+    }
+
+    private boolean isMethodInHierarchy(SymbolTable currentTable, Signature methodSignature) {
         var localMethods = currentTable.getMethod(methodSignature).isPresent();
         if (localMethods) return true;
 
@@ -39,10 +43,25 @@ public class CallsLogic extends AnalysisVisitorWithTable {
         if (superName != null && !superName.isEmpty()) {
             var superTable = table.getImportedSymbolTable(superName);
             if (superTable.isPresent()) {
-                return getMethodsInHierarchy(superTable.get(), methodSignature);
+                return isMethodInHierarchy(superTable.get(), methodSignature);
             }
         }
         return false;
+    }
+
+    private MethodSymbol getMethodInHierarchy(SymbolTable currentTable, Signature methodSignature) {
+        var localMethods = currentTable.getMethod(methodSignature);
+        if (localMethods.isPresent()) return localMethods.get();
+
+        String superName = currentTable.getSuperFullyQualifiedName();
+
+        if (superName != null && !superName.isEmpty()) {
+            var superTable = table.getImportedSymbolTable(superName);
+            if (superTable.isPresent()) {
+                return getMethodInHierarchy(superTable.get(), methodSignature);
+            }
+        }
+        return null;
     }
 
     private Void visitExplicitMethodCall(JmmNode methodCall, SymbolTable table) {
@@ -54,23 +73,10 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                 .toList();
         Signature methodsignature=new Signature(methodName,argTypes);
 
-        var type= methodCall.getChild(0);
-        if (receiver.getKind() != JmmKind.THIS) {
-            var receiverType = super.types.getExprType(type);
-            if (receiverType instanceof JmmClassType classType && (classType.isImported() || super.table.isImplicitImport(classType.name()))) {
-                var importTable = super.table.getImportedSymbolTable(classType.fullyQualifiedName());
-                if(importTable.isPresent()){
-                    if(!importTable.get().getMethod(methodsignature).isPresent()){
-                        addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method is not present in import "));
-                    }
-                }
+        if (receiver.getKind() == JmmKind.THIS) {
+            var matchingMethods = isMethodInHierarchy(table, methodsignature);
 
-            }
-        }
-        else {
-            var matchingMethods = getMethodsInHierarchy(table, methodsignature);
-
-            if (!matchingMethods) { // if method does not exist locally or in super class
+            if (!matchingMethods) {
                 addReport(Report.newError(
                         Stage.SEMANTIC,
                         NodeUtils.getLine(methodCall),
@@ -78,7 +84,59 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                         "Method '" + methodName + "' does not exist locally and no valid superclass was found.",
                         null
                 ));
-                return null;
+            }
+            return null;
+        }
+
+        // get the type of the receiver to check if its an object or a class name
+        var receiverType = super.types.getExprType(receiver);
+        if (receiverType instanceof JmmClassType classType) {
+            boolean isImported = classType.isImported() || super.table.isImplicitImport(classType.name());
+
+            if (isImported) {
+                // check if the method belongs to an external class
+                var importTable = super.table.getImportedSymbolTable(classType.fullyQualifiedName());
+                if (importTable.isPresent()) {
+                    var method = importTable.get().getMethod(methodsignature);
+                    
+                    // verify if the method actually exists in the imported class
+                    if (method.isEmpty()) {
+                        addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method '" + methodName + "' is not present in import " + classType.name()));
+                    } 
+                    // block instance methods called on a class name (static reference)
+                    else if (classType.staticRef() && !method.get().isStatic()) {
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                NodeUtils.getLine(methodCall),
+                                NodeUtils.getColumn(methodCall),
+                                "Non-static method '" + methodName + "' cannot be referenced from a static context.",
+                                null));
+                    }
+                }
+            } else {
+                var matchingMethods = isMethodInHierarchy(table, methodsignature);
+
+                if (!matchingMethods) {
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            NodeUtils.getLine(methodCall),
+                            NodeUtils.getColumn(methodCall),
+                            "Method '" + methodName + "' does not exist locally and no valid superclass was found.",
+                            null
+                    ));
+                }
+                // check static calls for local class names used as targets
+                else if (classType.staticRef()) {
+                    var localMethod = table.getMethods(methodName).stream().findFirst();
+                    if (localMethod.isPresent() && !localMethod.get().isStatic()) {
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                NodeUtils.getLine(methodCall),
+                                NodeUtils.getColumn(methodCall),
+                                "Non-static method '" + methodName + "' cannot be referenced from a static context.",
+                                null));
+                    }
+                }
             }
         }
         return null;
@@ -91,7 +149,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                 .toList();
         Signature methodsignature = new Signature(methodName, argTypes);
 
-        var matchingMethods = getMethodsInHierarchy(table, methodsignature);
+        var matchingMethods = isMethodInHierarchy(table, methodsignature);
 
         if (!matchingMethods) { // if method does not exist locally or in super class
             addReport(Report.newError(
@@ -102,6 +160,21 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                     null
             ));
         }
+
+
+        MethodSymbol calledMethod = getMethodInHierarchy(table, methodsignature);
+
+        // cant call non-static method from static method
+        if (currentMethod.isStatic() && !calledMethod.isStatic()) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(methodCall),
+                    NodeUtils.getColumn(methodCall),
+                    "Can't call non-static method '" + methodName + "' from a static context.",
+                    null
+            ));
+        }
+
         return null;
     }
 }
