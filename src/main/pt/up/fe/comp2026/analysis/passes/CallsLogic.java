@@ -13,10 +13,6 @@ import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp2026.utils.ReportUtils;
 
-import java.util.Collections;
-import java.util.List;
-
-
 
 public class CallsLogic extends AnalysisVisitorWithTable {
 
@@ -38,7 +34,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
         return null;
     }
 
-    private boolean getMethodsInHierarchy(SymbolTable currentTable, Signature methodSignature) {
+    private boolean isMethodInHierarchy(SymbolTable currentTable, Signature methodSignature) {
         var localMethods = currentTable.getMethod(methodSignature).isPresent();
         if (localMethods) return true;
 
@@ -47,10 +43,25 @@ public class CallsLogic extends AnalysisVisitorWithTable {
         if (superName != null && !superName.isEmpty()) {
             var superTable = table.getImportedSymbolTable(superName);
             if (superTable.isPresent()) {
-                return getMethodsInHierarchy(superTable.get(), methodSignature);
+                return isMethodInHierarchy(superTable.get(), methodSignature);
             }
         }
         return false;
+    }
+
+    private MethodSymbol getMethodInHierarchy(SymbolTable currentTable, Signature methodSignature) {
+        var localMethods = currentTable.getMethod(methodSignature);
+        if (localMethods.isPresent()) return localMethods.get();
+
+        String superName = currentTable.getSuperFullyQualifiedName();
+
+        if (superName != null && !superName.isEmpty()) {
+            var superTable = table.getImportedSymbolTable(superName);
+            if (superTable.isPresent()) {
+                return getMethodInHierarchy(superTable.get(), methodSignature);
+            }
+        }
+        return null;
     }
 
     private Void visitExplicitMethodCall(JmmNode methodCall, SymbolTable table) {
@@ -63,7 +74,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
         Signature methodsignature=new Signature(methodName,argTypes);
 
         if (receiver.getKind() == JmmKind.THIS) {
-            var matchingMethods = getMethodsInHierarchy(table, methodsignature);
+            var matchingMethods = isMethodInHierarchy(table, methodsignature);
 
             if (!matchingMethods) {
                 addReport(Report.newError(
@@ -103,7 +114,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                     }
                 }
             } else {
-                var matchingMethods = getMethodsInHierarchy(table, methodsignature);
+                var matchingMethods = isMethodInHierarchy(table, methodsignature);
 
                 if (!matchingMethods) {
                     addReport(Report.newError(
@@ -138,7 +149,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                 .toList();
         Signature methodsignature = new Signature(methodName, argTypes);
 
-        var matchingMethods = getMethodsInHierarchy(table, methodsignature);
+        var matchingMethods = isMethodInHierarchy(table, methodsignature);
 
         if (!matchingMethods) { // if method does not exist locally or in super class
             addReport(Report.newError(
@@ -151,7 +162,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
         }
 
 
-        MethodSymbol calledMethod = table.getMethods(methodName).get(0);
+        MethodSymbol calledMethod = getMethodInHierarchy(table, methodsignature);
 
         // cant call non-static method from static method
         if (currentMethod.isStatic() && !calledMethod.isStatic()) {
