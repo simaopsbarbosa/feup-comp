@@ -17,7 +17,7 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
     @Override
     public void buildVisitor() {
         addVisit(JmmKind.NEW_ARRAY, this::visitNewArray);
-//        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
+        // addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
 //        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
 //        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
     }
@@ -34,5 +34,6 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
 
         return null;
     }
+
 
 }
