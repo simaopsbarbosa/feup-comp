@@ -121,21 +121,21 @@ expr
     :LP expr RP                                                 #Parenteses      //16
     | expr DOT LENGTH                                           #Length
     | expr DOT name=ID                                          #FieldAcess
-    | expr DOT methodname=ID LP ( expr ( COMMA expr )* )? RP               #ExplicitMethodCall
+    | expr DOT methodname=ID LP ( expr ( COMMA expr )* )? RP    #ExplicitMethodCall
     | expr (LSB expr RSB)+                                      #ArrayAccess
     | expr op=('++'|'--')                                       #RightUnaryExpr  //15
-    | op='!' rest=expr                                          #LogicalNot  //14
+    | op='!' rest=expr                                          #LogicalNot      //14
     | op=('+'|'-'|'++'|'--') expr                               #LeftUnaryExpr   //14
     | expr op=('*'|'/'|'%') expr                                #BinaryExpr      //12
     | expr op=('+'|'-') expr                                    #BinaryExpr      //11
     | expr op=('<'|'>'|'<='|'>=') expr                          #LogicalExpr     //9
     | expr op=('=='|'!=') expr                                  #EqualityExpr    //8
-    | expr op='&&' expr                                         #LogicalExpr     // 4
-    | expr op='||' expr                                         #LogicalExpr     // 3
-    | NEW baseType (LSB size+=expr RSB)+                       #NewArray
+    | expr op='&&' expr                                         #LogicalExpr     //4
+    | expr op='||' expr                                         #LogicalExpr     //3
+    | NEW baseType (LSB size+=expr RSB)+                        #NewArray
     | NEW baseType (dims+='[]')+ arrayInitializer               #ArrayInit
-    | NEW name=ID LP ( expr ( COMMA expr )* )? RP                    #ClassInitialization
-    | methodname=ID LP (expr (COMMA expr)*)? RP                            #ImplicitMethodCall
+    | NEW name=ID LP ( expr ( COMMA expr )* )? RP               #ClassInitialization
+    | methodname=ID LP (expr (COMMA expr)*)? RP                 #ImplicitMethodCall
     | value=INTEGER                                             #IntegerLiteral
     | bool= (TRUE|FALSE)                                        #BoolLiteral
     | THIS                                                      #This
