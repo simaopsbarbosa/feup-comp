@@ -33,7 +33,8 @@ public class JmmAnalysisImpl implements JmmAnalysis {
                 new StatementLogic(table),
                 new ImportLogic(table),
                 new CallsLogic(table),
-                new AssignmentLogic(table)
+                new AssignmentLogic(table),
+                new ArrayLogic(table)
         );
     }
 
