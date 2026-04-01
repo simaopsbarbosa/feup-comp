@@ -104,7 +104,7 @@ stmt
     ;
 
 assignment
-    : ID EQUALS expr
+    : var=ID EQUALS expr
     ;
 
 arrayInitializer
