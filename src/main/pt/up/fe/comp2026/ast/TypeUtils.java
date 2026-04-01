@@ -228,6 +228,21 @@ public class TypeUtils {
         return getExprType(parentesesExpr.getChild(0));
     }
 
+    private JmmType getMethodReturnTypeInHierarchy(SymbolTable currentTable, Signature methodSignature) {
+        var localMethods = currentTable.getMethod(methodSignature);
+        if (localMethods.isPresent()) return localMethods.get().returnType();
+
+        String superName = currentTable.getSuperFullyQualifiedName();
+
+        if (superName != null && !superName.isEmpty()) {
+            var superTable = table.getImportedSymbolTable(superName);
+            if (superTable.isPresent()) {
+                return getMethodReturnTypeInHierarchy(superTable.get(), methodSignature);
+            }
+        }
+        return null;
+    }
+
     private JmmType getExplicitMethodCallType(JmmNode explMethodCall) {
         String methodName = explMethodCall.get("methodname");
 
@@ -256,7 +271,7 @@ public class TypeUtils {
         if (table.getSuperFullyQualifiedName() != null) {
             var importTable = table.getImportedSymbolTable(table.getSuperFullyQualifiedName());
             if (importTable.isPresent() && importTable.get().getMethod(methodSignature).isPresent()) {
-                return importTable.get().getMethod(methodSignature).get().returnType();
+                return getMethodReturnTypeInHierarchy(table, methodSignature);
             }
         }
 
