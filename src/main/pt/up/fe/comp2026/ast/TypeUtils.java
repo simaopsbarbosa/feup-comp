@@ -8,9 +8,11 @@ import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
@@ -193,6 +195,7 @@ public class TypeUtils {
         return null;
     }
 
+
     private JmmType resolveClass(String name) {
         return resolveClass(name, false);
     }
@@ -283,7 +286,10 @@ public class TypeUtils {
 
     private JmmType getArrayAccessType(JmmNode arrayAccess) {
         JmmType arrayType = getVarExprType(arrayAccess.getChild(0));
-        int dimsAccessed = arrayAccess.getChildren(EXPR).size();
+        int dimsAccessed = arrayAccess.getChildren(EXPR).size() - 1;   // remove expr for var
+
+        System.out.println("-------------------------");
+        System.out.println(dimsAccessed);
 
         if (arrayType instanceof JmmArrayType jmmArrayType) {
             JmmType itemType = jmmArrayType.itemType();
@@ -296,6 +302,31 @@ public class TypeUtils {
         }
 
         return JmmPrimitiveType.INT;
+    }
+
+
+
+    public Optional<JmmType> getVarTypeFromName(JmmNode node, String varName) {
+        Optional<JmmType> type = Optional.empty();
+        Optional<MethodSymbol> curentMethod = Optional.empty();
+
+        //verify if assignment is done in a method
+        if (node.getAncestor(JmmKind.METHOD_DECL).isPresent())
+            curentMethod = table.getMethod(getMethodDeclSignature(node.getAncestor(JmmKind.METHOD_DECL).get()));
+
+        //if var in locals
+        if (curentMethod.isPresent() && curentMethod.get().getLocalVariable(varName).isPresent())
+            type = Optional.of(curentMethod.get().getLocalVariable(varName).get().type());
+
+        //if var in parameters
+        if (curentMethod.isPresent() && curentMethod.get().getParameter(varName).isPresent())
+            type = Optional.of(curentMethod.get().getParameter(varName).get().type());
+
+        //if var in class field
+        if (table.getField(varName).isPresent())
+            type = Optional.of(table.getField(varName).get().type());
+
+        return type;
     }
 
 

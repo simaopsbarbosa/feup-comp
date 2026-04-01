@@ -98,13 +98,13 @@ stmt
     | FOR LP (assignment(COMMA assignment)*)?SEMICOLON (expr(COMMA expr)*)? SEMICOLON(assignment(COMMA assignment)*)? RP body=stmt #ForStmt
     | DO (expr|stmt) WHILE LP expr RP SEMICOLON #DoWhileStmt
     | expr SEMICOLON #Expression
-    | var=ID EQUALS expr SEMICOLON #AssignStmt
-    | var=ID (LSB expr RSB)+ EQUALS expr SEMICOLON #ArrayAssignment
+    | expr EQUALS expr SEMICOLON #AssignStmt
+   // | var=ID (LSB expr RSB)+ EQUALS expr SEMICOLON #ArrayAssignment
     | RETURN (expr)? SEMICOLON #ReturnStmt
     ;
 
 assignment
-    : var=ID EQUALS expr
+    : expr EQUALS expr
     ;
 
 arrayInitializer
