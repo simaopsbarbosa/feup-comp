@@ -20,6 +20,7 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
 //        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
 //        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
 //        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
+        addVisit(JmmKind.ARRAY_ACCESS, this::visitArrayAccess);
     }
 
     private Void visitNewArray(JmmNode newArray, SymbolTable table) {
@@ -28,11 +29,26 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
             JmmType exprType = types.getExprType(exprNode);
             if (!exprType.equals(JmmPrimitiveType.INT)) {
                 addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, newArray,
-                        "New Array dimension size is not Integer. Expression of dimension size is type " +  exprType));
+                        "New Array dimension size is not Integer. Expression of dimension size is type " + exprType));
             }
         });
 
         return null;
     }
 
+    private Void visitArrayAccess(JmmNode arrayAccess, SymbolTable table) {
+
+        // verifies if all experssions for dimensions are type INT
+        arrayAccess.getChildren(JmmKind.EXPR).stream().skip(1).forEach(expr -> {
+            if (expr instanceof JmmNode exprNode) {
+                JmmType exprType = types.getExprType(exprNode);
+                if (!exprType.equals(JmmPrimitiveType.INT)) {
+                    addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, arrayAccess,
+                            "Array access dimension size is not Integer. Expression of dimension size is type " +  exprType));
+                }
+            }
+        });
+
+        return null;
+    }
 }
