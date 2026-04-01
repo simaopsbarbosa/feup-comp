@@ -86,22 +86,12 @@ public class TypeUtils {
             case EXPLICIT_METHOD_CALL -> getExplicitMethodCallType(expr);
             case THIS -> resolveClass(table.getClassName());
             case IMPLICIT_METHOD_CALL -> getImplicitMethodCallType(expr);
-            case ARRAY_ACCESS -> getVarExprType(expr.getChild(0));
+            case ARRAY_ACCESS -> getArrayAccessType(expr);
             case NEW_ARRAY -> getArrayType(expr);
+            case PARAM -> convertType(expr.getChild(0));
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
         };
-    }
-
-    private JmmType getMethodCallType(JmmNode methodCall) {
-        var receiver = methodCall.getChild(0);
-        String methodName = methodCall.get("methodname");
-
-        if (receiver.getKind() == THIS) {
-            return getLocalMethodReturnType(methodName);
-        }
-
-        return new JmmClassType("java.lang.Object", true, false);
     }
 
     private JmmType getArrayType(JmmNode array) {
@@ -248,12 +238,12 @@ public class TypeUtils {
         Signature methodSignature = new Signature(methodName, argTypes);
 
         //verifies if calls class method
-        if (!table.getMethods(explMethodCall.get("methodname")).isEmpty())
+        if (!table.getMethod(methodSignature).isEmpty())
             return table.getMethod(methodSignature).get().returnType();
 
-        //verifies if imported call (TODO: need to check extended)
         var calleeType = getExprType(explMethodCall.getChild(0));
-        if (calleeType instanceof JmmClassType jmmClass && (jmmClass.isImported() || table.isImplicitImport(jmmClass.name()))) {
+
+        if (calleeType instanceof JmmClassType jmmClass && (true || jmmClass.isImported() || table.isImplicitImport(jmmClass.name()))) {;
             var importTable = table.getImportedSymbolTable(jmmClass.fullyQualifiedName());
 
             //checks if imported table contains method
@@ -262,9 +252,36 @@ public class TypeUtils {
             }
         }
 
+        // verifies if in extends
+        if (table.getSuperFullyQualifiedName() != null) {
+            var importTable = table.getImportedSymbolTable(table.getSuperFullyQualifiedName());
+            if (importTable.isPresent() && importTable.get().getMethod(methodSignature).isPresent()) {
+                return importTable.get().getMethod(methodSignature).get().returnType();
+            }
+        }
+
+        // TODO: NOT RECURSIVE SEARCH !!!!
 
         //default to int
         return JmmPrimitiveType.INT;
     }
+
+    private JmmType getArrayAccessType(JmmNode arrayAccess) {
+        JmmType arrayType = getVarExprType(arrayAccess.getChild(0));
+        int dimsAccessed = arrayAccess.getChildren(EXPR).size();
+
+        if (arrayType instanceof JmmArrayType jmmArrayType) {
+            JmmType itemType = jmmArrayType.itemType();
+            int totalArrayDims = jmmArrayType.dimension();
+
+            if (totalArrayDims > dimsAccessed) {
+                return new JmmArrayType(itemType, totalArrayDims - dimsAccessed);
+            } else if (totalArrayDims == dimsAccessed)
+                return itemType;
+        }
+
+        return JmmPrimitiveType.INT;
+    }
+
 
 }

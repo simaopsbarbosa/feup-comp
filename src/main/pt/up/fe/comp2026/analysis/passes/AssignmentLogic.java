@@ -44,6 +44,7 @@ public class AssignmentLogic extends AnalysisVisitorWithTable {
 
     private void validateAssignment(JmmNode assignmentNode, String varName, SymbolTable table) {
         Optional<MethodSymbol> curentMethod = Optional.empty();
+        System.out.println(assignmentNode);
         JmmType varType = null;
 
         //verify if assignment is done in a method
@@ -64,7 +65,7 @@ public class AssignmentLogic extends AnalysisVisitorWithTable {
 
         //get type of assigned expression
         JmmType exprType = super.types.getExprType(assignmentNode.getChildren(JmmKind.EXPR).getFirst());
-
+        System.out.println("this for sure works");
         // verifies if both types are classes
         if(varType instanceof JmmClassType varTypeClass && exprType instanceof JmmClassType exprTypeClass) {
             // var type has to be parent of expr

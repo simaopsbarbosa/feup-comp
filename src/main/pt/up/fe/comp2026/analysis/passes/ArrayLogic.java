@@ -13,6 +13,9 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
     @Override
     public void buildVisitor() {
         addVisit(JmmKind.NEW_ARRAY, this::visitNewArray);
+//        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
+//        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
+//        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
     }
 
     private Void visitNewArray(JmmNode jmmNode, SymbolTable table) {

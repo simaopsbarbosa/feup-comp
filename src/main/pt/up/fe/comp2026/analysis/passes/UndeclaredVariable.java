@@ -10,17 +10,23 @@ import pt.up.fe.comp.jmm.ast.NodeAttribute;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2026.analysis.AnalysisVisitor;
+import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
 import pt.up.fe.comp2026.ast.NodeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTableBuilder;
+import pt.up.fe.comp2026.utils.ReportUtils;
 
 import java.util.List;
 import java.util.Objects;
 
-public class UndeclaredVariable extends AnalysisVisitor {
+public class UndeclaredVariable extends AnalysisVisitorWithTable {
 
     private MethodSymbol currentMethod;
+
+    public UndeclaredVariable(SymbolTable table) {
+        super(table);
+    }
 
 
     @Override
@@ -36,7 +42,15 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
-        currentMethod = table.getMethods(method.get("name")).getFirst();
+        var argTypes = method.getChildren(JmmKind.PARAM).stream()
+                .map(super.types::getExprType)
+                .toList();
+        Signature methodsignature = new Signature(method.get("name"), argTypes);
+        if (table.getMethod(methodsignature).isEmpty()) {
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, method, "This method signature is something"));
+            return null;
+        }
+        currentMethod = table.getMethod(methodsignature).get();
         return null;
     }
 
