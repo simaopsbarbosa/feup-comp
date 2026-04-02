@@ -29,6 +29,7 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
         addVisit(JmmKind.ARRAY_ACCESS, this::visitArrayAccess);
         addVisit(JmmKind.LENGTH, this::visitArrayLength);
         addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
+        addVisit(JmmKind.TYPE, this::visitType);
     }
 
 
@@ -44,13 +45,36 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
 
     }
 
+    private Void visitType(JmmNode typeNode, SymbolTable table) {
+        String baseTypeName = typeNode.getChild(0).get("name");
+        List<Object> dims = typeNode.getObjectAsList("dims");
+
+        if ("void".equals(baseTypeName) && !dims.isEmpty()) {
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, typeNode,
+                    "Variables, fields, or parameters cannot be declared as void arrays."));
+        }
+
+        return null;
+    }
+
+    private void checkVoidType(JmmNode arrayNode) {
+        String baseTypeName = arrayNode.getChild(0).get("name");
+
+        if ("void".equals(baseTypeName)) {
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, arrayNode,
+                    "An array's base type cannot be void."));
+        }
+    }
+
     private Void visitNewArray(JmmNode newArray, SymbolTable table) {
         checkAccessInt(newArray, newArray.getChildren(JmmKind.EXPR), 0);
+        checkVoidType(newArray);
         return null;
     }
 
     private Void visitArrayAccess(JmmNode arrayAccess, SymbolTable table) {
         checkAccessInt(arrayAccess, arrayAccess.getChildren(JmmKind.EXPR), 1);
+        checkVoidType(arrayAccess);
 
         JmmNode node = arrayAccess.getDescendants(JmmKind.VAR_REF_EXPR).getFirst();
         String varName = node.get("name");

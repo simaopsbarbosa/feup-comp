@@ -1,0 +1,9 @@
+package pt.up.fe.comp2026;
+
+class ArrayVoidFail {
+    void[] a;
+
+    public void foo(void[] b) {
+        void[] c;
+    }
+}

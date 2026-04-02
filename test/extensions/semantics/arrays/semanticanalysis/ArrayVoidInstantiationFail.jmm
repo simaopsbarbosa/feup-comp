@@ -1,0 +1,11 @@
+package pt.up.fe.comp2026;
+
+class ArrayVoidInstantiationFail {
+    public int testInstantiations() {
+        new void[5];
+
+        new void[] {};
+
+        return 0;
+    }
+}
