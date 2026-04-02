@@ -92,6 +92,7 @@ public class TypeUtils {
             case NEW_ARRAY, ARRAY_INIT -> getArrayType(expr);
             case PARAM -> convertType(expr.getChild(0));
             case ARRAY_ELEMENT -> getExprType(expr.getChild(0));
+            case FIELD_ACESS -> getFieldAccessType(expr);
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
         };
@@ -312,6 +313,17 @@ public class TypeUtils {
         return JmmPrimitiveType.INT;
     }
 
+    private JmmType getFieldAccessType(JmmNode fieldAccess) {
+        String varRefName = fieldAccess.get("name");
+
+        if (table.getField(varRefName).isPresent()) {
+            return table.getField(varRefName).get().type();
+        }
+        // recursive search if in extended
+
+        return null;
+    }
+
 
 
     public Optional<JmmType> getVarTypeFromName(JmmNode node, String varName) {
@@ -336,6 +348,8 @@ public class TypeUtils {
 
         return type;
     }
+
+
 
 
 }
