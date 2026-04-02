@@ -92,7 +92,7 @@ public class TypeUtils {
             case NEW_ARRAY, ARRAY_INIT -> getArrayType(expr);
             case PARAM -> convertType(expr.getChild(0));
             case ARRAY_ELEMENT -> getExprType(expr.getChild(0));
-            case FIELD_ACESS -> getFieldAccessType(expr);
+            case FIELD_ACESS -> getFieldAccessType(expr, table);
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
         };
@@ -313,15 +313,18 @@ public class TypeUtils {
         return JmmPrimitiveType.INT;
     }
 
-    private JmmType getFieldAccessType(JmmNode fieldAccess) {
+    private JmmType getFieldAccessType(JmmNode fieldAccess, JmmSymbolTable currentTable) {
         String varRefName = fieldAccess.get("name");
 
-        if (table.getField(varRefName).isPresent()) {
-            return table.getField(varRefName).get().type();
+        if (currentTable.getField(varRefName).isPresent()) {
+            return currentTable.getField(varRefName).get().type();
         }
-        // recursive search if in extended
 
-        return null;
+        if (currentTable.getSuperFullyQualifiedName() != null) {
+            JmmSymbolTable superTable = (JmmSymbolTable) currentTable.getImportedSymbolTable(currentTable.getSuperFullyQualifiedName()).get();
+            return getFieldAccessType(fieldAccess, superTable);
+        }
+         return null;
     }
 
 
