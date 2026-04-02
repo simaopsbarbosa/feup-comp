@@ -74,7 +74,6 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
 
     private Void visitArrayAccess(JmmNode arrayAccess, SymbolTable table) {
         checkAccessInt(arrayAccess, arrayAccess.getChildren(JmmKind.EXPR), 1);
-        checkVoidType(arrayAccess);
 
         JmmNode node = arrayAccess.getDescendants(JmmKind.VAR_REF_EXPR).getFirst();
         String varName = node.get("name");
