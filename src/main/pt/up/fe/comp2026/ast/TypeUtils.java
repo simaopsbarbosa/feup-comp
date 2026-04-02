@@ -276,7 +276,7 @@ public class TypeUtils {
             }
         }
 
-        // verifies if in extends
+        // verifies if in extends (recursive)
         if (table.getSuperFullyQualifiedName() != null) {
             var importTable = table.getImportedSymbolTable(table.getSuperFullyQualifiedName());
             if (importTable.isPresent() && importTable.get().getMethod(methodSignature).isPresent()) {
@@ -284,7 +284,7 @@ public class TypeUtils {
             }
         }
 
-        // TODO: NOT RECURSIVE SEARCH !!!!
+
 
         //default to int
         return JmmPrimitiveType.INT;
