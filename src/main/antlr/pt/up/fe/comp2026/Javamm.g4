@@ -74,7 +74,7 @@ param
 
 
 type
-    : baseType (dims+='[]')*
+    : baseType (dims+=LSB RSB)*
     ;
 
 baseType
@@ -132,8 +132,8 @@ expr
     | expr op=('=='|'!=') expr                                  #EqualityExpr    //8
     | expr op='&&' expr                                         #LogicalExpr     //4
     | expr op='||' expr                                         #LogicalExpr     //3
-    | NEW baseType (LSB size+=expr RSB)+                        #NewArray
-    | NEW baseType (dims+='[]')+ arrayInitializer               #ArrayInit
+    | NEW baseType (size+=LSB elementCount+=expr RSB)+ (size+=LSB RSB)* #NewArray
+    | NEW baseType (dims+=LSB RSB)+ arrayInitializer            #ArrayInit
     | NEW name=ID LP ( expr ( COMMA expr )* )? RP               #ClassInitialization
     | methodname=ID LP (expr (COMMA expr)*)? RP                 #ImplicitMethodCall
     | value=INTEGER                                             #IntegerLiteral
