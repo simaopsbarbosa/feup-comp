@@ -132,7 +132,7 @@ expr
     | expr op=('=='|'!=') expr                                  #EqualityExpr    //8
     | expr op='&&' expr                                         #LogicalExpr     //4
     | expr op='||' expr                                         #LogicalExpr     //3
-    | NEW baseType (size+=LSB dims+=expr RSB)+ (size+=LSB RSB)* #NewArray
+    | NEW baseType (size+=LSB elementCount+=expr RSB)+ (size+=LSB RSB)* #NewArray
     | NEW baseType (dims+=LSB RSB)+ arrayInitializer            #ArrayInit
     | NEW name=ID LP ( expr ( COMMA expr )* )? RP               #ClassInitialization
     | methodname=ID LP (expr (COMMA expr)*)? RP                 #ImplicitMethodCall
