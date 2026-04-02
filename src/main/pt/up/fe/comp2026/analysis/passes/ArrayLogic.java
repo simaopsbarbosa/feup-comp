@@ -27,6 +27,7 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
         addVisit(JmmKind.NEW_ARRAY, this::visitNewArray);
 //        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
         addVisit(JmmKind.ARRAY_ACCESS, this::visitArrayAccess);
+        addVisit(JmmKind.LENGTH, this::visitArrayLength);
     }
 
 
@@ -62,6 +63,22 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
 
         return null;
     }
+
+
+
+    private Void visitArrayLength(JmmNode arrayLengthExpr, SymbolTable table) {
+        JmmNode varNode = arrayLengthExpr.getDescendants(JmmKind.VAR_REF_EXPR).getFirst();
+        String varName = varNode.get("name");
+
+        JmmType varType = types.getVarTypeFromName(varNode, varName).get();
+
+        if (!(varType instanceof JmmArrayType)) {
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, arrayLengthExpr,
+                    "Cant get length of non array type. Variable is type " + varType));
+        }
+        return null;
+    }
+    //Length
 
 
 }
