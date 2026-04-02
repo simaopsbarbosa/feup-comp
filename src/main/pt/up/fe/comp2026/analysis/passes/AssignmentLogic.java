@@ -6,6 +6,7 @@ import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp.jmm.ast.Kind;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
@@ -30,6 +31,7 @@ public class AssignmentLogic extends AnalysisVisitorWithTable {
 
     private Void visitAssignment(JmmNode assignmentExpr, SymbolTable table) {
         JmmType varType = types.getExprType(assignmentExpr.getChild(0));
+        if (!canAssign(assignmentExpr.getChild(0))) return null;
         this.validateAssignment(assignmentExpr, varType, table);
         return null;
     }
@@ -113,6 +115,17 @@ public class AssignmentLogic extends AnalysisVisitorWithTable {
 
         //recursive call on extended class
         return isParentClass(supposedParent, newChild);
+    }
+
+
+    private boolean canAssign(JmmNode leftExpr) {
+        Kind leftKind = leftExpr.getKind();
+        if (leftKind.equals(JmmKind.VAR_REF_EXPR) || leftKind.equals(JmmKind.ARRAY_ACCESS) || leftKind.equals(JmmKind.FIELD_ACESS))
+            return true;
+
+        addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, leftExpr,
+                "Variable cannot be assigned to. Variable is Node type " + leftExpr));
+        return false;
     }
 
 
