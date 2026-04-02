@@ -17,6 +17,8 @@ import pt.up.fe.comp2026.utils.ReportUtils;
 import java.util.List;
 import javax.lang.model.type.PrimitiveType;
 
+import static pt.up.fe.comp2026.jmm.ast.JmmKind.EXPR;
+
 public class ArrayLogic extends AnalysisVisitorWithTable {
 
     public ArrayLogic(SymbolTable table) {
@@ -58,9 +60,19 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
         JmmType type = types.getVarTypeFromName(node, varName).get();
 
         // check if variable is an array
-        if (!(type instanceof JmmArrayType)) {
+        if (!(type instanceof JmmArrayType arrayType)) {
             addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, arrayAccess,
                     "Variable is not subscriptable. Variable is type " + type));
+        }
+        else {
+            int totalDims = arrayType.dimension();
+            int accessedDims = arrayAccess.getChildren(EXPR).size() - 1;
+
+            //check correct amount of dims accessed
+            if (accessedDims > totalDims) {
+                addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, arrayAccess,
+                        "Accessed non-existent array dimension. Array has " + totalDims + " dimensions and Access has " + accessedDims + " dimensions"));
+            }
         }
 
         return null;
