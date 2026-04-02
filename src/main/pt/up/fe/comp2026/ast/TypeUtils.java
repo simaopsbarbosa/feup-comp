@@ -90,6 +90,7 @@ public class TypeUtils {
             case ARRAY_ACCESS -> getArrayAccessType(expr);
             case NEW_ARRAY, ARRAY_INIT -> getArrayType(expr);
             case PARAM -> convertType(expr.getChild(0));
+            case ARRAY_ELEMENT -> getExprType(expr.getChild(0));
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
         };

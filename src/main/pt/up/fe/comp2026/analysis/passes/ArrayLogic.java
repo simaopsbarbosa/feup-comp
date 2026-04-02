@@ -9,6 +9,8 @@ import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.utils.ReportUtils;
 
+import javax.lang.model.type.PrimitiveType;
+
 public class ArrayLogic extends AnalysisVisitorWithTable {
     public ArrayLogic(SymbolTable table) {
         super(table);
@@ -17,7 +19,7 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
     @Override
     public void buildVisitor() {
         addVisit(JmmKind.NEW_ARRAY, this::visitNewArray);
-        // addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
+        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
 //        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
 //        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
     }
@@ -34,6 +36,21 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
 
         return null;
     }
+    private Void visitArrayInit(JmmNode arrayInit,SymbolTable table){
+        var typeNode= arrayInit.getChild(0);
+        var type=super.types.getExprType(arrayInit).asArray().itemType();
+        var arrayelment=arrayInit.getChild(1).getChildren(JmmKind.ARRAY_ELEMENT);
+        if(arrayelment.isEmpty()) {
+           return  null;
+        }
+        var children= arrayelment.stream().allMatch(e -> super.types.getExprType(e).equals(type));
 
+        if(!children){
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, arrayInit,
+                    "Type mismatch array expects "+ type + " but at leats one child is of wrong type"   ));
+        }
+
+        return  null;
+    }
 
 }
