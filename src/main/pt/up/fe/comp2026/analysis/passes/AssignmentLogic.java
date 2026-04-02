@@ -3,6 +3,7 @@ package pt.up.fe.comp2026.analysis.passes;
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
+import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Stage;
@@ -28,49 +29,61 @@ public class AssignmentLogic extends AnalysisVisitorWithTable {
 
 
     private Void visitAssignment(JmmNode assignmentExpr, SymbolTable table) {
-        this.validateAssignment(assignmentExpr, assignmentExpr.get("var"), table);
+        JmmType varType = types.getExprType(assignmentExpr.getChild(0));
+        this.validateAssignment(assignmentExpr, varType, table);
         return null;
     }
 
+
     private Void vistVarDecl(JmmNode varDeclExpr, SymbolTable table) {
+
         //if has assignment validate it
         if (!varDeclExpr.getChildren(JmmKind.EXPR).isEmpty()) {
-            this.validateAssignment(varDeclExpr, varDeclExpr.get("name"), table);
+            JmmType varType = types.convertType(varDeclExpr.getChild(0));
+            this.validateAssignment(varDeclExpr, varType, table);
         }
 
         return null;
     }
 
 
-    private void validateAssignment(JmmNode assignmentNode, String varName, SymbolTable table) {
-        Optional<MethodSymbol> curentMethod = Optional.empty();
-        System.out.println(assignmentNode);
-        JmmType varType = null;
+    private void validateAssignment(JmmNode assignmentNode, JmmType varType, SymbolTable table) {
+        JmmType exprType = types.getExprType(assignmentNode.getChildren(JmmKind.EXPR).getLast());
 
-        //verify if assignment is done in a method
-        if (assignmentNode.getAncestor(JmmKind.METHOD_DECL).isPresent())
-            curentMethod = table.getMethod(super.types.getMethodDeclSignature(assignmentNode.getAncestor(JmmKind.METHOD_DECL).get()));
-
-        //if var in locals
-        if (curentMethod.isPresent() && curentMethod.get().getLocalVariable(varName).isPresent())
-            varType = curentMethod.get().getLocalVariable(varName).get().type();
-
-        //if var in parameters
-        if (curentMethod.isPresent() && curentMethod.get().getParameter(varName).isPresent())
-            varType = curentMethod.get().getParameter(varName).get().type();
-
-        //if var in class field
-        if (table.getField(varName).isPresent())
-            varType = table.getField(varName).get().type();
-
-        //get type of assigned expression
-        JmmType exprType = super.types.getExprType(assignmentNode.getChildren(JmmKind.EXPR).getFirst());
-        System.out.println("this for sure works");
         // verifies if both types are classes
         if(varType instanceof JmmClassType varTypeClass && exprType instanceof JmmClassType exprTypeClass) {
             // var type has to be parent of expr
             if (isParentClass(varTypeClass.fullyQualifiedName(), exprTypeClass.fullyQualifiedName()))
                 return;
+        }
+
+        // handle array level logic
+        boolean isVarArray  = (varType instanceof JmmArrayType);
+        boolean isExprArray = (exprType instanceof JmmArrayType);
+
+        // mismatched array type
+        if (isVarArray != isExprArray) {
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, assignmentNode,
+                    "Array assignment with incorrect types. Variable is type " + varType + " Expr is " + exprType));
+            return;
+        }
+
+        if (isVarArray && isExprArray) {
+            JmmArrayType varArrayType = (JmmArrayType) varType;
+            JmmArrayType exprArrayType = (JmmArrayType) exprType;
+
+            // mismatched primitive type
+            if (!varArrayType.itemType().equals(exprArrayType.itemType())) {
+                addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, assignmentNode,
+                        "Array Primitive types do not match. Variable is type " + varType + " Expr is " + exprType));
+            }
+
+            // mismatched dimensions
+            if (varArrayType.dimension() != exprArrayType.dimension()) {
+                addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, assignmentNode,
+                        "Array dimension assignment does not match. Variable has " + varType + " dims and Expr has " + exprType +" dims"));
+            }
+            return;
         }
 
         // else they are primitive and need to be equal

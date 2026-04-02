@@ -12,6 +12,7 @@ import pt.up.fe.comp2026.ast.AccessType;
 import pt.up.fe.comp2026.ast.NodeUtils;
 import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
+import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.specs.util.utilities.StringLines;
 
 import java.util.stream.Collectors;
@@ -87,7 +88,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // code to compute self
         // statement has type of lhs
-        var varName = node.get(JmmAttributes.ASSIGN_STMT.VAR);
+
+        var varName = node.getDescendants(VAR_REF_EXPR).getFirst().get("name");
         JmmType thisType = TypeUtils.intType();
         String typeString = ollirTypes.toOllirType(thisType);
         var varCode = ollirTypes.sanitizeId(varName) + typeString;

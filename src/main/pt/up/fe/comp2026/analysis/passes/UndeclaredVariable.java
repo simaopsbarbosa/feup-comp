@@ -33,9 +33,6 @@ public class UndeclaredVariable extends AnalysisVisitorWithTable {
     public void buildVisitor() {
         addVisit(JmmKind.METHOD_DECL, this::visitMethodDecl);
         addVisit(JmmKind.VAR_REF_EXPR, this::visitVarRefExpr);
-        addVisit(JmmKind.ASSIGN_STMT, this::visitAssignStmt);
-        addVisit(JmmKind.ARRAY_ASSIGNMENT, this::visitArrayAssignment);
-        addVisit(JmmKind.ARRAY_ASSIGNMENT, this::visitArrayAssignment);
         addVisit(JmmKind.FIELD_ACESS, this::visitFieldAccess);
 
     }
