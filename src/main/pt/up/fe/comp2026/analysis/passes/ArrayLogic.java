@@ -1,12 +1,8 @@
 package pt.up.fe.comp2026.analysis.passes;
 
-import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
-import pt.up.fe.comp.jmm.analysis.table.Signature;
-import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
-import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Stage;
@@ -15,7 +11,6 @@ import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.utils.ReportUtils;
 
 import java.util.List;
-import javax.lang.model.type.PrimitiveType;
 
 public class ArrayLogic extends AnalysisVisitorWithTable {
 
@@ -90,13 +85,12 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
     }
     private Void visitArrayInit(JmmNode arrayInit,SymbolTable table){
         checkVoidType(arrayInit);
-        var typeNode= arrayInit.getChild(0);
         var type=super.types.getExprType(arrayInit).asArray().itemType();
-        var arrayelment=arrayInit.getChild(1).getChildren(JmmKind.ARRAY_ELEMENT);
-        if(arrayelment.isEmpty()) {
+        var arrayElement=arrayInit.getChild(1).getChildren(JmmKind.ARRAY_ELEMENT);
+        if(arrayElement.isEmpty()) {
            return  null;
         }
-        var children= arrayelment.stream().allMatch(e -> super.types.getExprType(e).equals(type));
+        var children= arrayElement.stream().allMatch(e -> super.types.getExprType(e).equals(type));
 
         if(!children){
             addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, arrayInit,
