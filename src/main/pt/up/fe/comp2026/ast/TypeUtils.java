@@ -89,17 +89,25 @@ public class TypeUtils {
             case THIS -> resolveClass(table.getClassName());
             case IMPLICIT_METHOD_CALL -> getImplicitMethodCallType(expr);
             case ARRAY_ACCESS -> getArrayAccessType(expr);
-            case NEW_ARRAY -> getArrayType(expr);
+            case NEW_ARRAY, ARRAY_INIT -> getArrayType(expr);
             case PARAM -> convertType(expr.getChild(0));
+            case ARRAY_ELEMENT -> getExprType(expr.getChild(0));
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
         };
     }
 
     private JmmType getArrayType(JmmNode array) {
+        int size;
+        if (array.getKind() == ARRAY_INIT) {
+            size = array.getObjectAsList("dims").size();
+        } else {
+            size = array.getObjectAsList("size").size();
+        }
+
         var name = array.getChild(0).get("name");
         var type = JmmPrimitiveType.fromString(name);
-        var size = array.getObjectAsList("size").size();
+
         if (type.isPresent()) {
             return new JmmArrayType(type.get(), size);
         } else {

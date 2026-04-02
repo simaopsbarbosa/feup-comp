@@ -15,6 +15,7 @@ import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.utils.ReportUtils;
 
 import java.util.List;
+import javax.lang.model.type.PrimitiveType;
 
 public class ArrayLogic extends AnalysisVisitorWithTable {
 
@@ -25,9 +26,9 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
     @Override
     public void buildVisitor() {
         addVisit(JmmKind.NEW_ARRAY, this::visitNewArray);
-//        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
         addVisit(JmmKind.ARRAY_ACCESS, this::visitArrayAccess);
         addVisit(JmmKind.LENGTH, this::visitArrayLength);
+        addVisit(JmmKind.ARRAY_INIT, this::visitArrayInit);
     }
 
 
@@ -40,6 +41,7 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
                         addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, parentNode,
                                 "Array access size is not Integer. Expression of dimension size is type " + exprType));
                 });
+
     }
 
     private Void visitNewArray(JmmNode newArray, SymbolTable table) {
@@ -63,6 +65,22 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
 
         return null;
     }
+    private Void visitArrayInit(JmmNode arrayInit,SymbolTable table){
+        var typeNode= arrayInit.getChild(0);
+        var type=super.types.getExprType(arrayInit).asArray().itemType();
+        var arrayelment=arrayInit.getChild(1).getChildren(JmmKind.ARRAY_ELEMENT);
+        if(arrayelment.isEmpty()) {
+           return  null;
+        }
+        var children= arrayelment.stream().allMatch(e -> super.types.getExprType(e).equals(type));
+
+        if(!children){
+            addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, arrayInit,
+                    "Type mismatch array expects "+ type + " but at leats one child is of wrong type"   ));
+        }
+
+        return  null;
+    }
 
 
 
@@ -78,7 +96,6 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
         }
         return null;
     }
-    //Length
 
 
 }
