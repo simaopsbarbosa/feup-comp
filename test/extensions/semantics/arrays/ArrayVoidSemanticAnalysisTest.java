@@ -18,8 +18,20 @@ public class ArrayVoidSemanticAnalysisTest extends pt.up.fe.comp.test.env.JmmTes
     }
 
     @Test
-    public void arrayVoidInstantiationFail() {
-        setDescription("Test that void cannot be used with the 'new' keyword or in array initialization.");
-        semantics("ArrayVoidInstantiationFail.jmm", true);
+    public void arrayVoidNewSizeFail() {
+        setDescription("Test that 'new void[size]' fails.");
+        semantics("ArrayVoidNewSizeFail.jmm", true);
+    }
+
+    @Test
+    public void arrayVoidInitEmptyFail() {
+        setDescription("Test that 'new void[] {}' fails.");
+        semantics("ArrayVoidInitEmptyFail.jmm", true);
+    }
+
+    @Test
+    public void arrayVoidInitElementsFail() {
+        setDescription("Test that 'new void[] {1, 2}' fails.");
+        semantics("ArrayVoidInitElementsFail.jmm", true);
     }
 }

@@ -1,0 +1,8 @@
+package pt.up.fe.comp2026;
+
+class ArrayVoidNewSizeFail {
+    public int test() {
+        new void[5];
+        return 0;
+    }
+}

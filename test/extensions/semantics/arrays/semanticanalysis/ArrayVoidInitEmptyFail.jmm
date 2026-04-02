@@ -1,0 +1,8 @@
+package pt.up.fe.comp2026;
+
+class ArrayVoidInitEmptyFail {
+    public int test() {
+        new void[] {};
+        return 0;
+    }
+}
