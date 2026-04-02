@@ -89,6 +89,7 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
         return null;
     }
     private Void visitArrayInit(JmmNode arrayInit,SymbolTable table){
+        checkVoidType(arrayInit);
         var typeNode= arrayInit.getChild(0);
         var type=super.types.getExprType(arrayInit).asArray().itemType();
         var arrayelment=arrayInit.getChild(1).getChildren(JmmKind.ARRAY_ELEMENT);
