@@ -80,7 +80,7 @@ public class JmmSymbolTableBuilder {
         //get imports
         var importDecls = root.getChildren(IMPORT_DECL);
         buildimports(importDecls);
-        System.out.println("Imports: " + imports);
+
 
         //get super qualified name
         var superQualified = this.getSuperQualifiedName(classDecl);
@@ -104,7 +104,6 @@ public class JmmSymbolTableBuilder {
         return classDecl.getChildren(FIELD_DECL).stream()
                 .filter(decl ->{
                     var name=decl.getChild(0).get("name");
-                    System.out.println(name+"sucks");
                     if(seen.contains(name)){
                         reports.add(newError(decl,"Same name Variables"));
                         return  false;
