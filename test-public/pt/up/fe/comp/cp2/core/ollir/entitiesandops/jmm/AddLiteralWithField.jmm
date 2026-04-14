@@ -1,0 +1,12 @@
+package pt.up.fe.comp.cp2.core.ollir.entitiesandops.jmm;
+
+class AddLiteralWithField {
+    int b;
+
+    public int method() {
+        int a;
+        a = 1 + b;
+        return a;
+    }
+}
+
