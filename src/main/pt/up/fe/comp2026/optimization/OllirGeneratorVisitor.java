@@ -14,6 +14,7 @@ import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.specs.util.utilities.StringLines;
+import pt.up.fe.specs.util.utilities.Table;
 
 import java.util.stream.Collectors;
 
@@ -67,16 +68,19 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
     private String simpleVarDecl(JmmNode varDecl, Void unused) {
+        System.out.println( ollirTypes.toOllirType(varDecl.getObject("typeNode", JmmNode.class)));
         return varDecl.get("name") + ollirTypes.toOllirType(varDecl.getObject("typeNode", JmmNode.class)) + ";";
     }
 
     private String visitParam(JmmNode varDecl, Void unused) {
+        System.out.println( ollirTypes.toOllirType(varDecl.getObject("typeNode", JmmNode.class)));
         return varDecl.get("name") + ollirTypes.toOllirType(varDecl.getObject("typeNode", JmmNode.class));
     }
 
 
 
     private String visitPackageDecl(JmmNode packageDecl, Void unused) {
+        System.out.println(String.join(".", packageDecl.getObjectAsList("path", String.class)) );
         return "package " + String.join(".", packageDecl.getObjectAsList("path", String.class)) + ";\n";
     }
 
@@ -90,7 +94,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         // statement has type of lhs
 
         var varName = node.getDescendants(VAR_REF_EXPR).getFirst().get("name");
-        JmmType thisType = TypeUtils.intType();
+        JmmType thisType = TypeUtils.with(table).getExprType(node.getChild(0));
         String typeString = ollirTypes.toOllirType(thisType);
         var varCode = ollirTypes.sanitizeId(varName) + typeString;
 
@@ -110,19 +114,17 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(rhs.getCode());
 
         code.append(END_STMT);
-
+        System.out.println(code.toString());
         return code.toString();
     }
 
     private String visitReturn(JmmNode node, Void unused) {
 
-        System.out.println("[TODO] OllirGeneratorVisitor.visitReturn(): Assuming always returns an integer expression, needs to be expanded");
-        JmmType retType = TypeUtils.intType();
+
+        JmmType retType = TypeUtils.with(table).getExprType(node.getChild(0));
         var expr = exprVisitor.visit(node.getChild(0));
 
-
         StringBuilder code = new StringBuilder();
-
         code.append(expr.getComputation());
         code.append("ret");
         code.append(ollirTypes.toOllirType(retType));

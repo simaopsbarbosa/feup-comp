@@ -12,6 +12,7 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.specs.util.collections.AccumulatorMap;
 
+import java.sql.Array;
 import java.util.Set;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.TYPE;
@@ -59,12 +60,22 @@ public class OptUtils {
     }
 
     public String toOllirType(JmmType type) {
-            return "." + toPrimitiveOllirType((JmmPrimitiveType) type);
+            return  switch (type){
+                case JmmArrayType ar -> ".array"+ toOllirType(ar.itemType());
+                case JmmClassType c -> "."+c.name();
+                case  JmmPrimitiveType p->"."+toPrimitiveOllirType(p);
+                default -> ".void";
+            };
     }
 
     private String toPrimitiveOllirType(JmmPrimitiveType type) {
-        System.out.println("[TODO] OptUtils.toPrimitiveOllirType(): Assumes it is always int, needs to be expanded");
-        return "i32";
+        return switch(type) {
+            case INT -> "i32";
+            case VOID -> "void";
+            case BOOLEAN -> "boolean";
+            default -> "void";
+        };
+
     }
 
     public String sanitizeId(String id) {
