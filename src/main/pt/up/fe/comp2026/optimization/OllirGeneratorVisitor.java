@@ -63,9 +63,15 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(METHOD_DECL, this::visitMethodDecl);
         addVisit(RETURN_STMT, this::visitReturn);
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
+        addVisit(FIELD_DECL,this::FieldDecl);
         setDefaultVisit(this::defaultVisit);
     }
 
+
+    private String FieldDecl(JmmNode node, Void unused) {
+        var visibility= node.getOptional("visibility").isPresent()? node.getOptional("visibility").get(): "public";
+        return ".field "+visibility+" "+node.getChild(0).get("name") + ollirTypes.toOllirType(node.getChild(0).getObject("typeNode", JmmNode.class)) + ";";
+    }
 
 
     private String visitParam(JmmNode varDecl, Void unused) {
@@ -186,7 +192,11 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(L_BRACKET);
         code.append(NL);
         code.append(NL);
-
+        for(var child:node.getChildren(FIELD_DECL)){
+            var result=visit(child);
+            code.append(result);
+        }
+        code.append(NL);
 
         code.append(buildConstructor());
         code.append(NL);

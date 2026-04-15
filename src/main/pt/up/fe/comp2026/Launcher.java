@@ -42,8 +42,8 @@ public class Launcher {
         JmmAnalysisImpl sema = new JmmAnalysisImpl();
         JmmSemanticsResult semanticsResult = sema.semanticAnalysis(parserResult);
 
-        //System.out.println("Annotated AST:");
-        //System.out.println(semanticsResult.getRootNode().toTree());
+        System.out.println("Annotated AST:");
+        System.out.println(semanticsResult.getRootNode().toTree());
 
         semanticsResult.throwIfErrors();
 
@@ -59,6 +59,7 @@ public class Launcher {
         }
 
         OllirResult ollirResult = ollirGen.toOllir(semanticsResult);
+        System.out.println(ollirResult.getOllirCode());
         ollirResult.throwIfErrors();
 
 //        // Print OLLIR code
