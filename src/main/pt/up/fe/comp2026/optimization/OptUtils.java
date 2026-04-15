@@ -71,7 +71,7 @@ public class OptUtils {
     private String toPrimitiveOllirType(JmmPrimitiveType type) {
         return switch(type) {
             case INT -> "i32";
-            case VOID -> "void";
+            case VOID -> "V";
             case BOOLEAN -> "boolean";
             default -> "V";
         };
