@@ -40,6 +40,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(VAR_REF_EXPR, this::visitVarRef);
         addVisit(BINARY_EXPR, this::visitBinExpr);
         addVisit(INTEGER_LITERAL, this::visitInteger);
+        addVisit(BOOL_LITERAL, this::visitBoolLiteral);
     }
 
     private OllirExprResult visitInteger(JmmNode node, Void unused) {
@@ -89,6 +90,14 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         return new OllirExprResult(code);
 
+    }
+
+    private OllirExprResult visitBoolLiteral(JmmNode node, Void unused) {
+        if (node.get("bool").equals("true")) {
+            return new OllirExprResult("1.bool");
+        }
+
+        return new OllirExprResult("0.bool");
     }
 
 

@@ -29,12 +29,14 @@ public class OptUtils {
 
 
     private final AccumulatorMap<String> temporaries;
+    private final AccumulatorMap<String> labels;
 
     private final TypeUtils types;
 
     public OptUtils(TypeUtils types) {
         this.types = types;
         this.temporaries = new AccumulatorMap<>();
+        this.labels = new AccumulatorMap<>();
     }
 
 
@@ -49,6 +51,16 @@ public class OptUtils {
         var nextTempNum = temporaries.add(prefix) - 1;
 
         return prefix + nextTempNum;
+    }
+
+
+
+    public String nextLabel(String prefix) {
+
+        // Subtract 1 because the base is 1
+        var nextLabelNum = labels.add(prefix) - 1;
+
+        return prefix + "_" + nextLabelNum;
     }
 
 
@@ -72,7 +84,7 @@ public class OptUtils {
         return switch(type) {
             case INT -> "i32";
             case VOID -> "void";
-            case BOOLEAN -> "boolean";
+            case BOOLEAN -> "bool";
             default -> "V";
         };
 

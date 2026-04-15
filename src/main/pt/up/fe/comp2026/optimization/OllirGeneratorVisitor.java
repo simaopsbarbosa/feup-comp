@@ -62,6 +62,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(METHOD_DECL, this::visitMethodDecl);
         addVisit(RETURN_STMT, this::visitReturn);
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
+        addVisit(ELSEIF_BLOCK_STMT, this::visitIfStmt);
+        addVisit(BLOCK, this::visitBlockStmt);
         setDefaultVisit(this::defaultVisit);
     }
 
@@ -76,6 +78,42 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitPackageDecl(JmmNode packageDecl, Void unused) {
         return "package " + String.join(".", packageDecl.getObjectAsList("path", String.class)) + ";\n";
     }
+
+    //TODO: Spaces are weird
+    private String visitIfStmt(JmmNode ifStmt, Void unused) {
+        StringBuilder code = new StringBuilder();
+        String trueLabel = ollirTypes.nextLabel("if_true");
+        String exitLabel = ollirTypes.nextLabel("if_exit");
+
+        JmmNode condNode = ifStmt.getChildren(EXPR).get(0);
+        String cond = exprVisitor.visit(condNode).getCode();
+        code.append("if(" + cond + ") goto " + trueLabel + END_STMT);
+
+        //handle else stmt
+        if (ifStmt.getChildren(STMT).size() > 1) {
+            JmmNode elseStmt = ifStmt.getChildren(STMT).getLast();
+            String elseCodes = visit(elseStmt);
+            code.append(elseCodes);
+        }
+        code.append("   " + "goto " + exitLabel + END_STMT);
+
+        //handles true stmts:
+        code.append("   " + trueLabel + ":" + NL);
+        JmmNode trueStmt = ifStmt.getChildren(STMT).getFirst();
+        String trueCodes = visit(trueStmt);
+        code.append(trueCodes);
+
+        code.append("   " + exitLabel + ":" + NL);
+
+        return code.toString();
+    }
+
+
+    private String visitBlockStmt(JmmNode blockStmt, Void unused) {
+        //visit nested stmts
+        return blockStmt.getChildren(STMT).stream().map(this::visit).collect(Collectors.joining("\n   ", "   ", ""));
+    }
+
 
 
     private String visitAssignStmt(JmmNode node, Void unused) {
@@ -150,7 +188,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(name);
 
         // params
-        var paramsCode = node.getChildren(PARAM).stream().map(this::visit).collect(Collectors.joining("\n   ", " (", ")"));;
+        var paramsCode = node.getChildren(PARAM).stream().map(this::visit).collect(Collectors.joining(", ", " (", ")"));;
         code.append(paramsCode);
 
         // type
