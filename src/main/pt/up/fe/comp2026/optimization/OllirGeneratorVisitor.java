@@ -14,6 +14,7 @@ import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.specs.util.utilities.StringLines;
+import pt.up.fe.specs.util.utilities.Table;
 
 import java.util.stream.Collectors;
 
@@ -90,7 +91,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         // statement has type of lhs
 
         var varName = node.getDescendants(VAR_REF_EXPR).getFirst().get("name");
-        JmmType thisType = TypeUtils.intType();
+        JmmType thisType = TypeUtils.with(table).getExprType(node.getChild(0));
         String typeString = ollirTypes.toOllirType(thisType);
         var varCode = ollirTypes.sanitizeId(varName) + typeString;
 
@@ -110,19 +111,16 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(rhs.getCode());
 
         code.append(END_STMT);
-
         return code.toString();
     }
 
     private String visitReturn(JmmNode node, Void unused) {
 
-        System.out.println("[TODO] OllirGeneratorVisitor.visitReturn(): Assuming always returns an integer expression, needs to be expanded");
-        JmmType retType = TypeUtils.intType();
+
+        JmmType retType = TypeUtils.with(table).getExprType(node.getChild(0));
         var expr = exprVisitor.visit(node.getChild(0));
 
-
         StringBuilder code = new StringBuilder();
-
         code.append(expr.getComputation());
         code.append("ret");
         code.append(ollirTypes.toOllirType(retType));
@@ -157,8 +155,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // params
         // TODO: Hardcoded for a single parameter, needs to be expanded
-        var paramsCode = visit(node.getChild(1));
-        code.append("(" + paramsCode + ")");
+        var paramsCode = node.getChildren(PARAM).stream().map(this::visit).collect(Collectors.joining("\n   ", " (", ")"));;
+        code.append(paramsCode);
 
         // type
         var retType = ollirTypes.toOllirType(currentMethod.returnType());//table.getReturnType(node.get("name")));
