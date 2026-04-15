@@ -58,18 +58,14 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(PROGRAM, this::visitProgram);
         addVisit(PACKAGE_DECL, this::visitPackageDecl);
         addVisit(CLASS_DECL, this::visitClass);
-        addVisit(VAR_DECL, this::simpleVarDecl);
         addVisit(PARAM, this::visitParam);
         addVisit(METHOD_DECL, this::visitMethodDecl);
         addVisit(RETURN_STMT, this::visitReturn);
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
-//        setDefaultVisit(this::defaultVisit);
+        setDefaultVisit(this::defaultVisit);
     }
 
 
-    private String simpleVarDecl(JmmNode varDecl, Void unused) {
-        return varDecl.get("name") + ollirTypes.toOllirType(varDecl.getObject("typeNode", JmmNode.class)) + ";";
-    }
 
     private String visitParam(JmmNode varDecl, Void unused) {
         return varDecl.get("name") + ollirTypes.toOllirType(varDecl.getObject("typeNode", JmmNode.class));
@@ -154,7 +150,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(name);
 
         // params
-        // TODO: Hardcoded for a single parameter, needs to be expanded
         var paramsCode = node.getChildren(PARAM).stream().map(this::visit).collect(Collectors.joining("\n   ", " (", ")"));;
         code.append(paramsCode);
 
@@ -228,7 +223,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
      * @return
      */
     private String defaultVisit(JmmNode node, Void unused) {
-
+        System.out.println("default visited " + node + "----------------------------------------------");
         for (var child : node.getChildren()) {
             visit(child);
         }
