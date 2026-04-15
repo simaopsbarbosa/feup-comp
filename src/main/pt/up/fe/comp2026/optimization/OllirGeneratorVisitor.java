@@ -18,6 +18,7 @@ import pt.up.fe.specs.util.utilities.Table;
 
 import java.util.stream.Collectors;
 
+import static pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType.VOID;
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
 /**
@@ -111,21 +112,23 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String visitReturn(JmmNode node, Void unused) {
-
-
-        JmmType retType = TypeUtils.with(table).getExprType(node.getChild(0));
-        var expr = exprVisitor.visit(node.getChild(0));
-
+        JmmType retType = node.getChildren().isEmpty() ? VOID : TypeUtils.with(table).getExprType(node.getChild(0));
+        OllirExprResult expr=null;
         StringBuilder code = new StringBuilder();
+        if (node.getChildren().isEmpty()) {
+            code.append("ret");
+            code.append(ollirTypes.toOllirType(retType));
+            code.append(SPACE);
+            code.append(END_STMT);
+            return code.toString();
+        }
+        expr = exprVisitor.visit(node.getChild(0));
         code.append(expr.getComputation());
         code.append("ret");
         code.append(ollirTypes.toOllirType(retType));
         code.append(SPACE);
-
         code.append(expr.getCode());
-
         code.append(END_STMT);
-
         return code.toString();
     }
 
