@@ -68,19 +68,16 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
     private String simpleVarDecl(JmmNode varDecl, Void unused) {
-        System.out.println( ollirTypes.toOllirType(varDecl.getObject("typeNode", JmmNode.class)));
         return varDecl.get("name") + ollirTypes.toOllirType(varDecl.getObject("typeNode", JmmNode.class)) + ";";
     }
 
     private String visitParam(JmmNode varDecl, Void unused) {
-        System.out.println( ollirTypes.toOllirType(varDecl.getObject("typeNode", JmmNode.class)));
         return varDecl.get("name") + ollirTypes.toOllirType(varDecl.getObject("typeNode", JmmNode.class));
     }
 
 
 
     private String visitPackageDecl(JmmNode packageDecl, Void unused) {
-        System.out.println(String.join(".", packageDecl.getObjectAsList("path", String.class)) );
         return "package " + String.join(".", packageDecl.getObjectAsList("path", String.class)) + ";\n";
     }
 
@@ -114,7 +111,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(rhs.getCode());
 
         code.append(END_STMT);
-        System.out.println(code.toString());
         return code.toString();
     }
 
@@ -159,8 +155,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // params
         // TODO: Hardcoded for a single parameter, needs to be expanded
-        var paramsCode = visit(node.getChild(1));
-        code.append("(" + paramsCode + ")");
+        var paramsCode = node.getChildren(PARAM).stream().map(this::visit).collect(Collectors.joining("\n   ", " (", ")"));;
+        code.append(paramsCode);
 
         // type
         var retType = ollirTypes.toOllirType(currentMethod.returnType());//table.getReturnType(node.get("name")));

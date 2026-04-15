@@ -64,7 +64,7 @@ public class OptUtils {
                 case JmmArrayType ar -> ".array"+ toOllirType(ar.itemType());
                 case JmmClassType c -> "."+c.name();
                 case  JmmPrimitiveType p->"."+toPrimitiveOllirType(p);
-                default -> ".void";
+                default -> ".V";
             };
     }
 
@@ -73,7 +73,7 @@ public class OptUtils {
             case INT -> "i32";
             case VOID -> "void";
             case BOOLEAN -> "boolean";
-            default -> "void";
+            default -> "V";
         };
 
     }
