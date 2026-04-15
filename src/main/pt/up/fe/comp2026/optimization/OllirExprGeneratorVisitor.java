@@ -41,6 +41,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(BINARY_EXPR, this::visitBinExpr);
         addVisit(INTEGER_LITERAL, this::visitInteger);
         addVisit(BOOL_LITERAL, this::visitBoolLiteral);
+        addVisit(LOGICAL_EXPR, this::visitBinExpr);
     }
 
     private OllirExprResult visitInteger(JmmNode node, Void unused) {

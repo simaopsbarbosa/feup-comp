@@ -66,6 +66,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(ELSEIF_BLOCK_STMT, this::visitIfStmt);
         addVisit(BLOCK, this::visitBlockStmt);
         addVisit(FIELD_DECL,this::FieldDecl);
+        addVisit(WHILE_STMT, this::visitWhileStmt);
         setDefaultVisit(this::defaultVisit);
     }
 
@@ -85,6 +86,33 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitPackageDecl(JmmNode packageDecl, Void unused) {
         return "package " + String.join(".", packageDecl.getObjectAsList("path", String.class)) + ";\n";
     }
+
+    private String visitWhileStmt(JmmNode whileStmt, Void unused) {
+        StringBuilder code = new StringBuilder();
+        String loopBeginLabel = ollirTypes.nextLabel("loop_begin");
+        String loopLabel = ollirTypes.nextLabel("loop_body");
+        String exitLabel = ollirTypes.nextLabel("loop_exit");
+
+        code.append(loopBeginLabel + ":" + NL);
+
+        //handle condition
+        JmmNode condNode = whileStmt.getChildren(EXPR).get(0);
+        String cond = exprVisitor.visit(condNode).getCode();
+        code.append("   if(" + cond + ") goto " + loopLabel + END_STMT);
+
+        code.append("   " + "goto " + exitLabel + END_STMT);
+
+        //handles loop stmts:
+        code.append("   " + loopLabel + ":" + NL);
+        code.append(visit(whileStmt.getChildren(STMT).getFirst()));
+        code.append("   " + "goto " + loopBeginLabel + END_STMT);
+
+        code.append("   " + exitLabel + ":" + NL);
+
+        return code.toString();
+    }
+
+
 
     //TODO: Spaces are weird
     private String visitIfStmt(JmmNode ifStmt, Void unused) {
