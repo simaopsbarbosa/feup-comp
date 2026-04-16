@@ -8,6 +8,7 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2026.ast.AccessType;
 import pt.up.fe.comp2026.ast.TypeUtils;
+import pt.up.fe.comp2026.jmm.ast.JmmKind;
 
 import java.util.stream.Collectors;
 
@@ -42,8 +43,15 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(INTEGER_LITERAL, this::visitInteger);
         addVisit(BOOL_LITERAL, this::visitBoolLiteral);
         addVisit(LOGICAL_EXPR, this::visitBinExpr);
+        addVisit(THIS, this::visitThisExpr);
     }
 
+    private OllirExprResult visitThisExpr(JmmNode node,Void unused){
+        String code;
+        code = "this."+node.getAncestor(CLASS_DECL).get().get("name");
+        System.out.println(code);
+        return new OllirExprResult(code);
+    }
     private OllirExprResult visitInteger(JmmNode node, Void unused) {
         var intType = TypeUtils.intType();
         String ollirIntType = ollirTypes.toOllirType(intType);
@@ -85,11 +93,15 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         var id = ollirTypes.sanitizeId(node.get("name"));
         JmmType type = types.getExprType(node);
         String ollirType = ollirTypes.toOllirType(type);
+        var code = new StringBuilder();
+        if(table.getField(id).isPresent()){
+            code.append("getfield(").append("this,").append(id).append(ollirType).append(")").append(ollirType);
+        }
+        else {
+            code.append(id).append(ollirType);
+        }
 
-
-        String code = id + ollirType;
-
-        return new OllirExprResult(code);
+        return new OllirExprResult(code.toString());
 
     }
 
