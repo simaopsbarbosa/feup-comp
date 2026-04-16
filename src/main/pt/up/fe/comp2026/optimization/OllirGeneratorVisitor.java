@@ -70,7 +70,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         setDefaultVisit(this::defaultVisit);
     }
 
-
     private String FieldDecl(JmmNode node, Void unused) {
         var visibility= node.getOptional("visibility").isPresent()? node.getOptional("visibility").get(): "public";
         return ".field "+visibility+" "+node.getChild(0).get("name") + ollirTypes.toOllirType(node.getChild(0).getObject("typeNode", JmmNode.class)) + ";";
@@ -154,7 +153,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private String visitAssignStmt(JmmNode node, Void unused) {
         // TODO: Several hard-coded things, should be rewritten
 
-        var rhs = exprVisitor.visit(node.getChild(0));
+        var rhs = exprVisitor.visit(node.getChild(1));
 
         // code to compute self
         // statement has type of lhs
@@ -162,6 +161,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         var varName = node.getDescendants(VAR_REF_EXPR).getFirst().get("name");
         JmmType thisType = TypeUtils.with(table).getExprType(node.getChild(0));
         String typeString = ollirTypes.toOllirType(thisType);
+
         var varCode = ollirTypes.sanitizeId(varName) + typeString;
 
 
