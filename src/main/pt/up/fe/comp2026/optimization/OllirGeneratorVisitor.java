@@ -153,7 +153,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private String visitAssignStmt(JmmNode node, Void unused) {
         // TODO: Several hard-coded things, should be rewritten
-
+        System.out.println(node);
         var rhs = exprVisitor.visit(node.getChild(0));
 
         // code to compute self

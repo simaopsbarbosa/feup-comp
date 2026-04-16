@@ -51,19 +51,19 @@ public class Launcher {
         JmmOptimizationImpl ollirGen = new JmmOptimizationImpl();
 //
 //        // AST-based optimizations
-        if(semanticsResult.config().get("optimize") != null && semanticsResult.config().get("optimize").equals("true")){
+        //if(semanticsResult.config().get("optimize") != null && semanticsResult.config().get("optimize").equals("true")){
             semanticsResult = ollirGen.transformAst(semanticsResult);
 
             System.out.println("Optimized AST:");
             System.out.println("AST: " + semanticsResult.getRootNode().toTree());
-        }
+        //}
 
         OllirResult ollirResult = ollirGen.toOllir(semanticsResult);
         System.out.println(ollirResult.getOllirCode());
         ollirResult.throwIfErrors();
 
 //        // Print OLLIR code
-        System.out.println(ollirResult.getOllirCode());
+        //System.out.println(ollirResult.getOllirCode());
 //
 //        // Code generation stage
 //        JasminBackendImpl jasminGen = new JasminBackendImpl();
