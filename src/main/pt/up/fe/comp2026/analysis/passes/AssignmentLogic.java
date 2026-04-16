@@ -23,7 +23,6 @@ public class AssignmentLogic extends AnalysisVisitorWithTable {
 
     @Override
     public void buildVisitor() {
-        addVisit(JmmKind.ASSIGN_STMT, this::visitAssignment);
         addVisit(JmmKind.VAR_DECL, this::vistVarDecl);
         addVisit(JmmKind.ASSIGNMENT, this::visitAssignment);
     }

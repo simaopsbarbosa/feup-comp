@@ -105,13 +105,10 @@ stmt
     | FOR LP (forInit)?SEMICOLON (forCond)? SEMICOLON (forUpdate)? RP body=stmt #ForStmt
     | DO (expr|stmt) WHILE LP expr RP SEMICOLON #DoWhileStmt
     | expr SEMICOLON #Expression
-    | expr EQUALS expr SEMICOLON #AssignStmt
-   // | var=ID (LSB expr RSB)+ EQUALS expr SEMICOLON #ArrayAssignment
+    | assignment SEMICOLON #AssignStmt
     | RETURN (expr)? SEMICOLON #ReturnStmt
     ;
 
-
-//    | FOR LP (assignment(COMMA assignment)*)?stop1=SEMICOLON (expr(COMMA expr)*)? stop2=SEMICOLON(assignment(COMMA assignment)*)? RP body=stmt #ForStmt
 
 assignment
     : expr EQUALS expr

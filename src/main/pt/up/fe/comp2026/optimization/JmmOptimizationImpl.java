@@ -52,7 +52,12 @@ public class JmmOptimizationImpl implements JmmOptimization {
         //add initializations before while loop
         if (hasInit) {
             List<JmmNode> initNodes = forStmt.getChildren(JmmKind.FOR_INIT).getFirst().getChildren(JmmKind.ASSIGNMENT);
-            initNodes.forEach(initNode -> outerBlockNode.add(initNode));
+
+            initNodes.forEach(initNode -> {
+                JmmNode assigntStmt = new JmmNodeImpl(JmmKind.ASSIGN_STMT);
+                assigntStmt.add(initNode);
+                outerBlockNode.add(assigntStmt);
+            });
         }
 
         JmmNode whileNode = new JmmNodeImpl(JmmKind.WHILE_STMT);
