@@ -1,6 +1,7 @@
 package pt.up.fe.comp2026.optimization;
 
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
@@ -157,29 +158,35 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // code to compute self
         // statement has type of lhs
-
+        var varCode="";
+        var code = new StringBuilder();
         var varName = node.getDescendants(VAR_REF_EXPR).getFirst().get("name");
         JmmType thisType = TypeUtils.with(table).getExprType(node.getChild(0));
+
         String typeString = ollirTypes.toOllirType(thisType);
+        if (table.getField(varName).isPresent()) {
+            code.append("putfield(this,");
+            varCode=ollirTypes.sanitizeId(varName) + typeString;
 
-        var varCode = ollirTypes.sanitizeId(varName) + typeString;
+
+            code.append(varCode).append(",").append(rhs.getCode()).append(")").append(".V").append(END_STMT);
+        }
+        else {
+            varCode = ollirTypes.sanitizeId(varName) + typeString;
+            code.append(rhs.getComputation());
+            code.append(varCode);
+            code.append(SPACE);
+            code.append(ASSIGN);
+            code.append(typeString);
+            code.append(SPACE);
+            code.append(rhs.getCode());
+            code.append(END_STMT);
+        }
 
 
-        var code = new StringBuilder();
 
         // code to compute the children
-        code.append(rhs.getComputation());
 
-        code.append(varCode);
-        code.append(SPACE);
-
-        code.append(ASSIGN);
-        code.append(typeString);
-        code.append(SPACE);
-
-        code.append(rhs.getCode());
-
-        code.append(END_STMT);
         return code.toString();
     }
 

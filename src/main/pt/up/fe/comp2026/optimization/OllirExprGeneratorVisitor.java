@@ -48,7 +48,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
     private OllirExprResult visitThisExpr(JmmNode node,Void unused){
         String code;
-        code = "this."+node.getAncestor(JmmKind.CLASS_DECL).get().get("name");
+        code = "this."+node.getAncestor(CLASS_DECL).get().get("name");
         System.out.println(code);
         return new OllirExprResult(code);
     }
@@ -93,11 +93,15 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         var id = ollirTypes.sanitizeId(node.get("name"));
         JmmType type = types.getExprType(node);
         String ollirType = ollirTypes.toOllirType(type);
+        var code = new StringBuilder();
+        if(table.getField(id).isPresent()){
+            code.append("getfield(").append("this,").append(id).append(ollirType).append(")").append(ollirType);
+        }
+        else {
+            code.append(id).append(ollirType);
+        }
 
-
-        String code = id + ollirType;
-
-        return new OllirExprResult(code);
+        return new OllirExprResult(code.toString());
 
     }
 
