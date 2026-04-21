@@ -255,12 +255,16 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
+    // a parte do extends só tentei diferentes variações até passar os testes, então não sei se tá correto
     private String visitClass(JmmNode node, Void unused) {
 
         StringBuilder code = new StringBuilder();
 
         code.append(NL);
-        code.append(table.getClassName());
+
+        if (table.getSuper() != null) {
+            code.append(table.getClassName() + " extends " + table.getSuper());
+        } else code.append(table.getClassName());
 
         code.append(L_BRACKET);
         code.append(NL);
@@ -285,12 +289,18 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String buildConstructor() {
+        String extendName = "java.lang.Object";
+        if (table.getSuperFullyQualifiedName() != null) {
+            extendName = table.getSuper();
+        }
+
         return """
-                .construct %s().V {
-                    invokespecial(this, "<init>").V;
+                .construct "<init>"().V {
+                    invokespecial(this."%s", "<init>").V;
                 }
-                """.formatted(table.getClassName());
+                """.formatted(extendName);
     }
+
 
     private String visitProgram(JmmNode node, Void unused) {
 
