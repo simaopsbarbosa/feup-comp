@@ -9,6 +9,7 @@ import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2026.ast.AccessType;
 import pt.up.fe.comp2026.ast.TypeUtils;
+import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 
 import java.util.stream.Collectors;
@@ -46,9 +47,16 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(LOGICAL_EXPR, this::visitBinExpr);
         addVisit(NEW_ARRAY,this::visitNewArray);
         addVisit(ARRAY_INIT,this::visitNewArray);
+        addVisit(CLASS_INITIALIZATION,this::visitClassInit);
         addVisit(THIS, this::visitThisExpr);
     }
+    private OllirExprResult visitClassInit(JmmNode node,Void unused){
+        String code;
+        code="new("+node.get("name")+")"+ollirTypes.toOllirType(types.getExprType(node));
+        return new OllirExprResult(code);
+    }
     private OllirExprResult visitNewArray(JmmNode node,Void unused){
+        //checked documentation have zero ideas on how to make this for multiarrays
         String code;
         JmmType type=types.getExprType(node);
         int size;
