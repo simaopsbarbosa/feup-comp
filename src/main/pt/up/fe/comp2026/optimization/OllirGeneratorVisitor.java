@@ -175,6 +175,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
             code.append(varCode).append(",").append(rhs.getCode()).append(")").append(".V").append(END_STMT);
         }
+
         else {
             varCode = ollirTypes.sanitizeId(varName) + typeString;
             code.append(rhs.getComputation());
@@ -185,6 +186,12 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(SPACE);
             code.append(rhs.getCode());
             code.append(END_STMT);
+        }
+
+
+        if (node.getChild(1).getKind().equals(CLASS_INITIALIZATION)) {
+            varCode = ollirTypes.sanitizeId(varName) + typeString;
+            code.append("invokespecial(" + varCode + ", " + "\"<init>\").V" + END_STMT);
         }
 
 
@@ -280,7 +287,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         }
         code.append(NL);
 
-        code.append(buildConstructor());
+        code.append(buildConstructor(node));
         code.append(NL);
 
         for (var child : node.getChildren(METHOD_DECL)) {
@@ -293,7 +300,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
-    private String buildConstructor() {
+    //TODO: use node to check if fields have initialization
+    private String buildConstructor(JmmNode classNode) {
         StringBuilder code = new StringBuilder();
         String extendName = "java.lang.Object";
         if (table.getSuperFullyQualifiedName() != null) {
