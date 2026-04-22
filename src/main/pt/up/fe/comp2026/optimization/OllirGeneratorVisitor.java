@@ -1,5 +1,6 @@
 package pt.up.fe.comp2026.optimization;
 
+import org.apache.commons.lang3.StringUtils;
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
@@ -17,6 +18,8 @@ import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.specs.util.utilities.StringLines;
 import pt.up.fe.specs.util.utilities.Table;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType.VOID;
@@ -289,16 +292,32 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String buildConstructor() {
+        StringBuilder code = new StringBuilder();
         String extendName = "java.lang.Object";
         if (table.getSuperFullyQualifiedName() != null) {
             extendName = table.getSuper();
         }
 
-        return """
-                .construct "<init>"().V {
-                    invokespecial(this."%s", "<init>").V;
-                }
-                """.formatted(extendName);
+        // get constructor params
+        List<Symbol> fields = table.getFields();
+        List<String> constructorTypes = new ArrayList<>();
+        fields.forEach(symbol -> {constructorTypes.add(ollirTypes.nextTemp() + ollirTypes.toOllirType(symbol.type()));});
+        String constructorCode = StringUtils.join(constructorTypes, ", ");
+
+
+        code.append(".construct \"<init>\"(" + constructorCode + ").V" + L_BRACKET);
+        code.append("invokespecial(this.\"%s\", \"<init>\").V;\n".formatted(extendName));
+
+        for (int i = 0; i < fields.size(); i++) {
+            var symbolField = fields.get(i);
+            String typeSuffix = ollirTypes.toOllirType(symbolField.type());
+            String fieldIdentifier = symbolField.name() + typeSuffix;
+            String tmpVar = "tmp" + i + typeSuffix;
+            code.append("putfield(this, %s, %s).V;\n".formatted(fieldIdentifier, tmpVar));
+        }
+        code.append(R_BRACKET);
+
+        return code.toString();
     }
 
 
