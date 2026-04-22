@@ -1,5 +1,6 @@
 package pt.up.fe.comp2026.optimization;
 
+import com.google.gson.stream.JsonToken;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
@@ -43,9 +44,25 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(INTEGER_LITERAL, this::visitInteger);
         addVisit(BOOL_LITERAL, this::visitBoolLiteral);
         addVisit(LOGICAL_EXPR, this::visitBinExpr);
+        addVisit(NEW_ARRAY,this::visitNewArray);
+        addVisit(ARRAY_INIT,this::visitNewArray);
         addVisit(THIS, this::visitThisExpr);
     }
-
+    private OllirExprResult visitNewArray(JmmNode node,Void unused){
+        String code;
+        JmmType type=types.getExprType(node);
+        int size;
+        String t=ollirTypes.toOllirType(type);
+        System.out.println(t);
+        if (node.getKind() == ARRAY_INIT) {
+            size = node.getObjectAsList("dims").size();
+        } else {
+            size = node.getObjectAsList("size").size();
+        }
+        code = "new(array,"+ size +t+ ")"+t;
+        System.out.println(this + code);
+        return new OllirExprResult(code);
+    }
     private OllirExprResult visitThisExpr(JmmNode node,Void unused){
         String code;
         code = "this."+node.getAncestor(CLASS_DECL).get().get("name");
