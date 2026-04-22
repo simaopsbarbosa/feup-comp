@@ -20,6 +20,7 @@ import pt.up.fe.specs.util.utilities.Table;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType.VOID;
@@ -220,11 +221,12 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         StringBuilder code = new StringBuilder(".method ");
 
-        boolean isPublic = NodeUtils.getBooleanAttribute(node, "isPublic", "false");
-
-        if (isPublic) {
-            code.append("public ");
+        String visibility = "";
+        Optional<String> nodeVisibility = node.getOptional(JmmAttributes.METHOD_DECL.VISIBILITY);
+        if (nodeVisibility.isPresent()) {
+            visibility = nodeVisibility.get();
         }
+        code.append(visibility + " ");
 
         if (node.getObject("isStatic", Boolean.class)) {
             code.append("static ");
@@ -239,7 +241,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(paramsCode);
 
         // type
-        var retType = ollirTypes.toOllirType(currentMethod.returnType());//table.getReturnType(node.get("name")));
+        var retType = ollirTypes.toOllirType(currentMethod.returnType());
         code.append(retType);
         code.append(L_BRACKET);
 
