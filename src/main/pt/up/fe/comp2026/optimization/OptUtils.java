@@ -73,7 +73,14 @@ public class OptUtils {
 
     public String toOllirType(JmmType type) {
             return  switch (type){
-                case JmmArrayType ar -> ".array"+ toOllirType(ar.itemType());
+                case JmmArrayType ar-> {
+                    StringBuilder res=new StringBuilder();
+                    for (int i =0;i<ar.dimension();i++){
+                        res.append(".array");
+                    }
+                    res.append(toOllirType(ar.itemType()));
+                    yield res.toString();
+                }
                 case JmmClassType c -> "."+c.name();
                 case  JmmPrimitiveType p->"."+toPrimitiveOllirType(p);
                 default -> ".V";

@@ -7,11 +7,13 @@ import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2026.JavammParser;
 import pt.up.fe.comp2026.ast.AccessType;
 import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
@@ -57,19 +59,33 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     }
     private OllirExprResult visitNewArray(JmmNode node,Void unused){
         //checked documentation have zero ideas on how to make this for multiarrays
-        String code;
+        StringBuilder code=new StringBuilder();
+        StringBuilder dims=new StringBuilder();
         JmmType type=types.getExprType(node);
         int size;
         String t=ollirTypes.toOllirType(type);
         System.out.println(t);
         if (node.getKind() == ARRAY_INIT) {
             size = node.getObjectAsList("dims").size();
+            dims.append(size).append(".i32");
         } else {
             size = node.getObjectAsList("size").size();
+            for(int i=1; i<=size;i++){
+                JmmNode child=node.getChild(i);
+                String typeChild= ollirTypes.toOllirType(types.getExprType(child));
+                String value=child.get("value") ;
+                if(i!=size){
+                    dims.append(value).append(typeChild).append(',');
+                }
+                else {
+                    dims.append(value).append(typeChild);
+                }
+
+            }
         }
-        code = "new(array,"+ size +t+ ")"+t;
-        System.out.println(this + code);
-        return new OllirExprResult(code);
+        code.append(" new(array,").append(dims).append(")").append(t);
+        System.out.println(this + code.toString());
+        return new OllirExprResult(code.toString());
     }
     private OllirExprResult visitThisExpr(JmmNode node,Void unused){
         String code;
