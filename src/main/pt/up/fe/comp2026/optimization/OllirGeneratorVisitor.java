@@ -72,6 +72,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(BLOCK, this::visitBlockStmt);
         addVisit(FIELD_DECL,this::FieldDecl);
         addVisit(WHILE_STMT, this::visitWhileStmt);
+        addVisit(VAR_DECL, this::simpleVarDecl);
         setDefaultVisit(this::defaultVisit);
     }
 
@@ -154,60 +155,74 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
 
+    private String visitAssignment(JmmNode node, String varName, JmmType thisType, JmmNode AssigneeExpr) {
+        var rhs = exprVisitor.visit(AssigneeExpr);
 
-    private String visitAssignStmt(JmmNode node, Void unused) {
-        // TODO: Several hard-coded things, should be rewritten
-
-        var rhs = exprVisitor.visit(node.getChild(1));
-
-        // code to compute self
-        // statement has type of lhs
-        var varCode="";
+        var varCode = "";
         var code = new StringBuilder();
-        var varName = node.getDescendants(VAR_REF_EXPR).getFirst().get("name");
-        JmmType thisType = TypeUtils.with(table).getExprType(node.getChild(0));
 
         String typeString = ollirTypes.toOllirType(thisType);
         if (table.getField(varName).isPresent()) {
             code.append("putfield(this,");
             varCode=ollirTypes.sanitizeId(varName) + typeString;
-
             code.append(varCode).append(",").append(rhs.getCode()).append(")").append(".V").append(END_STMT);
-        }
-
-        else {
+        } else {
             varCode = ollirTypes.sanitizeId(varName) + typeString;
-            code.append(rhs.getComputation());
-            code.append(varCode);
-            code.append(SPACE);
-            code.append(ASSIGN);
-            code.append(typeString);
-            code.append(SPACE);
-            code.append(rhs.getCode());
-            code.append(END_STMT);
+            String computation = rhs.getComputation();
+            String tempCode = rhs.getCode();
+
+            // visitBinExpr always adds a temp, so try to replace it with real var name (not sure if the correct way)
+            if (!computation.isEmpty() && computation.contains(tempCode + " :=")) {
+                computation = computation.replace(tempCode + " :=", varCode + " :=");
+                code.append(computation);
+            } else {
+                code.append(computation);
+                code.append(varCode).append(SPACE)
+                        .append(ASSIGN).append(typeString).append(SPACE)
+                        .append(tempCode).append(END_STMT);
+            }
         }
 
-        // if assignment is a class initialization
-        if (node.getChild(1).getKind().equals(CLASS_INITIALIZATION)) {
-            JmmType parentType = TypeUtils.with(table).getExprType(node.getChild(1));
+        if (AssigneeExpr.getKind().equals(CLASS_INITIALIZATION)) {
+            JmmType parentType = TypeUtils.with(table).getExprType(AssigneeExpr);
             String parentStr = ollirTypes.toOllirType(parentType);
             varCode = ollirTypes.sanitizeId(varName) + parentStr;
             code.append("invokespecial(" + varCode + ", " + "\"<init>\").V" + END_STMT);
         }
 
-
         return code.toString();
     }
+
+
+    private String visitAssignStmt(JmmNode node, Void unused) {
+
+        String varName = node.getDescendants(VAR_REF_EXPR).getFirst().get("name");
+        JmmType thisType = TypeUtils.with(table).getExprType(node.getChild(0));
+        JmmNode assigneeExpr = node.getChild(1);
+
+        return visitAssignment(node, varName, thisType, assigneeExpr);
+    }
+
+
+
+
+    private String simpleVarDecl(JmmNode varDecl, Void unused) {
+        if (!varDecl.getChildren(EXPR).isEmpty()) {
+            String varName = varDecl.get(JmmAttributes.VAR_DECL.NAME);
+            JmmType thisType = TypeUtils.with(table).convertType(varDecl.getChild(0));
+            JmmNode assigneeExpr = varDecl.getChild(1);
+            return visitAssignment(varDecl, varName, thisType, assigneeExpr);
+        }
+        return "";
+    }
+
 
     private String visitReturn(JmmNode node, Void unused) {
         JmmType retType = node.getChildren().isEmpty() ? VOID : TypeUtils.with(table).getExprType(node.getChild(0));
         OllirExprResult expr=null;
         StringBuilder code = new StringBuilder();
         if (node.getChildren().isEmpty()) {
-            code.append("ret");
-            code.append(ollirTypes.toOllirType(retType));
-            code.append(SPACE);
-            code.append(END_STMT);
+            code.append("ret" + ollirTypes.toOllirType(retType) + SPACE + END_STMT);
             return code.toString();
         }
         expr = exprVisitor.visit(node.getChild(0));
@@ -249,6 +264,13 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         var retType = ollirTypes.toOllirType(currentMethod.returnType());
         code.append(retType);
         code.append(L_BRACKET);
+
+        //NEEDS TO CHECK VARDECL WHOM HAVE ASSIGNMENTS
+        var varDecls = node.getChildren(VAR_DECL);
+        if (!varDecls.isEmpty()) {
+            var varDeclCode = varDecls.stream().map(this::visit).collect(Collectors.joining("\n   ", "   ", ""));
+            code.append(varDeclCode);
+        }
 
         var stmts = node.getChildren(STMT);
         if (!stmts.isEmpty()) {

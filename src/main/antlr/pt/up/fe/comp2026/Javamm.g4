@@ -99,7 +99,6 @@ stmt
     | DO (expr|stmt) WHILE LP expr RP SEMICOLON #DoWhileStmt
     | expr SEMICOLON #Expression
     | expr EQUALS expr SEMICOLON #AssignStmt
-   // | var=ID (LSB expr RSB)+ EQUALS expr SEMICOLON #ArrayAssignment
     | RETURN (expr)? SEMICOLON #ReturnStmt
     ;
 
