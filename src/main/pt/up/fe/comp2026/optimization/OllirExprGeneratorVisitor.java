@@ -1,19 +1,16 @@
 package pt.up.fe.comp2026.optimization;
 
-import com.google.gson.stream.JsonToken;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp2026.JavammParser;
 import pt.up.fe.comp2026.ast.AccessType;
 import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
@@ -47,16 +44,13 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(INTEGER_LITERAL, this::visitInteger);
         addVisit(BOOL_LITERAL, this::visitBoolLiteral);
         addVisit(LOGICAL_EXPR, this::visitBinExpr);
+        addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(NEW_ARRAY,this::visitNewArray);
         addVisit(ARRAY_INIT,this::visitNewArray);
         addVisit(CLASS_INITIALIZATION,this::visitClassInit);
         addVisit(THIS, this::visitThisExpr);
     }
-    private OllirExprResult visitClassInit(JmmNode node,Void unused){
-        String code;
-        code="new("+node.get("name")+")"+ollirTypes.toOllirType(types.getExprType(node));
-        return new OllirExprResult(code);
-    }
+
     private OllirExprResult visitNewArray(JmmNode node,Void unused){
         //checked documentation have zero ideas on how to make this for multiarrays
         StringBuilder code=new StringBuilder();
@@ -153,6 +147,15 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         }
 
         return new OllirExprResult("0.bool");
+    }
+
+
+//new(myClass).myClass
+    private OllirExprResult visitClassInit(JmmNode classInit, Void unused) {
+        StringBuilder code = new StringBuilder();
+        String className = classInit.get(JmmAttributes.CLASS_INITIALIZATION.NAME);
+        code.append("new(%s).%s".formatted(className, className));
+        return new OllirExprResult(code.toString());
     }
 
 
