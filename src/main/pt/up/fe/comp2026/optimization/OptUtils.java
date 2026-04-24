@@ -15,7 +15,7 @@ import pt.up.fe.specs.util.collections.AccumulatorMap;
 import java.sql.Array;
 import java.util.Set;
 
-import static pt.up.fe.comp2026.jmm.ast.JmmKind.TYPE;
+import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
 /**
  * Utility methods related to the optimization middle-end.
@@ -73,7 +73,14 @@ public class OptUtils {
 
     public String toOllirType(JmmType type) {
             return  switch (type){
-                case JmmArrayType ar -> ".array"+ toOllirType(ar.itemType());
+                case JmmArrayType ar-> {
+                    StringBuilder res=new StringBuilder();
+                    for (int i =0;i<ar.dimension();i++){
+                        res.append(".array");
+                    }
+                    res.append(toOllirType(ar.itemType()));
+                    yield res.toString();
+                }
                 case JmmClassType c -> "."+c.name();
                 case  JmmPrimitiveType p->"."+toPrimitiveOllirType(p);
                 default -> ".V";
@@ -103,6 +110,5 @@ public class OptUtils {
 
         return id;
     }
-
 
 }
