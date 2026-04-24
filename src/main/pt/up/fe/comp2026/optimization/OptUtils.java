@@ -15,7 +15,7 @@ import pt.up.fe.specs.util.collections.AccumulatorMap;
 import java.sql.Array;
 import java.util.Set;
 
-import static pt.up.fe.comp2026.jmm.ast.JmmKind.TYPE;
+import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
 /**
  * Utility methods related to the optimization middle-end.
@@ -109,6 +109,28 @@ public class OptUtils {
         }
 
         return id;
+    }
+    public String toOllirExpr(JmmNode node,StringBuilder methodCode){
+
+        String type = toOllirType(types.getExprType(node));
+        switch (node.getKind()){
+            case INTEGER_LITERAL, BOOL_LITERAL -> {
+                return node.get("value")+type;
+            }
+            case BINARY_EXPR-> {
+
+                String left=toOllirExpr(node.getChild(0),methodCode);
+                String right=toOllirExpr(node.getChild(1),methodCode);
+                String tempName = nextTemp("t") + type;
+                methodCode.append(tempName).append(":=").append(type).append(left).append(node.get("op")).append(type).append(right).append(";\n");;
+                temporaries.add(tempName);
+                return tempName;
+            }
+            case VAR_REF_EXPR->{
+                return sanitizeId(node.get("name")) + type;
+            }
+            default->throw new IllegalStateException("Unexpected value: " + node.getKind());
+        }
     }
 
 
