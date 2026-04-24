@@ -171,7 +171,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         if (table.getField(varName).isPresent()) {
             code.append("putfield(this,");
             varCode=ollirTypes.sanitizeId(varName) + typeString;
-
+            code.append(rhs.getComputation());
             code.append(varCode).append(",").append(rhs.getCode()).append(")").append(".V").append(END_STMT);
         }
 

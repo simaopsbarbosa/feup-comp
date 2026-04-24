@@ -53,7 +53,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
     private OllirExprResult visitNewArray(JmmNode node,Void unused){
         //checked documentation have zero ideas on how to make this for multiarrays
-        StringBuilder code=new StringBuilder();
+        StringBuilder comp=new StringBuilder();
         StringBuilder dims=new StringBuilder();
         JmmType type=types.getExprType(node);
         int size;
@@ -67,14 +67,16 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             for(int i=1; i<=size;i++){
                 JmmNode child=node.getChild(i);
                 OllirExprResult res = visit(child);
-                code.append(res.getComputation());
-
+                comp.append(res.getComputation());
+                dims.append(res.getCode());
+                if (i <size) {
+                    dims.append(", ");
+                }
             }
         }
-        System.out.println(method);
-        code.append(" new(array,").append(dims).append(")").append(t);
-        System.out.println(this + code.toString());
-        return new OllirExprResult(code.toString());
+        String code = "new(array, " + dims + ")" + t;
+        return new OllirExprResult(code, comp);
+
     }
     private OllirExprResult visitThisExpr(JmmNode node,Void unused){
         String code;
