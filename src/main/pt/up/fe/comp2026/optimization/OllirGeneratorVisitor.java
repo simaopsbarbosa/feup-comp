@@ -1,5 +1,6 @@
 package pt.up.fe.comp2026.optimization;
 
+import org.apache.commons.lang3.StringUtils;
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
@@ -17,6 +18,9 @@ import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.specs.util.utilities.StringLines;
 import pt.up.fe.specs.util.utilities.Table;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType.VOID;
@@ -78,7 +82,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
     private String visitParam(JmmNode varDecl, Void unused) {
-        return varDecl.get("name") + ollirTypes.toOllirType(varDecl.getObject("typeNode", JmmNode.class));
+        return ollirTypes.sanitizeId(varDecl.get("name")) + ollirTypes.toOllirType(varDecl.getObject("typeNode", JmmNode.class));
     }
 
 
@@ -168,9 +172,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append("putfield(this,");
             varCode=ollirTypes.sanitizeId(varName) + typeString;
 
-
             code.append(varCode).append(",").append(rhs.getCode()).append(")").append(".V").append(END_STMT);
         }
+
         else {
             varCode = ollirTypes.sanitizeId(varName) + typeString;
             code.append(rhs.getComputation());
@@ -183,9 +187,14 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(END_STMT);
         }
 
+        // if assignment is a class initialization
+        if (node.getChild(1).getKind().equals(CLASS_INITIALIZATION)) {
+            JmmType parentType = TypeUtils.with(table).getExprType(node.getChild(1));
+            String parentStr = ollirTypes.toOllirType(parentType);
+            varCode = ollirTypes.sanitizeId(varName) + parentStr;
+            code.append("invokespecial(" + varCode + ", " + "\"<init>\").V" + END_STMT);
+        }
 
-
-        // code to compute the children
 
         return code.toString();
     }
@@ -217,11 +226,12 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         StringBuilder code = new StringBuilder(".method ");
 
-        boolean isPublic = NodeUtils.getBooleanAttribute(node, "isPublic", "false");
-
-        if (isPublic) {
-            code.append("public ");
+        String visibility = "";
+        Optional<String> nodeVisibility = node.getOptional(JmmAttributes.METHOD_DECL.VISIBILITY);
+        if (nodeVisibility.isPresent()) {
+            visibility = nodeVisibility.get();
         }
+        code.append(visibility + " ");
 
         if (node.getObject("isStatic", Boolean.class)) {
             code.append("static ");
@@ -236,7 +246,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(paramsCode);
 
         // type
-        var retType = ollirTypes.toOllirType(currentMethod.returnType());//table.getReturnType(node.get("name")));
+        var retType = ollirTypes.toOllirType(currentMethod.returnType());
         code.append(retType);
         code.append(L_BRACKET);
 
@@ -255,12 +265,16 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
+    // a parte do extends só tentei diferentes variações até passar os testes, então não sei se tá correto
     private String visitClass(JmmNode node, Void unused) {
 
         StringBuilder code = new StringBuilder();
 
         code.append(NL);
-        code.append(table.getClassName());
+
+        if (table.getSuper() != null) {
+            code.append(table.getClassName() + " extends " + table.getSuper());
+        } else code.append(table.getClassName());
 
         code.append(L_BRACKET);
         code.append(NL);
@@ -271,7 +285,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         }
         code.append(NL);
 
-        code.append(buildConstructor());
+        code.append(buildConstructor(node));
         code.append(NL);
 
         for (var child : node.getChildren(METHOD_DECL)) {
@@ -284,13 +298,36 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
-    private String buildConstructor() {
-        return """
-                .construct %s().V {
-                    invokespecial(this, "<init>").V;
-                }
-                """.formatted(table.getClassName());
+    //TODO: use node to check if fields have initialization
+    private String buildConstructor(JmmNode classNode) {
+        StringBuilder code = new StringBuilder();
+        String extendName = "java.lang.Object";
+        if (table.getSuperFullyQualifiedName() != null) {
+            extendName = table.getSuper();
+        }
+
+        // get constructor params
+        List<Symbol> fields = table.getFields();
+        List<String> constructorTypes = new ArrayList<>();
+        fields.forEach(symbol -> {constructorTypes.add(ollirTypes.nextTemp() + ollirTypes.toOllirType(symbol.type()));});
+        String constructorCode = StringUtils.join(constructorTypes, ", ");
+
+
+        code.append(".construct \"<init>\"(" + constructorCode + ").V" + L_BRACKET);
+        code.append("invokespecial(this.\"%s\", \"<init>\").V;\n".formatted(extendName));
+
+        for (int i = 0; i < fields.size(); i++) {
+            var symbolField = fields.get(i);
+            String typeSuffix = ollirTypes.toOllirType(symbolField.type());
+            String fieldIdentifier = symbolField.name() + typeSuffix;
+            String tmpVar = "tmp" + i + typeSuffix;
+            code.append("putfield(this, %s, %s).V;\n".formatted(fieldIdentifier, tmpVar));
+        }
+        code.append(R_BRACKET);
+
+        return code.toString();
     }
+
 
     private String visitProgram(JmmNode node, Void unused) {
 
