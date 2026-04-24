@@ -32,11 +32,11 @@ public class JmmOptimizationImpl implements JmmOptimization {
         JmmNode rootNode = semanticsResult.getRootNode();
         boolean hasChanges = true;
 
-        while (hasChanges) {
+        //while (hasChanges) {
             ConstantPropagationVisitor propagator = new ConstantPropagationVisitor();
 
             hasChanges = propagator.visit(rootNode, new HashMap<>());
-        }
+        // }
 
         return semanticsResult;
     }
