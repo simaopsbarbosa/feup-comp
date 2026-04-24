@@ -51,12 +51,13 @@ public class Launcher {
         JmmOptimizationImpl ollirGen = new JmmOptimizationImpl();
 //
 //        // AST-based optimizations
-        if(semanticsResult.config().get("optimize") != null && semanticsResult.config().get("optimize").equals("true")){
+        //TODO: add back this if, i removed it for testing purposes
+        //if(semanticsResult.config().get("optimize") != null && semanticsResult.config().get("optimize").equals("true")){
             semanticsResult = ollirGen.transformAst(semanticsResult);
 
             System.out.println("Optimized AST:");
             System.out.println("AST: " + semanticsResult.getRootNode().toTree());
-        }
+        // }
 
         OllirResult ollirResult = ollirGen.toOllir(semanticsResult);
         System.out.println(ollirResult.getOllirCode());
