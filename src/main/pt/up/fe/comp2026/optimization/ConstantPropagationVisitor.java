@@ -33,7 +33,13 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
     }
 
     private Boolean visitAssignment(JmmNode jmmNode, Map<String, JmmNode> constants) {
-        String variableName = jmmNode.getChild(0).get("name");
+        JmmNode leftSide = jmmNode.getChild(0);
+
+        if (leftSide.getKind() != JmmKind.VAR_REF_EXPR) {
+            return false;
+        }
+
+        String variableName = leftSide.get("name");
         JmmNode rightSide = jmmNode.getChild(jmmNode.getChildren().size() - 1);
 
         boolean changed = handleAssignment(variableName, rightSide, constants);

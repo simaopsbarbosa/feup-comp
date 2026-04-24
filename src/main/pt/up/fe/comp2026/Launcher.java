@@ -52,12 +52,12 @@ public class Launcher {
 //
 //        // AST-based optimizations
         //TODO: add back this if, i removed it for testing purposes
-        //if(semanticsResult.config().get("optimize") != null && semanticsResult.config().get("optimize").equals("true")){
+        if(semanticsResult.config().get("optimize") != null && semanticsResult.config().get("optimize").equals("true")){
             semanticsResult = ollirGen.transformAst(semanticsResult);
 
             System.out.println("Optimized AST:");
             System.out.println("AST: " + semanticsResult.getRootNode().toTree());
-        // }
+        }
 
         OllirResult ollirResult = ollirGen.toOllir(semanticsResult);
         System.out.println(ollirResult.getOllirCode());
