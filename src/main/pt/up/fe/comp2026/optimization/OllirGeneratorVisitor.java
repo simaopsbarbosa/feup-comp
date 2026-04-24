@@ -172,7 +172,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append("putfield(this,");
             varCode=ollirTypes.sanitizeId(varName) + typeString;
 
-
             code.append(varCode).append(",").append(rhs.getCode()).append(")").append(".V").append(END_STMT);
         }
 
@@ -188,15 +187,14 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(END_STMT);
         }
 
-
+        // if assignment is a class initialization
         if (node.getChild(1).getKind().equals(CLASS_INITIALIZATION)) {
-            varCode = ollirTypes.sanitizeId(varName) + typeString;
+            JmmType parentType = TypeUtils.with(table).getExprType(node.getChild(1));
+            String parentStr = ollirTypes.toOllirType(parentType);
+            varCode = ollirTypes.sanitizeId(varName) + parentStr;
             code.append("invokespecial(" + varCode + ", " + "\"<init>\").V" + END_STMT);
         }
 
-
-
-        // code to compute the children
 
         return code.toString();
     }
