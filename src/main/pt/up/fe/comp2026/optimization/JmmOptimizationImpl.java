@@ -27,16 +27,14 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
     @Override
     public JmmSemanticsResult transformAst(JmmSemanticsResult semanticsResult) {
-        //TODO: Do your AST-based optimizations here
 
         JmmNode rootNode = semanticsResult.getRootNode();
         boolean hasChanges = true;
 
-        //while (hasChanges) {
+        while (hasChanges) {
             ConstantPropagationVisitor propagator = new ConstantPropagationVisitor();
-
             hasChanges = propagator.visit(rootNode, new HashMap<>());
-        // }
+        }
 
         return semanticsResult;
     }

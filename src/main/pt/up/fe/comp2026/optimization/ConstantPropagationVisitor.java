@@ -57,10 +57,10 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
             // the right side is constant (x = 10 or y = True)
             // add it to the map
             JmmNode previousValue = constants.put(variableName, rightSide);
-            return previousValue == null || !previousValue.equals(rightSide);
+            return false;
         }
-
-        return constants.remove(variableName) != null;
+        constants.remove(variableName);
+        return false;
     }
 
     private Boolean visitVarRefExpr(JmmNode jmmNode, Map<String, JmmNode> constants) {
