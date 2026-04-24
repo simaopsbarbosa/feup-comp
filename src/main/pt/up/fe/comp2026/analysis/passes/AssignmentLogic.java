@@ -96,6 +96,7 @@ public class AssignmentLogic extends AnalysisVisitorWithTable {
 
 
     private boolean isParentClass(String supposedParent, String supposedChild) {
+        if (supposedParent.endsWith(".Object")) return true;
         if (supposedChild.equals("")) return false;
         if (supposedParent.equals(supposedChild)) return true;
         if (table.getFullyQualifiedName().equals(supposedChild)
