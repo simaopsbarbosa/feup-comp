@@ -2,12 +2,14 @@ package pt.up.fe.comp2026.ast;
 
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.Signature;
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
 
@@ -91,7 +93,7 @@ public class TypeUtils {
             case ARRAY_ACCESS -> getArrayAccessType(expr);
             case NEW_ARRAY, ARRAY_INIT -> getArrayType(expr);
             case PARAM -> convertType(expr.getChild(0));
-            case ARRAY_ELEMENT -> getExprType(expr.getChild(0));
+            case ARRAY_ELEMENT, ARRAY_INITIALIZER -> getExprType(expr.getChild(0));
             case FIELD_ACESS -> getFieldAccessType(expr, table);
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
@@ -351,7 +353,6 @@ public class TypeUtils {
 
         return type;
     }
-
 
 
 
