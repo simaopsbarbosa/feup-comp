@@ -129,18 +129,19 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     }
 
     private OllirExprResult visitVarRef(JmmNode node, Void unused) {
-
         var id = ollirTypes.sanitizeId(node.get("name"));
         JmmType type = types.getExprType(node);
         String ollirType = ollirTypes.toOllirType(type);
         var code = new StringBuilder();
+
+        // fields need pre computation
         if(table.getField(id).isPresent()){
-            code.append("getfield(").append("this,").append(id).append(ollirType).append(")").append(ollirType);
-        }
-        else {
-            code.append(id).append(ollirType);
+            String temp = ollirTypes.nextTemp() + ollirType;
+            String computation = temp + ASSIGN + ollirType + " getfield(this," + id + ollirType + ")" + ollirType + END_STMT;
+            return new OllirExprResult(temp, computation);
         }
 
+        code.append(id).append(ollirType);
         return new OllirExprResult(code.toString());
 
     }
@@ -154,7 +155,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     }
 
 
-//new(myClass).myClass
+    //new(myClass).myClass
     private OllirExprResult visitClassInit(JmmNode classInit, Void unused) {
         StringBuilder code = new StringBuilder();
         String className = classInit.get(JmmAttributes.CLASS_INITIALIZATION.NAME);
