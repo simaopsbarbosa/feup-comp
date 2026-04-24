@@ -2,12 +2,14 @@ package pt.up.fe.comp2026.ast;
 
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.Signature;
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
 
@@ -352,7 +354,97 @@ public class TypeUtils {
         return type;
     }
 
+    public int getExprValue(JmmNode expr) {
+        return switch (expr.getKind()) {
+            case INTEGER_LITERAL -> Integer.parseInt(expr.get("value"));
+            case LEFT_UNARY_EXPR ->{
+                int value=getExprValue(expr.getChild(0));
+                String op=expr.get("op");
+                switch( op){
+                    case "--":
+                        yield --value;
+                    case "++":
+                        yield ++value;
+                    case "-":
+                        yield  -value;
+                    case  "+":
+                        yield  +value;
 
+                    default:
+                        throw new RuntimeException("Unknown leftunary operator"+op);
+                }
+            }
+            case RIGHT_UNARY_EXPR  ->{
+                int value=getExprValue(expr.getChild(0));
+                String op=expr.get("op");
+                switch( op){
+                    case "--":
+                        yield value--;
+                    case "++":
+                        yield value++;
+
+                    default:
+                        throw new RuntimeException("Unknown rightunary operator"+op);
+                }
+            }
+            case BINARY_EXPR ->{
+                int lv=getExprValue(expr.getChild(0));
+                int rv=getExprValue(expr.getChild(1));
+                System.out.println();
+                switch( expr.get("op")){
+                    case "+":
+                        yield lv+rv;
+                    case "-":
+                        yield lv-rv;
+                    case "/":
+                        yield lv/rv;
+                    case  "*":
+                        yield lv*rv;
+                    case "%":
+                        yield lv%rv;
+                    default:
+                        throw new RuntimeException("Unknown binary expression"+expr);
+                }
+            }
+            case VAR_REF_EXPR -> {
+                resolveScope(expr);
+                yield 0;
+            }
+            default ->
+                    throw new RuntimeException("Can't resolve"+expr);
+        };
+    }
+
+    private int resolveScope(JmmNode var) {
+        String name=var.get("name");
+        var ancestor=var.getAncestor(METHOD_DECL);
+        if(ancestor.isPresent()){
+            Signature methodDeclSignature = getMethodDeclSignature(ancestor.get());
+            MethodSymbol method = table.getMethod(methodDeclSignature).get();
+            Optional<Symbol> name1 = method.getLocalVariable(name);
+            if(name1.isPresent()){
+                System.out.println("LOOK");
+                name1.get().print();
+                return  0;
+            }
+            else {
+                name1= method.getParameter(name);
+                if(name1.isPresent()){
+                    return  ;
+                }
+            }
+
+        }
+        else {
+            Optional<Symbol> name1= table.getField(name);
+            if(name1.isPresent()){
+                name1.get().print();
+                return  0;
+            }
+        }
+
+        return  0;
+    }
 
 
 }

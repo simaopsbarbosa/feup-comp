@@ -71,15 +71,10 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         } else {
             size = node.getObjectAsList("size").size();
             for(int i=1; i<=size;i++){
-                String value="";
                 JmmNode child=node.getChild(i);
                 String typeChild= ollirTypes.toOllirType(types.getExprType(child));
-                if(child.getKind()==INTEGER_LITERAL){
-                    value=child.get("value") ;
-                }
-                else {
-                    /// need to make a function that is recursive and returns a value
-                }
+                int value = types.getExprValue(child);
+
                 if(i!=size){
                     dims.append(value).append(typeChild).append(',');
                 }
