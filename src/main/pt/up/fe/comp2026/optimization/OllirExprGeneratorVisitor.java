@@ -47,12 +47,12 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(NEW_ARRAY,this::visitNewArray);
         addVisit(ARRAY_INIT,this::visitNewArray);
+        //addVisit(EXPLICIT_METHOD_CALL,this::visitMethodCall);
         addVisit(CLASS_INITIALIZATION,this::visitClassInit);
         addVisit(THIS, this::visitThisExpr);
     }
 
     private OllirExprResult visitNewArray(JmmNode node,Void unused){
-        //checked documentation have zero ideas on how to make this for multiarrays
         StringBuilder comp=new StringBuilder();
         StringBuilder dims=new StringBuilder();
         JmmType type=types.getExprType(node);
@@ -60,8 +60,16 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         String t=ollirTypes.toOllirType(type);
 
         if (node.getKind() == ARRAY_INIT) {
-            size = node.getObjectAsList("dims").size();
-            dims.append(size).append(".i32");
+            var elements = node.getDescendants().stream().skip(2).filter(n -> n.getKind().equals(ARRAY_INITIALIZER))
+                    .map(n -> n.getChildren(ARRAY_ELEMENT).size())
+                    .toList();
+            for(int i=1; i<=elements.size();i++){
+                dims.append(i).append(".i32");
+                if (i <elements.size()) {
+                    dims.append(", ");
+                }
+            }
+
         } else {
             size = node.getObjectAsList("size").size();
             for(int i=1; i<=size;i++){
