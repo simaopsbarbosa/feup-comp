@@ -14,6 +14,7 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
         addVisit(JmmKind.METHOD_DECL, this::visitMethodDecl);
         addVisit(JmmKind.ASSIGN_STMT, this::visitAssignment);
         addVisit(JmmKind.ASSIGNMENT, this::visitAssignment);
+        addVisit(JmmKind.VAR_DECL, this::visitVarDecl);
         setDefaultVisit(this::defaultVisit);
     }
 
@@ -31,15 +32,22 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
     }
 
     private Boolean visitAssignment(JmmNode jmmNode, Map<String, JmmNode> constants) {
-        JmmNode leftSide = jmmNode.getChild(0);
+        String variableName = jmmNode.getChild(0).get("name");
         JmmNode rightSide = jmmNode.getChild(jmmNode.getChildren().size() - 1);
 
-        return handleAssignment(leftSide, rightSide, constants);
+        return handleAssignment(variableName, rightSide, constants);
     }
 
-    private Boolean handleAssignment(JmmNode leftSide, JmmNode rightSide, Map<String, JmmNode> constants) {
-        String variableName = leftSide.get("name");
+    private Boolean visitVarDecl(JmmNode jmmNode, Map<String, JmmNode> constants) {
+        if (jmmNode.getChildren().size() == 2) {
+            String variableName = jmmNode.get("name");
+            JmmNode rightSide = jmmNode.getChild(1);
+            return handleAssignment(variableName, rightSide, constants);
+        }
+        return false;
+    }
 
+    private Boolean handleAssignment(String variableName, JmmNode rightSide, Map<String, JmmNode> constants) {
         if (rightSide.getKind() == JmmKind.INTEGER_LITERAL || rightSide.getKind() == JmmKind.BOOL_LITERAL) {
             // the right side is constant (x = 10 or y = True)
             // add it to the map
