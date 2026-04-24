@@ -155,14 +155,20 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     }
 
 
-    //new(myClass).myClass
+    // temp = new(myClass).myClass
+    // invoke(temp, init);
     private OllirExprResult visitClassInit(JmmNode classInit, Void unused) {
-        StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
         String className = classInit.get(JmmAttributes.CLASS_INITIALIZATION.NAME);
-        String temp = ollirTypes.nextTemp() + "." + className;
-        String computation = temp + ASSIGN + "." + className + " new(%s).%s".formatted(className, className) + END_STMT;
-        return new OllirExprResult(temp, computation);
-    }
+        String temp = ollirTypes.nextTemp()+ "." + className;
 
+        //assign object to temp
+        computation.append(temp + SPACE + ASSIGN + "." + className + " new(%s).%s".formatted(className, className) + END_STMT);
+
+        //call object init
+        computation.append("invokespecial(" + temp + ", " +  "\"<init>\").V" + END_STMT);
+
+        return new OllirExprResult(temp, computation.toString());
+    }
 
 }

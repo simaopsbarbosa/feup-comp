@@ -163,9 +163,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         String typeString = ollirTypes.toOllirType(thisType);
         if (table.getField(varName).isPresent()) {
-            code.append("putfield(this,");
             varCode=ollirTypes.sanitizeId(varName) + typeString;
             code.append(rhs.getComputation());
+            code.append("putfield(this,");
             code.append(varCode).append(",").append(rhs.getCode()).append(")").append(".V").append(END_STMT);
         } else {
             varCode = ollirTypes.sanitizeId(varName) + typeString;
@@ -182,13 +182,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                         .append(ASSIGN).append(typeString).append(SPACE)
                         .append(tempCode).append(END_STMT);
             }
-        }
-
-        if (AssigneeExpr.getKind().equals(CLASS_INITIALIZATION)) {
-            JmmType parentType = TypeUtils.with(table).getExprType(AssigneeExpr);
-            String parentStr = ollirTypes.toOllirType(parentType);
-            varCode = ollirTypes.sanitizeId(varName) + parentStr;
-            code.append("invokespecial(" + varCode + ", " + "\"<init>\").V" + END_STMT);
         }
 
         return code.toString();
