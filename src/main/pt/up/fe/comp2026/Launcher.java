@@ -51,7 +51,6 @@ public class Launcher {
         JmmOptimizationImpl ollirGen = new JmmOptimizationImpl();
 //
 //        // AST-based optimizations
-        //TODO: add back this if, i removed it for testing purposes
         if(semanticsResult.config().get("optimize") != null && semanticsResult.config().get("optimize").equals("true")){
             semanticsResult = ollirGen.transformAst(semanticsResult);
 

@@ -30,12 +30,19 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         JmmNode rootNode = semanticsResult.getRootNode();
         boolean hasChanges = true;
+        int passes = 0;
 
         while (hasChanges) {
             ConstantPropagationVisitor propagator = new ConstantPropagationVisitor();
             hasChanges = propagator.visit(rootNode, new HashMap<>());
+
+            ConstantFoldingVisitor folder = new ConstantFoldingVisitor();
+            hasChanges |= folder.visit(rootNode);
+
+            passes++;
         }
 
+        System.out.println(passes + " passes completed");
         return semanticsResult;
     }
 
