@@ -4,9 +4,11 @@ class LogicalOperatorsOk {
     int logical() {
         int x = 5 + 10;
         int y;
-        boolean b = 1 == 0;
+        boolean b = 1 == 1;
         if (b) {
-            y = x * 2;
+            if (x > 10) {
+                y = x * 2;
+            }
         } else {
             y = x * 4;
         }

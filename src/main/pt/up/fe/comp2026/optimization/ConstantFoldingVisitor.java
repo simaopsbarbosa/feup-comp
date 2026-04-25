@@ -88,7 +88,7 @@ public class ConstantFoldingVisitor extends AJmmVisitor<Void, Boolean> {
             }
 
             JmmNode newNode = new JmmNodeImpl(JmmKind.BOOL_LITERAL);
-            newNode.put("value",newVal);
+            newNode.put("bool",newVal);
             jmmNode.replace(newNode);
             return true;
         } else if (leftNode.getKind().equals(JmmKind.BOOL_LITERAL) && rightNode.getKind().equals(JmmKind.BOOL_LITERAL)) {
@@ -131,13 +131,15 @@ public class ConstantFoldingVisitor extends AJmmVisitor<Void, Boolean> {
 
         boolean res;
         String op = jmmNode.get("op");
+        String valueString = (jmmNode.getKind() == JmmKind.INTEGER_LITERAL) ? "bool" : "value";
+
         switch (op) {
             case "==" -> {
-                res = leftNode.get("value").equals(rightNode.get("value"));
+                res = leftNode.get(valueString).equals(rightNode.get(valueString));
                 changed = true;
             }
             case "!=" -> {
-                res = !leftNode.get("value").equals(rightNode.get("value"));
+                res = !leftNode.get(valueString).equals(rightNode.get(valueString));
                 changed = true;
             }
             default -> {
