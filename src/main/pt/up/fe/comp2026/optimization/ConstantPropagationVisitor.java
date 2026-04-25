@@ -16,6 +16,7 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
         addVisit(JmmKind.ASSIGNMENT, this::visitAssignment);
         addVisit(JmmKind.VAR_DECL, this::visitVarDecl);
         addVisit(JmmKind.VAR_REF_EXPR, this::visitVarRefExpr);
+        addVisit(JmmKind.ELSEIF_BLOCK_STMT, this::visitIfStmt);
         setDefaultVisit(this::defaultVisit);
     }
 
@@ -28,6 +29,40 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
         for (var child : methodDecl.getChildren()) {
             changed |= visit(child, methodConstants);
         }
+
+        return changed;
+    }
+
+    private Boolean visitIfStmt(JmmNode jmmNode, Map<String, JmmNode> constants) {
+        boolean changed = visit(jmmNode.getChild(0), constants);
+
+        JmmNode condition = jmmNode.getChild(0);
+        if (condition.getKind() == JmmKind.BOOL_LITERAL) {
+            if (condition.get("bool").equals("true")) {
+                changed |= visit(jmmNode.getChild(1), constants);
+            } else if (jmmNode.getChildren().size() > 2) {
+                changed |= visit(jmmNode.getChild(2), constants);
+            }
+            return changed;
+        }
+
+        Map<String, JmmNode> thenConstants = new HashMap<>(constants);
+        Map<String, JmmNode> elseConstants = new HashMap<>(constants);
+
+        changed |= visit(jmmNode.getChild(1), thenConstants);
+
+        if (jmmNode.getChildren().size() > 2) {
+                changed |= visit(jmmNode.getChild(2), elseConstants);
+            }
+
+        constants.entrySet().removeIf(entry -> {
+                JmmNode thenValue = thenConstants.get(entry.getKey());
+                JmmNode elseValue = elseConstants.get(entry.getKey());
+
+                return thenValue == null || elseValue == null ||
+                        !thenValue.getKind().equals(elseValue.getKind()) ||
+                        !thenValue.getAttributes().equals(elseValue.getAttributes());
+            });
 
         return changed;
     }
