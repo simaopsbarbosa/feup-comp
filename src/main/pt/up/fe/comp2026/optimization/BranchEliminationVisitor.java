@@ -20,7 +20,8 @@ public class BranchEliminationVisitor extends AJmmVisitor<Void, Boolean> {
         if (condition.getKind() == JmmKind.BOOL_LITERAL) {
             if (condition.get("bool").equals("false")) {
                 if (hasElseStmt) {
-                    jmmNode.replace(thenStmt);
+                    JmmNode elseStmt = jmmNode.getChild(2);
+                    jmmNode.replace(elseStmt);
                 } else {
                     jmmNode.delete();
                 }
