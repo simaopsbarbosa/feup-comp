@@ -2,15 +2,12 @@ package pt.up.fe.comp.cp1.core.semantics.entityops.semanticanalysis;
 
 class LogicalOperatorsOk {
     int logical() {
-        int x = 5 + 10;
+        int x = 10;
         int y;
-        boolean b = 1 == 1;
-        if (b) {
-            if (x > 10) {
-                y = x * 2;
-            }
+        if (x == 10) {
+            y = 1;
         } else {
-            y = x * 4;
+            y = 0;
         }
         return y;
     }

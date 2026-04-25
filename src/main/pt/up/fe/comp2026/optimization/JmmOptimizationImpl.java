@@ -39,6 +39,9 @@ public class JmmOptimizationImpl implements JmmOptimization {
             ConstantFoldingVisitor folder = new ConstantFoldingVisitor();
             hasChanges |= folder.visit(rootNode);
 
+            BranchEliminationVisitor branchEliminator = new BranchEliminationVisitor();
+            hasChanges |= branchEliminator.visit(rootNode);
+
             passes++;
         }
 
