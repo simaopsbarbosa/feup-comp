@@ -52,17 +52,22 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
         changed |= visit(jmmNode.getChild(1), thenConstants);
 
         if (jmmNode.getChildren().size() > 2) {
-                changed |= visit(jmmNode.getChild(2), elseConstants);
+            changed |= visit(jmmNode.getChild(2), elseConstants);
+        } else {
+            elseConstants = new HashMap<>(constants);
+        }
+
+        constants.clear();
+        
+        for (var entry : thenConstants.entrySet()) {
+            JmmNode elseValue = elseConstants.get(entry.getKey());
+
+            if (elseValue != null &&
+                    entry.getValue().getKind().equals(elseValue.getKind()) &&
+                    entry.getValue().getAttributes().equals(elseValue.getAttributes())) {
+                constants.put(entry.getKey(), entry.getValue());
             }
-
-        constants.entrySet().removeIf(entry -> {
-                JmmNode thenValue = thenConstants.get(entry.getKey());
-                JmmNode elseValue = elseConstants.get(entry.getKey());
-
-                return thenValue == null || elseValue == null ||
-                        !thenValue.getKind().equals(elseValue.getKind()) ||
-                        !thenValue.getAttributes().equals(elseValue.getAttributes());
-            });
+        }
 
         return changed;
     }
