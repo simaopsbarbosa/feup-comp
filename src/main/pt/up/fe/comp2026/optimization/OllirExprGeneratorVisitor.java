@@ -11,6 +11,7 @@ import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
@@ -47,11 +48,31 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(NEW_ARRAY,this::visitNewArray);
         addVisit(ARRAY_INIT,this::visitNewArray);
-        //addVisit(EXPLICIT_METHOD_CALL,this::visitMethodCall);
+        addVisit(EXPLICIT_METHOD_CALL,this::visitMethodCall);
         addVisit(CLASS_INITIALIZATION,this::visitClassInit);
         addVisit(THIS, this::visitThisExpr);
     }
 
+    private OllirExprResult visitMethodCall(JmmNode node, Void unused){
+        StringBuilder code= new StringBuilder();
+        StringBuilder computation=new StringBuilder();
+        JmmClassType type= types.getExprType(node.getChild(0)).asClass();
+        String methodname= node.get("methodname");
+        if(type.fullyQualifiedName().equals(table.getClassName())){
+            code.append("invokevirtual(this,").append(methodname).append(SPACE);
+            List<OllirExprResult> res= node.getChildren().stream().skip(1).map(this::visit).toList();
+            for( int i =0; i< res.size();i++){
+                OllirExprResult r=res.get(i);
+                computation.append(r.getComputation());
+                code.append(r.getCode());
+                if(i< res.size()-1){
+                    code.append(",").append(SPACE);
+                }
+            }
+            code.append(")");
+        }
+        return new OllirExprResult(code.toString(),computation);
+    }
     private OllirExprResult visitNewArray(JmmNode node,Void unused){
         StringBuilder comp=new StringBuilder();
         StringBuilder dims=new StringBuilder();
