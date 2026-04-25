@@ -10,6 +10,8 @@ public class ConstantFoldingVisitor extends AJmmVisitor<Void, Boolean> {
     @Override
     protected void buildVisitor() {
         addVisit(JmmKind.BINARY_EXPR, this::visitBinaryExpr);
+        addVisit(JmmKind.LOGICAL_EXPR, this::visitLogicalExpr);
+        addVisit(JmmKind.EQUALITY_EXPR, this::visitEqualityExpr);
         setDefaultVisit(this::defaultVisit);
     }
 
@@ -43,6 +45,109 @@ public class ConstantFoldingVisitor extends AJmmVisitor<Void, Boolean> {
 
             JmmNode newNode = new JmmNodeImpl(JmmKind.INTEGER_LITERAL);
             newNode.put("value",newVal);
+            jmmNode.replace(newNode);
+            return true;
+        }
+
+        return changed;
+    }
+
+    private Boolean visitLogicalExpr(JmmNode jmmNode, Void unused) {
+        boolean changed = false;
+
+        for (var child : jmmNode.getChildren()) {
+            changed |= visit(child);
+        }
+
+        JmmNode leftNode = jmmNode.getChild(0);
+        JmmNode rightNode = jmmNode.getChild(1);
+
+        if (leftNode.getKind().equals(JmmKind.INTEGER_LITERAL) && rightNode.getKind().equals(JmmKind.INTEGER_LITERAL)) {
+            String newVal;
+
+            int leftVal = Integer.parseInt(leftNode.get("value"));
+            int rightVal = Integer.parseInt(rightNode.get("value"));
+            String op = jmmNode.get("op");
+
+            switch (op) {
+                case "<" -> {
+                    newVal = String.valueOf(leftVal < rightVal);
+                }
+                case ">" -> {
+                    newVal = String.valueOf(leftVal > rightVal);
+                }
+                case "<=" -> {
+                    newVal = String.valueOf(leftVal <= rightVal);
+                }
+                case ">=" -> {
+                    newVal = String.valueOf(leftVal >= rightVal);
+                }
+                default -> {
+                    return changed;
+                }
+            }
+
+            JmmNode newNode = new JmmNodeImpl(JmmKind.BOOL_LITERAL);
+            newNode.put("value",newVal);
+            jmmNode.replace(newNode);
+            return true;
+        } else if (leftNode.getKind().equals(JmmKind.BOOL_LITERAL) && rightNode.getKind().equals(JmmKind.BOOL_LITERAL)) {
+            String newVal;
+
+            boolean leftVal = Boolean.parseBoolean(leftNode.get("bool"));
+            boolean rightVal = Boolean.parseBoolean(rightNode.get("bool"));
+            String op = jmmNode.get("op");
+
+            switch (op) {
+                case "&&" -> {
+                    newVal = String.valueOf(leftVal && rightVal);
+                }
+                case "||" -> {
+                    newVal = String.valueOf(leftVal || rightVal);
+                }
+                default -> {
+                    return changed;
+                }
+            }
+
+            JmmNode newNode = new JmmNodeImpl(JmmKind.BOOL_LITERAL);
+            newNode.put("bool",newVal);
+            jmmNode.replace(newNode);
+            return true;
+        }
+
+        return changed;
+    }
+
+    private Boolean visitEqualityExpr(JmmNode jmmNode, Void unused) {
+        boolean changed = false;
+
+        for (var child : jmmNode.getChildren()) {
+            changed |= visit(child);
+        }
+
+        JmmNode leftNode = jmmNode.getChild(0);
+        JmmNode rightNode = jmmNode.getChild(1);
+
+        boolean res;
+        String op = jmmNode.get("op");
+        switch (op) {
+            case "==" -> {
+                res = leftNode.get("value").equals(rightNode.get("value"));
+                changed = true;
+            }
+            case "!=" -> {
+                res = !leftNode.get("value").equals(rightNode.get("value"));
+                changed = true;
+            }
+            default -> {
+                return changed;
+            }
+        }
+
+        if (changed) {
+            JmmNode newNode = new JmmNodeImpl(JmmKind.BOOL_LITERAL);
+            newNode.put("bool", String.valueOf(res));
             jmmNode.replace(newNode);
             return true;
         }
