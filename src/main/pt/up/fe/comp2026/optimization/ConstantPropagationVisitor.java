@@ -57,19 +57,24 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
             elseConstants = new HashMap<>(constants);
         }
 
-        constants.clear();
-        
-        for (var entry : thenConstants.entrySet()) {
-            JmmNode elseValue = elseConstants.get(entry.getKey());
-
-            if (elseValue != null &&
-                    entry.getValue().getKind().equals(elseValue.getKind()) &&
-                    entry.getValue().getAttributes().equals(elseValue.getAttributes())) {
-                constants.put(entry.getKey(), entry.getValue());
-            }
+        removeAssignedVariables(jmmNode.getChild(1), constants);
+        if (jmmNode.getChildren().size() > 2) {
+            removeAssignedVariables(jmmNode.getChild(2), constants);
         }
 
         return changed;
+    }
+
+    private void removeAssignedVariables(JmmNode jmmNode, Map<String, JmmNode> constants) {
+        if ((jmmNode.getKind() == JmmKind.ASSIGN_STMT ||
+                jmmNode.getKind() == JmmKind.ASSIGNMENT) &&
+                jmmNode.getChild(0).getKind() == JmmKind.VAR_REF_EXPR) {
+            constants.remove(jmmNode.getChild(0).get("name"));
+        }
+
+        for (var child : jmmNode.getChildren()) {
+            removeAssignedVariables(child, constants);
+        }
     }
 
     private Boolean visitAssignment(JmmNode jmmNode, Map<String, JmmNode> constants) {
