@@ -2,6 +2,7 @@ package pt.up.fe.comp2026.optimization;
 
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 
 import java.util.HashMap;
@@ -18,6 +19,8 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
         addVisit(JmmKind.VAR_REF_EXPR, this::visitVarRefExpr);
         addVisit(JmmKind.ELSEIF_BLOCK_STMT, this::visitIfStmt);
         addVisit(JmmKind.WHILE_STMT, this::visitWhileStmt);
+        addVisit(JmmKind.LEFT_UNARY_EXPR, this::visitUnaryExpr);
+        addVisit(JmmKind.RIGHT_UNARY_EXPR, this::visitUnaryExpr);
         setDefaultVisit(this::defaultVisit);
     }
 
@@ -120,6 +123,47 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
         }
         return false;
     }
+
+    private Boolean visitUnaryExpr(JmmNode jmmNode, Map<String, JmmNode> constants) {
+        JmmNode child = jmmNode.getChild(0);
+
+        if (child.getKind() != JmmKind.VAR_REF_EXPR) {
+            return visit(child, constants);
+        }
+
+        String variableName = child.get("name");
+
+        if (!constants.containsKey(variableName)) {
+            return false;
+        }
+
+        JmmNode constantNode = constants.get(variableName);
+
+        if (constantNode.getKind() != JmmKind.INTEGER_LITERAL) {
+            constants.remove(variableName);
+            return false;
+        }
+
+        int value = Integer.parseInt(constantNode.get("value"));
+        String op = jmmNode.get("op");
+
+        int newValue = switch (op) {
+            case "++" -> value + 1;
+            case "--" -> value - 1;
+            default -> {
+                constants.remove(variableName);
+                yield value;
+            }
+        };
+
+        JmmNode newConstantNode = new JmmNodeImpl(JmmKind.INTEGER_LITERAL);
+        newConstantNode.put("value", String.valueOf(newValue));
+        constants.put(variableName, newConstantNode);
+
+        return false;
+    }
+
+
 
     private Boolean handleAssignment(String variableName, JmmNode rightSide, Map<String, JmmNode> constants) {
         if (rightSide.getKind() == JmmKind.INTEGER_LITERAL || rightSide.getKind() == JmmKind.BOOL_LITERAL) {
