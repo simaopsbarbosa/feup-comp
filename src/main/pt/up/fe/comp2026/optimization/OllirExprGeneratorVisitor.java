@@ -48,7 +48,8 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(INTEGER_LITERAL, this::visitInteger);
         addVisit(BOOL_LITERAL, this::visitBoolLiteral);
         addVisit(LOGICAL_EXPR, this::visitBinExpr);
-       // addVisit(LOGICAL_NOT,this::visitNot);
+        addVisit(EQUALITY_EXPR,this::visitBinExpr);
+        addVisit(LOGICAL_NOT,this::visitNot);
         addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(NEW_ARRAY,this::visitNewArray);
         addVisit(ARRAY_INIT,this::visitNewArray);
@@ -58,9 +59,17 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(PARENTESES,this::visitParenteses);
     }
 
-//    private OllirExprResult visitNot(JmmNode node, Void unused){
-//        return
-//    }
+    private OllirExprResult visitNot(JmmNode node, Void unused){
+
+        StringBuilder computation=new StringBuilder();
+        OllirExprResult res=visit(node.getChild(0));
+        computation.append(res.getComputation());
+        var resollirtype=ollirTypes.toOllirType(types.getExprType(node));
+        String code=ollirTypes.nextTemp()+resollirtype;
+        computation.append(code);
+        computation.append(SPACE).append(ASSIGN).append(".bool").append(SPACE).append("!.bool").append(SPACE).append(res.getCode()).append(END_STMT);
+        return new OllirExprResult(code,computation);
+    }
     private OllirExprResult visitParenteses(JmmNode node,Void unused){
         return this.visit(node.getChild(0));
     }
@@ -155,7 +164,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         var op = node.get("op");
         StringBuilder computation= new StringBuilder();
         String code;
-        JmmType type = types.getExprType(node);
+        JmmType type = types.getExprType(node.getChild(0));
         switch (op){
             case "&&" ->{
                 JmmType resType = types.getExprType(node);
