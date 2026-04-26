@@ -194,17 +194,26 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
     private String visitAssignStmt(JmmNode node, Void unused) {
-        String varName;
         JmmNode lhs = node.getChild(0);
-        varName = switch (lhs.getKind()) {
-            case ARRAY_ACCESS -> exprVisitor.visit(lhs).getCode();
-            default -> lhs.get("name");
-        };
-
         JmmType thisType = TypeUtils.with(table).getExprType(node.getChild(0));
         JmmNode assigneeExpr = node.getChild(1);
-
-        return visitAssignment(node, varName, thisType, assigneeExpr);
+        
+        var rhs = exprVisitor.visit(assigneeExpr);
+        var code = new StringBuilder();
+        String typeString = ollirTypes.toOllirType(thisType);
+        
+        if (lhs.getKind() == ARRAY_ACCESS) {
+            OllirExprResult lhsResult = exprVisitor.visit(lhs);
+            code.append(lhsResult.getComputation());
+            code.append(rhs.getComputation());
+            code.append(lhsResult.getCode()).append(SPACE)
+                    .append(ASSIGN).append(typeString).append(SPACE)
+                    .append(rhs.getCode()).append(END_STMT);
+            return code.toString();
+        } else {
+            String varName = lhs.get("name");
+            return visitAssignment(node, varName, thisType, assigneeExpr);
+        }
     }
 
 
