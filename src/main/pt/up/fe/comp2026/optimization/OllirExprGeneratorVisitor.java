@@ -52,6 +52,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(NEW_ARRAY,this::visitNewArray);
         addVisit(ARRAY_INIT,this::visitNewArray);
         addVisit(ARRAY_ACCESS, this::visitArrayAccess);
+        addVisit(LENGTH, this::visitLength);
         addVisit(EXPLICIT_METHOD_CALL,this::visitMethodCall);
         addVisit(CLASS_INITIALIZATION,this::visitClassInit);
         addVisit(THIS, this::visitThisExpr);
@@ -175,6 +176,26 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                     .append(code).append(END_STMT);
             return new OllirExprResult(temp, computation);
         }
+    }
+
+    private OllirExprResult visitLength(JmmNode node, Void unused) {
+        var arrayExpr = visit(node.getChild(0));
+        StringBuilder computation = new StringBuilder();
+        computation.append(arrayExpr.getComputation());
+
+        String arrayCode = arrayExpr.getCode();
+        if (arrayCode.contains("[")) {
+            JmmType arrayType = types.getExprType(node.getChild(0));
+            String arrayOllirType = ollirTypes.toOllirType(arrayType);
+            String temp = ollirTypes.nextTemp() + arrayOllirType;
+            computation.append(temp).append(" :=").append(arrayOllirType).append(" ").append(arrayCode).append(END_STMT);
+            arrayCode = temp;
+        }
+
+        String temp = ollirTypes.nextTemp() + ".i32";
+        computation.append(temp).append(" :=.i32 ").append("arraylength(").append(arrayCode).append(").i32").append(END_STMT);
+
+        return new OllirExprResult(temp, computation);
     }
 
     private OllirExprResult visitThisExpr(JmmNode node,Void unused){
