@@ -48,6 +48,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(INTEGER_LITERAL, this::visitInteger);
         addVisit(BOOL_LITERAL, this::visitBoolLiteral);
         addVisit(LOGICAL_EXPR, this::visitBinExpr);
+       // addVisit(LOGICAL_NOT,this::visitNot);
         addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(NEW_ARRAY,this::visitNewArray);
         addVisit(ARRAY_INIT,this::visitNewArray);
@@ -57,6 +58,9 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(PARENTESES,this::visitParenteses);
     }
 
+//    private OllirExprResult visitNot(JmmNode node, Void unused){
+//        return
+//    }
     private OllirExprResult visitParenteses(JmmNode node,Void unused){
         return this.visit(node.getChild(0));
     }
@@ -149,28 +153,67 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
     private OllirExprResult visitBinExpr(JmmNode node, Void unused) {
         var op = node.get("op");
-
-        var lhs = visit(node.getChild(0));
-        var rhs = visit(node.getChild(1));
-
-        StringBuilder computation = new StringBuilder();
-
-        // code to compute the children
-        computation.append(lhs.getComputation());
-        computation.append(rhs.getComputation());
-
-        // code to compute self
-        JmmType resType = types.getExprType(node);
-        String resOllirType = ollirTypes.toOllirType(resType);
-        String code = ollirTypes.nextTemp() + resOllirType;
-
-        computation.append(code).append(SPACE)
-                .append(ASSIGN).append(resOllirType).append(SPACE)
-                .append(lhs.getCode()).append(SPACE);
-
+        StringBuilder computation= new StringBuilder();
+        String code;
         JmmType type = types.getExprType(node);
-        computation.append(op).append(ollirTypes.toOllirType(type)).append(SPACE)
-                .append(rhs.getCode()).append(END_STMT);
+        switch (op){
+            case "&&" ->{
+                JmmType resType = types.getExprType(node);
+                String resOllirType = ollirTypes.toOllirType(resType);
+                var lhs = visit(node.getChild(0));
+                computation.append(lhs.getComputation());
+                String false_label= ollirTypes.nextLabel("f");
+                computation.append("if(!.bool ").append(lhs.getCode()).append(")").append(SPACE).append("goto").append(SPACE).append(false_label).append(END_STMT);
+                code = ollirTypes.nextTemp() + resOllirType;
+                String end_label=ollirTypes.nextLabel("s");
+                var rhs = visit(node.getChild(1));
+                computation.append(rhs.getComputation());
+                computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType)
+                        .append(SPACE).append(rhs.getCode()).append(END_STMT).append("goto").append(SPACE).append(end_label).append(END_STMT);
+                computation.append(false_label).append(":\n");
+                computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType)
+                        .append(SPACE).append("0.bool").append(END_STMT).append(end_label).append(":\n");
+            }
+            case "||"->{
+                JmmType resType = types.getExprType(node);
+                String resOllirType = ollirTypes.toOllirType(resType);
+                var lhs = visit(node.getChild(0));
+                computation.append(lhs.getComputation());
+                String true_label= ollirTypes.nextLabel("t");
+                String end_label=ollirTypes.nextLabel("s");
+                computation.append("if(").append(lhs.getCode()).append(")").append(SPACE).append("goto").append(SPACE).append(true_label).append(END_STMT);
+                code = ollirTypes.nextTemp() + resOllirType;
+                var rhs = visit(node.getChild(1));
+                computation.append(rhs.getComputation());
+                computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType)
+                        .append(SPACE).append(rhs.getCode()).append(END_STMT).append("goto").append(SPACE).append(end_label).append(END_STMT);
+                computation.append(true_label).append(":\n");
+                computation.append(code).append(SPACE).append(ASSIGN).append(resOllirType)
+                        .append(SPACE).append("1.bool").append(END_STMT).append(end_label).append(":\n");
+
+            }
+            default -> {
+                var lhs = visit(node.getChild(0));
+                var rhs = visit(node.getChild(1));
+                // code to compute the children
+                computation.append(lhs.getComputation());
+                computation.append(rhs.getComputation());
+
+                // code to compute self
+                JmmType resType = types.getExprType(node);
+                String resOllirType = ollirTypes.toOllirType(resType);
+                code = ollirTypes.nextTemp() + resOllirType;
+
+                computation.append(code).append(SPACE)
+                        .append(ASSIGN).append(resOllirType).append(SPACE)
+                        .append(lhs.getCode()).append(SPACE);
+
+                computation.append(op).append(ollirTypes.toOllirType(type)).append(SPACE)
+                        .append(rhs.getCode()).append(END_STMT);
+
+            }
+        }
+
 
         return new OllirExprResult(code, computation);
     }
