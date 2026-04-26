@@ -1,5 +1,7 @@
 package pt.up.fe.comp2026.optimization;
 
+import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
+import pt.up.fe.comp.jmm.analysis.table.Signature;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
@@ -52,8 +54,12 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(EXPLICIT_METHOD_CALL,this::visitMethodCall);
         addVisit(CLASS_INITIALIZATION,this::visitClassInit);
         addVisit(THIS, this::visitThisExpr);
+        addVisit(PARENTESES,this::visitParenteses);
     }
 
+    private OllirExprResult visitParenteses(JmmNode node,Void unused){
+        return this.visit(node.getChild(0));
+    }
     private OllirExprResult visitMethodCall(JmmNode node, Void unused){
         StringBuilder code= new StringBuilder();
         StringBuilder computation=new StringBuilder();
@@ -64,7 +70,20 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         String methodname= node.get("methodname");
         JmmNode parent=node.getParent();
         List<OllirExprResult> res= node.getChildren().stream().skip(1).map(this::visit).toList();
-        code.append("invokevirtual(").append(calleResult.getCode()).append(SPACE).append(",").append(DOUBLE_Quote).append(methodname).append(DOUBLE_Quote);
+
+        var argTypes = node.getChildren().stream().skip(1)
+                .map(arg -> types.getExprType(arg))
+                .toList();
+
+        Signature methodSignature = new Signature(methodname, argTypes);
+        MethodSymbol methodSymbol=table.getMethod(methodSignature).get();
+        if(methodSymbol.isStatic()){
+            code.append("invokestatic").append(calle.get("name"));
+        }
+        else{
+            code.append("invokevirtual(").append(calleResult.getCode());
+        }
+        code.append(SPACE).append(",").append(DOUBLE_Quote).append(methodname).append(DOUBLE_Quote);
         for( int i =0; i< res.size();i++){
             OllirExprResult r=res.get(i);
             computation.append(r.getComputation());
