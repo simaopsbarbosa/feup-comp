@@ -17,6 +17,7 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
         addVisit(JmmKind.VAR_DECL, this::visitVarDecl);
         addVisit(JmmKind.VAR_REF_EXPR, this::visitVarRefExpr);
         addVisit(JmmKind.ELSEIF_BLOCK_STMT, this::visitIfStmt);
+        addVisit(JmmKind.WHILE_STMT, this::visitWhileStmt);
         setDefaultVisit(this::defaultVisit);
     }
 
@@ -28,6 +29,18 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
 
         for (var child : methodDecl.getChildren()) {
             changed |= visit(child, methodConstants);
+        }
+
+        return changed;
+    }
+
+    private Boolean visitWhileStmt(JmmNode whileStmt, Map<String, JmmNode> constants) {
+        removeAssignedVariables(whileStmt.getChild(1), constants);
+
+        boolean changed = false;
+
+        for (var child : whileStmt.getChildren()) {
+            changed |= visit(child, constants);
         }
 
         return changed;
@@ -107,7 +120,7 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
         if (rightSide.getKind() == JmmKind.INTEGER_LITERAL || rightSide.getKind() == JmmKind.BOOL_LITERAL) {
             // the right side is constant (x = 10 or y = True)
             // add it to the map
-            JmmNode previousValue = constants.put(variableName, rightSide);
+            constants.put(variableName, rightSide);
             return false;
         }
         constants.remove(variableName);
