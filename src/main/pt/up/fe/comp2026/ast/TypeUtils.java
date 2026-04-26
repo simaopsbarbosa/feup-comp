@@ -14,6 +14,7 @@ import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
@@ -277,10 +278,32 @@ public class TypeUtils {
 
             //checks if imported table contains method
             if (importTable.isPresent() && !importTable.get().getMethods().isEmpty()) {
-                return importTable.get().getMethod(methodSignature).get().returnType();
+                MethodSymbol method=null;
+                var methods = importTable.get().getMethods(methodName);
+                // verify if the method actually exists in the imported class
+                for ( MethodSymbol i:methods) {
+                    List<Symbol> parameters = i.parameters();
+                   boolean exists=false;
+                    if (argTypes.size() == parameters.size()) {
+                        exists=true;
+                        for (int t = 0; t < parameters.size(); t++) {
+                            JmmType actType = parameters.get(t).type();
+                            JmmType callType = argTypes.get(t);
+                            if (!canBeconverted(callType, actType)) {
+                                exists = false;
+                            }
+                        }
+                    }
+                    if (exists) {
+                        method = i;
+                    }
+                }
+                if(method!=null){
+                    return method.returnType();
+                }
+
             }
         }
-
         // verifies if in extends (recursive)
         if (table.getSuperFullyQualifiedName() != null) {
             var importTable = table.getImportedSymbolTable(table.getSuperFullyQualifiedName());
@@ -354,6 +377,33 @@ public class TypeUtils {
         return type;
     }
 
+    public boolean canBeconverted(JmmType src,JmmType tag){
+        if(src.equals(tag)){
+            return true;
+        }
+        if(src instanceof  JmmClassType src1 && tag instanceof  JmmClassType tag1){
+            if(tag1.name().equals("Object")){
+                return  true;
+            }
+            if(superCheckName(table, tag1.name())){
+                return true;
+            }
 
+        }
+        return  false;
+    }
+    private boolean superCheckName(SymbolTable currentTable, String targetName) {
+        String superName = currentTable.getSuperFullyQualifiedName();
 
+        if (superName != null && !superName.isEmpty()) {
+            if(superName.equals(targetName)){
+                return true;
+            }
+            var superTable = table.getImportedSymbolTable(superName);
+            if (superTable.isPresent()) {
+                return superCheckName(superTable.get(),targetName);
+            }
+        }
+        return false;
+    }
 }

@@ -1,7 +1,9 @@
 package pt.up.fe.comp2026.analysis.passes;
 
 import pt.up.fe.comp.jmm.analysis.table.Signature;
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
+import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Report;
@@ -12,6 +14,8 @@ import pt.up.fe.comp2026.jmm.ast.JmmKind;
 
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp2026.utils.ReportUtils;
+
+import java.util.List;
 
 
 public class CallsLogic extends AnalysisVisitorWithTable {
@@ -97,14 +101,31 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                 // check if the method belongs to an external class
                 var importTable = super.table.getImportedSymbolTable(classType.fullyQualifiedName());
                 if (importTable.isPresent()) {
-                    var method = importTable.get().getMethod(methodsignature);
-                    
+                    MethodSymbol method=null;
+                    var methods = importTable.get().getMethods(methodName);
                     // verify if the method actually exists in the imported class
-                    if (method.isEmpty()) {
+                    for ( MethodSymbol i:methods) {
+                        List<Symbol> parameters = i.parameters();
+                        boolean exists = false;
+                        if (argTypes.size() == parameters.size()) {
+                            exists = true;
+                            for (int t = 0; t < parameters.size(); t++) {
+                                JmmType actType = parameters.get(t).type();
+                                JmmType callType = argTypes.get(t);
+                                if (!types.canBeconverted(callType, actType)) {
+                                    exists = false;
+                                }
+                            }
+                        }
+                        if (exists) {
+                            method = i;
+                        }
+                    }
+                    if (method==null) {
                         addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method '" + methodName + "' is not present in import " + classType.name()));
                     } 
                     // block instance methods called on a class name (static reference)
-                    else if (classType.staticRef() && !method.get().isStatic()) {
+                    else if (classType.staticRef() && !method.isStatic()) {
                         addReport(Report.newError(
                                 Stage.SEMANTIC,
                                 NodeUtils.getLine(methodCall),
@@ -145,7 +166,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
 
         String methodName = methodCall.get("methodname");
         var argTypes = methodCall.getChildren().stream()
-                .map(arg -> super.types.getExprType(arg))
+                .map(super.types::getExprType)
                 .toList();
         Signature methodsignature = new Signature(methodName, argTypes);
 
