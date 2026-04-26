@@ -161,9 +161,20 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             arrayCode = temp;
         }
 
+        var parent = jmmNode.getParent();
+        boolean isAssignmentLHS = parent != null && parent.getKind() == ASSIGN_STMT && parent.getChild(0) == jmmNode;
+
         String elementOllirType = ollirTypes.toOllirType(types.getExprType(jmmNode));
         String code = arrayCode + '[' + indexCode + ']' + elementOllirType;
-        return new OllirExprResult(code, computation);
+
+        if (isAssignmentLHS) {
+            return new OllirExprResult(code, computation);
+        } else {
+            String temp = ollirTypes.nextTemp() + elementOllirType;
+            computation.append(temp).append(SPACE).append(ASSIGN).append(elementOllirType).append(SPACE)
+                    .append(code).append(END_STMT);
+            return new OllirExprResult(temp, computation);
+        }
     }
 
     private OllirExprResult visitThisExpr(JmmNode node,Void unused){
