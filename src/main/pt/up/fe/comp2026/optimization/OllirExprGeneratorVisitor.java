@@ -47,6 +47,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(NEW_ARRAY,this::visitNewArray);
         addVisit(ARRAY_INIT,this::visitNewArray);
+        addVisit(ARRAY_ACCESS, this::visitArrayAccess);
         //addVisit(EXPLICIT_METHOD_CALL,this::visitMethodCall);
         addVisit(CLASS_INITIALIZATION,this::visitClassInit);
         addVisit(THIS, this::visitThisExpr);
@@ -86,6 +87,16 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         return new OllirExprResult(code, comp);
 
     }
+
+    private OllirExprResult visitArrayAccess(JmmNode jmmNode, Void unused) {
+        JmmType type = types.getExprType(jmmNode.getChild(0));
+        String t = ollirTypes.toOllirType(type);
+        var content = visit(jmmNode.getChild(1));
+        String code = jmmNode.getChild(0).get("name") + t + '[' + content.getCode() + ']' + ollirTypes.toOllirType(types.getExprType(jmmNode));
+        System.out.println(code);
+        return new OllirExprResult(code);
+    }
+
     private OllirExprResult visitThisExpr(JmmNode node,Void unused){
         String code;
         code = "this."+node.getAncestor(CLASS_DECL).get().get("name");
