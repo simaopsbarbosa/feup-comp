@@ -58,32 +58,27 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         StringBuilder code= new StringBuilder();
         StringBuilder computation=new StringBuilder();
         JmmNode calle =node.getChild(0);
-        JmmClassType type= types.getExprType(calle).asClass();
+        OllirExprResult calleResult = this.visit(calle);
+        computation.append(calleResult.getComputation());
         String ollirType= ollirTypes.toOllirType(types.getExprType(node));
         String methodname= node.get("methodname");
-        if(calle.getKind()==THIS){
-            code.append("invokevirtual(this,").append(DOUBLE_Quote).append(methodname).append(DOUBLE_Quote);
-            List<OllirExprResult> res= node.getChildren().stream().skip(1).map(this::visit).toList();
-            for( int i =0; i< res.size();i++){
-                OllirExprResult r=res.get(i);
-                computation.append(r.getComputation());
-                code.append(",").append(SPACE).append(r.getCode());
-            }
-            code.append(")").append(ollirType);
+        JmmNode parent=node.getParent();
+        List<OllirExprResult> res= node.getChildren().stream().skip(1).map(this::visit).toList();
+        code.append("invokevirtual(").append(calleResult.getCode()).append(SPACE).append(",").append(DOUBLE_Quote).append(methodname).append(DOUBLE_Quote);
+        for( int i =0; i< res.size();i++){
+            OllirExprResult r=res.get(i);
+            computation.append(r.getComputation());
+            code.append(",").append(SPACE).append(r.getCode());
         }
-        else{
-            code.append("invokespecial(").append(calle.get("name")).append(ollirTypes.toOllirType(type)).append(SPACE).append(",").append(DOUBLE_Quote).append(methodname).append(DOUBLE_Quote);
-            List<OllirExprResult> res= node.getChildren().stream().skip(1).map(this::visit).toList();
-            for( int i =0; i< res.size();i++){
-                OllirExprResult r=res.get(i);
-                computation.append(r.getComputation());
-                code.append(",").append(SPACE).append(r.getCode());
-            }
-            code.append(")").append(ollirType);
-
+        code.append(")").append(ollirType);
+        if (parent.getKind()==EXPRESSION){
+            code.append(END_STMT);
+            return new OllirExprResult(code.toString(),computation);
         }
-        code.append(END_STMT);
-        return new OllirExprResult(code.toString(),computation);
+        String tempVar = ollirTypes.nextTemp() + ollirType;
+        computation.append(tempVar).append(SPACE).append(":=").append(ollirType)
+                .append(SPACE).append(code).append(END_STMT);
+        return new OllirExprResult(tempVar,computation);
     }
     private OllirExprResult visitNewArray(JmmNode node,Void unused){
         StringBuilder comp=new StringBuilder();
