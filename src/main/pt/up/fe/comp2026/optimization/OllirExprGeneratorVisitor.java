@@ -89,12 +89,21 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     }
 
     private OllirExprResult visitArrayAccess(JmmNode jmmNode, Void unused) {
-        JmmType type = types.getExprType(jmmNode.getChild(0));
-        String t = ollirTypes.toOllirType(type);
-        var content = visit(jmmNode.getChild(1));
-        String code = jmmNode.getChild(0).get("name") + t + '[' + content.getCode() + ']' + ollirTypes.toOllirType(types.getExprType(jmmNode));
-        System.out.println(code);
-        return new OllirExprResult(code);
+        JmmType arrayType = types.getExprType(jmmNode.getChild(0));
+        String arrayOllirType = ollirTypes.toOllirType(arrayType);
+        var indexExpr = visit(jmmNode.getChild(1));
+
+        var parent = jmmNode.getParent();
+        boolean isAssignmentLHS = parent != null && parent.getKind() == ASSIGN_STMT && parent.getChild(0) == jmmNode;
+        
+        if (isAssignmentLHS) {
+            String code = jmmNode.getChild(0).get("name") + arrayOllirType + '[' + indexExpr.getCode() + ']' + ".i32";
+            return new OllirExprResult(code, indexExpr.getComputation());
+        } else {
+            String elementOllirType = ollirTypes.toOllirType(types.getExprType(jmmNode));
+            String code = jmmNode.getChild(0).get("name") + arrayOllirType + '[' + indexExpr.getCode() + ']' + elementOllirType;
+            return new OllirExprResult(code, indexExpr.getComputation());
+        }
     }
 
     private OllirExprResult visitThisExpr(JmmNode node,Void unused){
