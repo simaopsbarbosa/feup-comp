@@ -42,6 +42,9 @@ public class JmmOptimizationImpl implements JmmOptimization {
             BranchEliminationVisitor branchEliminator = new BranchEliminationVisitor();
             hasChanges |= branchEliminator.visit(rootNode);
 
+            DeadCodeEliminationVisitor deadCodeEliminator = new DeadCodeEliminationVisitor();
+            hasChanges |= deadCodeEliminator.visit(rootNode);
+
             passes++;
         }
 

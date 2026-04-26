@@ -3,14 +3,9 @@ package pt.up.fe.comp.cp1.core.semantics.entityops.semanticanalysis;
 class LogicalOperatorsOk {
     int logical() {
         int x = 10;
-        int y = 0;
-        if (x != 10) {
-            y = 1;
-        } else {
-            y = 2;
-            y = 3;
-            y = 4;
+        while (x == 1) {
+            x = 2;
         }
-        return y;
+        return x;
     }
 }
