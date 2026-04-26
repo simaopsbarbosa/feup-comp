@@ -35,13 +35,18 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
     }
 
     private Boolean visitWhileStmt(JmmNode whileStmt, Map<String, JmmNode> constants) {
-        removeAssignedVariables(whileStmt.getChild(1), constants);
+        boolean changed = visit(whileStmt.getChild(0), constants);
 
-        boolean changed = false;
-
-        for (var child : whileStmt.getChildren()) {
-            changed |= visit(child, constants);
+        JmmNode condition = whileStmt.getChild(0);
+        if (condition.getKind() == JmmKind.BOOL_LITERAL && condition.get("bool").equals("false")) {
+            return changed;
         }
+
+        Map<String, JmmNode> bodyConstants = new HashMap<>(constants);
+
+        changed |= visit(whileStmt.getChild(1), bodyConstants);
+
+        removeAssignedVariables(whileStmt.getChild(1), constants);
 
         return changed;
     }
