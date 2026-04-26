@@ -24,6 +24,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     private static final String SPACE = " ";
     private static final String ASSIGN = ":=";
     private final String END_STMT = ";\n";
+    private  final String DOUBLE_Quote="\"";
 
     private final SymbolTable table;
 
@@ -56,21 +57,32 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     private OllirExprResult visitMethodCall(JmmNode node, Void unused){
         StringBuilder code= new StringBuilder();
         StringBuilder computation=new StringBuilder();
-        JmmClassType type= types.getExprType(node.getChild(0)).asClass();
+        JmmNode calle =node.getChild(0);
+        JmmClassType type= types.getExprType(calle).asClass();
+        String ollirType= ollirTypes.toOllirType(types.getExprType(node));
         String methodname= node.get("methodname");
-        if(type.fullyQualifiedName().equals(table.getClassName())){
-            code.append("invokevirtual(this,").append(methodname).append(SPACE);
+        if(calle.getKind()==THIS){
+            code.append("invokevirtual(this,").append(DOUBLE_Quote).append(methodname).append(DOUBLE_Quote);
             List<OllirExprResult> res= node.getChildren().stream().skip(1).map(this::visit).toList();
             for( int i =0; i< res.size();i++){
                 OllirExprResult r=res.get(i);
                 computation.append(r.getComputation());
-                code.append(r.getCode());
-                if(i< res.size()-1){
-                    code.append(",").append(SPACE);
-                }
+                code.append(",").append(SPACE).append(r.getCode());
             }
-            code.append(")");
+            code.append(")").append(ollirType);
         }
+        else{
+            code.append("invokespecial(").append(calle.get("name")).append(ollirTypes.toOllirType(type)).append(SPACE).append(",").append(DOUBLE_Quote).append(methodname).append(DOUBLE_Quote);
+            List<OllirExprResult> res= node.getChildren().stream().skip(1).map(this::visit).toList();
+            for( int i =0; i< res.size();i++){
+                OllirExprResult r=res.get(i);
+                computation.append(r.getComputation());
+                code.append(",").append(SPACE).append(r.getCode());
+            }
+            code.append(")").append(ollirType);
+
+        }
+        code.append(END_STMT);
         return new OllirExprResult(code.toString(),computation);
     }
     private OllirExprResult visitNewArray(JmmNode node,Void unused){
