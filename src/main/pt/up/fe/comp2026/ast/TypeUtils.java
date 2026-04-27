@@ -319,11 +319,8 @@ public class TypeUtils {
     }
 
     private JmmType getArrayAccessType(JmmNode arrayAccess) {
-        JmmType arrayType = getVarExprType(arrayAccess.getChild(0));
+        JmmType arrayType = getExprType(arrayAccess.getChild(0));
         int dimsAccessed = arrayAccess.getChildren(EXPR).size() - 1;   // remove expr for var
-
-        System.out.println("-------------------------");
-        System.out.println(dimsAccessed);
 
         if (arrayType instanceof JmmArrayType jmmArrayType) {
             JmmType itemType = jmmArrayType.itemType();

@@ -72,10 +72,7 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
     private Void visitArrayAccess(JmmNode arrayAccess, SymbolTable table) {
         checkAccessInt(arrayAccess, arrayAccess.getChildren(JmmKind.EXPR), 1);
 
-        JmmNode node = arrayAccess.getDescendants(JmmKind.VAR_REF_EXPR).getFirst();
-        String varName = node.get("name");
-
-        JmmType type = types.getVarTypeFromName(node, varName).get();
+        JmmType type = types.getExprType(arrayAccess.getChild(0));
 
         // check if variable is an array
         if (!(type instanceof JmmArrayType arrayType)) {
@@ -115,10 +112,7 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
 
 
     private Void visitArrayLength(JmmNode arrayLengthExpr, SymbolTable table) {
-        JmmNode varNode = arrayLengthExpr.getDescendants(JmmKind.VAR_REF_EXPR).getFirst();
-        String varName = varNode.get("name");
-
-        JmmType varType = types.getVarTypeFromName(varNode, varName).get();
+        JmmType varType = types.getExprType(arrayLengthExpr.getChild(0));
 
         if (!(varType instanceof JmmArrayType)) {
             addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, arrayLengthExpr,
