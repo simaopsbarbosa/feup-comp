@@ -272,6 +272,15 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             var stmtsCode = stmts.stream().map(this::visit).collect(Collectors.joining("\n   ", "   ", ""));
             code.append(stmtsCode);
         }
+        var expr=node.getChildren(EXPRESSION).stream().flatMap(n->n.getChildren().stream()).filter(n -> n.getKind()==EXPLICIT_METHOD_CALL ||
+                n.getKind()==IMPLICIT_METHOD_CALL).toList();
+        if(!expr.isEmpty()){
+            for (var n : expr) {
+                OllirExprResult res = exprVisitor.visit(n);
+                code.append(res.getComputation());
+                code.append(res.getCode());
+            }
+        }
 
         code.append(R_BRACKET);
         code.append(NL);

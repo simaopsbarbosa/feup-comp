@@ -1,5 +1,7 @@
 package pt.up.fe.comp2026.optimization;
 
+import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
+import pt.up.fe.comp.jmm.analysis.table.Signature;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
@@ -11,6 +13,7 @@ import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
@@ -23,6 +26,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     private static final String SPACE = " ";
     private static final String ASSIGN = ":=";
     private final String END_STMT = ";\n";
+    private  final String DOUBLE_Quote="\"";
 
     private final SymbolTable table;
 
@@ -47,11 +51,54 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(NEW_ARRAY,this::visitNewArray);
         addVisit(ARRAY_INIT,this::visitNewArray);
-        //addVisit(EXPLICIT_METHOD_CALL,this::visitMethodCall);
+        addVisit(EXPLICIT_METHOD_CALL,this::visitMethodCall);
         addVisit(CLASS_INITIALIZATION,this::visitClassInit);
         addVisit(THIS, this::visitThisExpr);
+        addVisit(PARENTESES,this::visitParenteses);
     }
 
+    private OllirExprResult visitParenteses(JmmNode node,Void unused){
+        return this.visit(node.getChild(0));
+    }
+    private OllirExprResult visitMethodCall(JmmNode node, Void unused){
+        StringBuilder code= new StringBuilder();
+        StringBuilder computation=new StringBuilder();
+        JmmNode calle =node.getChild(0);
+        OllirExprResult calleResult = this.visit(calle);
+        computation.append(calleResult.getComputation());
+        String ollirType= ollirTypes.toOllirType(types.getExprType(node));
+        String methodname= node.get("methodname");
+        JmmNode parent=node.getParent();
+        List<OllirExprResult> res= node.getChildren().stream().skip(1).map(this::visit).toList();
+
+        var argTypes = node.getChildren().stream().skip(1)
+                .map(arg -> types.getExprType(arg))
+                .toList();
+
+        Signature methodSignature = new Signature(methodname, argTypes);
+        MethodSymbol methodSymbol=table.getMethod(methodSignature).get();
+        if(methodSymbol.isStatic()){
+            code.append("invokestatic").append(calle.get("name"));
+        }
+        else{
+            code.append("invokevirtual(").append(calleResult.getCode());
+        }
+        code.append(SPACE).append(",").append(DOUBLE_Quote).append(methodname).append(DOUBLE_Quote);
+        for( int i =0; i< res.size();i++){
+            OllirExprResult r=res.get(i);
+            computation.append(r.getComputation());
+            code.append(",").append(SPACE).append(r.getCode());
+        }
+        code.append(")").append(ollirType);
+        if (parent.getKind()==EXPRESSION){
+            code.append(END_STMT);
+            return new OllirExprResult(code.toString(),computation);
+        }
+        String tempVar = ollirTypes.nextTemp() + ollirType;
+        computation.append(tempVar).append(SPACE).append(":=").append(ollirType)
+                .append(SPACE).append(code).append(END_STMT);
+        return new OllirExprResult(tempVar,computation);
+    }
     private OllirExprResult visitNewArray(JmmNode node,Void unused){
         StringBuilder comp=new StringBuilder();
         StringBuilder dims=new StringBuilder();
