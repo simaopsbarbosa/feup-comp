@@ -1,9 +1,9 @@
 package pt.up.fe.comp.cp1.core.semantics.entityops.semanticanalysis;
 
 class LogicalOperatorsOk {
-    int logical(int a) {
-        int b;
-
-        return 0;
+    int logical() {
+        int x = 10;
+        x++;
+        return x;
     }
 }
