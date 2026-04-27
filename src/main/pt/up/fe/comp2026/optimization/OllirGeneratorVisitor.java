@@ -330,33 +330,27 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
-    //TODO: use node to check if fields have initialization
     private String buildConstructor(JmmNode classNode) {
         StringBuilder code = new StringBuilder();
         String extendName = "java.lang.Object";
-        if (table.getSuperFullyQualifiedName() != null) {
+        if (table.getSuper() != null) {
             extendName = table.getSuper();
         }
 
-        // get constructor params
-        List<Symbol> fields = table.getFields();
-        List<String> constructorTypes = new ArrayList<>();
-        fields.forEach(symbol -> {
-            constructorTypes.add(ollirTypes.nextTemp() + ollirTypes.toOllirType(symbol.type()));
-        });
-        String constructorCode = StringUtils.join(constructorTypes, ", ");
+        code.append(".construct \"<init>\"().V" + L_BRACKET);
+        code.append("   invokespecial(this.\"%s\", \"<init>\").V;\n".formatted(extendName));
 
-
-        code.append(".construct \"<init>\"(" + constructorCode + ").V" + L_BRACKET);
-        code.append("invokespecial(this.\"%s\", \"<init>\").V;\n".formatted(extendName));
-
-        for (int i = 0; i < fields.size(); i++) {
-            var symbolField = fields.get(i);
-            String typeSuffix = ollirTypes.toOllirType(symbolField.type());
-            String fieldIdentifier = symbolField.name() + typeSuffix;
-            String tmpVar = "tmp" + i + typeSuffix;
-            code.append("putfield(this, %s, %s).V;\n".formatted(fieldIdentifier, tmpVar));
+        for (var fieldDecl : classNode.getChildren(FIELD_DECL)) {
+            var varDecl = fieldDecl.getChild(0);
+            var initializers = varDecl.getChildren(EXPR);
+            if (!initializers.isEmpty()) {
+                String varName = varDecl.get("name");
+                JmmType thisType = TypeUtils.with(table).convertType(varDecl.getChild(0));
+                JmmNode assigneeExpr = initializers.get(0);
+                code.append("   ").append(visitAssignment(varDecl, varName, thisType, assigneeExpr));
+            }
         }
+
         code.append(R_BRACKET);
 
         return code.toString();
