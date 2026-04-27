@@ -1,11 +1,13 @@
 package pt.up.fe.comp2026.optimization;
 
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
+import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 
 
 import java.util.Collections;
+import java.util.HashMap;
 
 public class JmmOptimizationImpl implements JmmOptimization {
 
@@ -26,7 +28,27 @@ public class JmmOptimizationImpl implements JmmOptimization {
     @Override
     public JmmSemanticsResult transformAst(JmmSemanticsResult semanticsResult) {
 
-        //TODO: Do your AST-based optimizations here
+        JmmNode rootNode = semanticsResult.getRootNode();
+        boolean hasChanges = true;
+        int passes = 0;
+
+        while (hasChanges) {
+            ConstantPropagationVisitor propagator = new ConstantPropagationVisitor();
+            hasChanges = propagator.visit(rootNode, new HashMap<>());
+
+            ConstantFoldingVisitor folder = new ConstantFoldingVisitor();
+            hasChanges |= folder.visit(rootNode);
+
+            BranchEliminationVisitor branchEliminator = new BranchEliminationVisitor();
+            hasChanges |= branchEliminator.visit(rootNode);
+
+            DeadCodeEliminationVisitor deadCodeEliminator = new DeadCodeEliminationVisitor();
+            hasChanges |= deadCodeEliminator.visit(rootNode);
+
+            passes++;
+        }
+
+        System.out.println(passes + " passes completed");
         return semanticsResult;
     }
 
