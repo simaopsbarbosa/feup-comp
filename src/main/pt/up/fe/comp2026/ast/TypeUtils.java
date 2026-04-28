@@ -265,8 +265,8 @@ public class TypeUtils {
 
     public MethodSymbol getExplicitMethodCallSymbol(JmmNode explicitMethodCall) {
         String methodName = explicitMethodCall.get("methodname");
-
-        var argTypes = explicitMethodCall.getChildren().stream().skip(1).map(arg -> getExprType(arg)).toList();
+        int skip= explicitMethodCall.getKind()==IMPLICIT_METHOD_CALL? 0:1;
+        var argTypes = explicitMethodCall.getChildren().stream().skip(skip).map(arg -> getExprType(arg)).toList();
 
         Signature methodSignature = new Signature(methodName, argTypes);
 

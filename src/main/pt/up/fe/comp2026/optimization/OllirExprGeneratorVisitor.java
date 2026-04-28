@@ -54,6 +54,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(ARRAY_ACCESS, this::visitArrayAccess);
         addVisit(LENGTH, this::visitLength);
         addVisit(EXPLICIT_METHOD_CALL, this::visitMethodCall);
+        addVisit(IMPLICIT_METHOD_CALL,this::visitMethodCall);
         addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(THIS, this::visitThisExpr);
         addVisit(PARENTESES, this::visitParenteses);
@@ -78,21 +79,31 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     private OllirExprResult visitMethodCall(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
-        JmmNode calle = node.getChild(0);
-        OllirExprResult calleResult = this.visit(calle);
-        computation.append(calleResult.getComputation());
         String ollirType = ollirTypes.toOllirType(types.getExprType(node));
         String methodname = node.get("methodname");
         JmmNode parent = node.getParent();
-        List<OllirExprResult> res = node.getChildren().stream().skip(1).map(this::visit).toList();
-
+        int skip= node.getKind()==IMPLICIT_METHOD_CALL? 0:1;
+        List<OllirExprResult> res = node.getChildren().stream().skip(skip).map(this::visit).toList();
         MethodSymbol method = types.getExplicitMethodCallSymbol(node);
-
-        if (method.isStatic()) {
-            code.append("invokestatic(").append(calle.get("name"));
-        } else {
-            code.append("invokevirtual(").append(calleResult.getCode());
+        if(node.getKind()==EXPLICIT_METHOD_CALL){
+            JmmNode calle = node.getChild(0);
+            OllirExprResult calleResult = this.visit(calle);
+            computation.append(calleResult.getComputation());
+            if (method.isStatic()) {
+                code.append("invokestatic(").append(calle.get("name"));
+            } else {
+                code.append("invokevirtual(").append(calleResult.getCode());
+            }
         }
+        else{
+            if (method.isStatic()) {
+                code.append("invokestatic(");
+            } else {
+                code.append("invokevirtual(");
+            }
+            code.append("this.").append(table.getClassName());
+        }
+
         code.append(SPACE).append(",").append(DOUBLE_Quote).append(methodname).append(DOUBLE_Quote);
         for (int i = 0; i < res.size(); i++) {
             OllirExprResult r = res.get(i);
