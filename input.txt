@@ -1,9 +1,12 @@
-package pt.up.fe.comp.cp1.core.semantics.entityops.semanticanalysis;
+package extensions.semantics.calls;
 
-class LogicalOperatorsOk {
-    int logical() {
-        int x = 10;
-        x++;
-        return x;
+class NonStaticOnClassFail {
+    int nonStatic() {
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        int x;
+        x = NonStaticOnClassFail.nonStatic();
     }
 }

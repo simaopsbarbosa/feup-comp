@@ -1,0 +1,15 @@
+package pt.up.fe.comp.extensions.ollir.statements.jmm;
+
+class DoWhileSimple {
+
+    public int method(int limit) {
+        int i;
+        i = 0;
+
+        do {
+            i = i + 1;
+        } while (i < limit);
+
+        return i;
+    }
+}

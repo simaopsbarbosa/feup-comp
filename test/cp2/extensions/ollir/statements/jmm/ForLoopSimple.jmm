@@ -1,0 +1,16 @@
+package pt.up.fe.comp.extensions.ollir.statements.jmm;
+
+class ForLoopSimple {
+
+    public int method(int limit) {
+        int i;
+        int sum;
+        sum = 0;
+
+        for (i = 0; i < limit; i = i + 1) {
+            sum = sum + i;
+        }
+
+        return sum;
+    }
+}

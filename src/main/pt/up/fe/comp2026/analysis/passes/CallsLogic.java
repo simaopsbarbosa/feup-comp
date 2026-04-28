@@ -76,7 +76,15 @@ public class CallsLogic extends AnalysisVisitorWithTable {
                     Stage.SEMANTIC,
                     NodeUtils.getLine(methodCall),
                     NodeUtils.getColumn(methodCall),
-                    "Method '" + methodCall.get("name") + "' does not exist locally and in imports and no valid superclass was found.",
+                    "Method '" + methodCall.get("methodname") + "' does not exist locally and in imports and no valid superclass was found.",
+                    null
+            ));
+        } else if (types.getExprType(methodCall.getChild(0)).asClass().staticRef() && !symbol.isStatic()) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(methodCall),
+                    NodeUtils.getColumn(methodCall),
+                    "Method '" + methodCall.get("methodname") + "' cannot be called in a static manner.",
                     null
             ));
         }

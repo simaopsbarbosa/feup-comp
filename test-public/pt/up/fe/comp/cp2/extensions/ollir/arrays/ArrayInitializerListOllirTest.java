@@ -1,4 +1,4 @@
-package pt.up.fe.comp.cp2.extensions.ollir.arrays.jmm;
+package pt.up.fe.comp.cp2.extensions.ollir.arrays;
 
 public class ArrayInitializerListOllirTest {
 }

@@ -58,12 +58,12 @@ public class Launcher {
             System.out.println("AST: " + semanticsResult.getRootNode().toTree());
         }
 
-        OllirResult ollirResult = ollirGen.toOllir(semanticsResult);
-        System.out.println(ollirResult.getOllirCode());
-        ollirResult.throwIfErrors();
+//        OllirResult ollirResult = ollirGen.toOllir(semanticsResult);
+//        System.out.println(ollirResult.getOllirCode());
+//        ollirResult.throwIfErrors();
 
 //        // Print OLLIR code
-        System.out.println(ollirResult.getOllirCode());
+//        System.out.println(ollirResult.getOllirCode());
 //
 //        // Code generation stage
 //        JasminBackendImpl jasminGen = new JasminBackendImpl();
