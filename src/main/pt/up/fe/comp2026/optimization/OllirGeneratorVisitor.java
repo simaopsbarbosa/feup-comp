@@ -93,8 +93,11 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         //handle condition
         JmmNode condNode = whileStmt.getChildren(EXPR).get(0);
-        String cond = exprVisitor.visit(condNode).getCode();
-        code.append("   if(" + cond + ") goto " + loopLabel + END_STMT);
+
+        var cond = exprVisitor.visit(condNode);
+        code.append("   " + cond.getComputation());
+        //String cond = exprVisitor.visit(condNode).getCode();
+        code.append("   if(" + cond.getCode() + ") goto " + loopLabel + END_STMT);
 
         code.append("   " + "goto " + exitLabel + END_STMT);
 
