@@ -92,6 +92,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
             return null;
         }
 
+        // TODO: THIS NEEDS A REFACTOR
         // get the type of the receiver to check if its an object or a class name
         var receiverType = super.types.getExprType(receiver);
         if (receiverType instanceof JmmClassType classType) {

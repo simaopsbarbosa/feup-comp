@@ -88,6 +88,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         JmmClassType classType = types.getExprType(calle).asClass();
         MethodSymbol method = null;
 
+        // TODO: THIS NEEDS A REFACTOR
         var argTypes = node.getChildren().stream().skip(1)
                 .map(types::getExprType)
                 .toList();
