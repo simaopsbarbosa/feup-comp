@@ -240,9 +240,9 @@ public class TypeUtils {
         return getExprType(parentesesExpr.getChild(0));
     }
 
-    private JmmType getMethodReturnTypeInHierarchy(SymbolTable currentTable, Signature methodSignature) {
+    private MethodSymbol getMethodReturnTypeInHierarchy(SymbolTable currentTable, Signature methodSignature) {
         var localMethods = currentTable.getMethod(methodSignature);
-        if (localMethods.isPresent()) return localMethods.get().returnType();
+        if (localMethods.isPresent()) return localMethods.get();
 
         String superName = currentTable.getSuperFullyQualifiedName();
 
@@ -256,16 +256,24 @@ public class TypeUtils {
     }
 
     private JmmType getExplicitMethodCallType(JmmNode explMethodCall) {
-        String methodName = explMethodCall.get("methodname");
+        MethodSymbol symbol = getExplicitMethodCallSymbol(explMethodCall);
+        if (symbol == null) {
+            return JmmPrimitiveType.INT;
+        }
+        return symbol.returnType();
+    }
 
-        var argTypes = explMethodCall.getChildren().stream().skip(1).map(arg -> getExprType(arg)).toList();
+    public MethodSymbol getExplicitMethodCallSymbol(JmmNode explicitMethodCall) {
+        String methodName = explicitMethodCall.get("methodname");
+
+        var argTypes = explicitMethodCall.getChildren().stream().skip(1).map(arg -> getExprType(arg)).toList();
 
         Signature methodSignature = new Signature(methodName, argTypes);
 
         //verifies if calls class method
-        if (!table.getMethod(methodSignature).isEmpty()) return table.getMethod(methodSignature).get().returnType();
+        if (!table.getMethod(methodSignature).isEmpty()) return table.getMethod(methodSignature).get();
 
-        var calleeType = getExprType(explMethodCall.getChild(0));
+        var calleeType = getExprType(explicitMethodCall.getChild(0));
 
         if (calleeType instanceof JmmClassType jmmClass && (jmmClass.isImported() || table.isImplicitImport(jmmClass.name()))) {
             var importTable = table.getImportedSymbolTable(jmmClass.fullyQualifiedName());
@@ -293,7 +301,7 @@ public class TypeUtils {
                     }
                 }
                 if (method != null) {
-                    return method.returnType();
+                    return method;
                 }
 
             }
@@ -305,10 +313,7 @@ public class TypeUtils {
                 return getMethodReturnTypeInHierarchy(table, methodSignature);
             }
         }
-
-
-        //default to int
-        return JmmPrimitiveType.INT;
+        return null;
     }
 
     private JmmType getArrayAccessType(JmmNode arrayAccess) {

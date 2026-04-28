@@ -69,97 +69,16 @@ public class CallsLogic extends AnalysisVisitorWithTable {
     }
 
     private Void visitExplicitMethodCall(JmmNode methodCall, SymbolTable table) {
-        var receiver = methodCall.getChild(0);
+        MethodSymbol symbol = types.getExplicitMethodCallSymbol(methodCall);
 
-        String methodName=methodCall.get("methodname");
-        var argTypes = methodCall.getChildren().stream().skip(1)
-                .map(arg -> super.types.getExprType(arg))
-                .toList();
-        Signature methodsignature=new Signature(methodName,argTypes);
-
-        if (receiver.getKind() == JmmKind.THIS) {
-            var matchingMethods = isMethodInHierarchy(table, methodsignature);
-
-            if (!matchingMethods) {
-                addReport(Report.newError(
-                        Stage.SEMANTIC,
-                        NodeUtils.getLine(methodCall),
-                        NodeUtils.getColumn(methodCall),
-                        "Method '" + methodName + "' does not exist locally and no valid superclass was found.",
-                        null
-                ));
-            }
-            return null;
-        }
-
-        // TODO: THIS NEEDS A REFACTOR
-        // get the type of the receiver to check if its an object or a class name
-        var receiverType = super.types.getExprType(receiver);
-        if (receiverType instanceof JmmClassType classType) {
-            boolean isImported = classType.isImported() || super.table.isImplicitImport(classType.name());
-
-            if (isImported) {
-                // check if the method belongs to an external class
-                var importTable = super.table.getImportedSymbolTable(classType.fullyQualifiedName());
-                if (importTable.isPresent()) {
-                    MethodSymbol method=null;
-                    var methods = importTable.get().getMethods(methodName);
-                    // verify if the method actually exists in the imported class
-                    for ( MethodSymbol i:methods) {
-                        List<Symbol> parameters = i.parameters();
-                        boolean exists = false;
-                        if (argTypes.size() == parameters.size()) {
-                            exists = true;
-                            for (int t = 0; t < parameters.size(); t++) {
-                                JmmType actType = parameters.get(t).type();
-                                JmmType callType = argTypes.get(t);
-                                if (!types.canBeconverted(callType, actType)) {
-                                    exists = false;
-                                }
-                            }
-                        }
-                        if (exists) {
-                            method = i;
-                        }
-                    }
-                    if (method==null) {
-                        addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, methodCall, "Method '" + methodName + "' is not present in import " + classType.name()));
-                    } 
-                    // block instance methods called on a class name (static reference)
-                    else if (classType.staticRef() && !method.isStatic()) {
-                        addReport(Report.newError(
-                                Stage.SEMANTIC,
-                                NodeUtils.getLine(methodCall),
-                                NodeUtils.getColumn(methodCall),
-                                "Non-static method '" + methodName + "' cannot be referenced from a static context.",
-                                null));
-                    }
-                }
-            } else {
-                var matchingMethods = isMethodInHierarchy(table, methodsignature);
-
-                if (!matchingMethods) {
-                    addReport(Report.newError(
-                            Stage.SEMANTIC,
-                            NodeUtils.getLine(methodCall),
-                            NodeUtils.getColumn(methodCall),
-                            "Method '" + methodName + "' does not exist locally and no valid superclass was found.",
-                            null
-                    ));
-                }
-                // check static calls for local class names used as targets
-                else if (classType.staticRef()) {
-                    var localMethod = table.getMethods(methodName).stream().findFirst();
-                    if (localMethod.isPresent() && !localMethod.get().isStatic()) {
-                        addReport(Report.newError(
-                                Stage.SEMANTIC,
-                                NodeUtils.getLine(methodCall),
-                                NodeUtils.getColumn(methodCall),
-                                "Non-static method '" + methodName + "' cannot be referenced from a static context.",
-                                null));
-                    }
-                }
-            }
+        if (symbol == null) {
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    NodeUtils.getLine(methodCall),
+                    NodeUtils.getColumn(methodCall),
+                    "Method '" + methodCall.get("name") + "' does not exist locally and in imports and no valid superclass was found.",
+                    null
+            ));
         }
         return null;
     }

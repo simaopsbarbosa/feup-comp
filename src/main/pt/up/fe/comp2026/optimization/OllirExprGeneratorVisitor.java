@@ -85,43 +85,8 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         String methodname = node.get("methodname");
         JmmNode parent = node.getParent();
         List<OllirExprResult> res = node.getChildren().stream().skip(1).map(this::visit).toList();
-        JmmClassType classType = types.getExprType(calle).asClass();
-        MethodSymbol method = null;
 
-        // TODO: THIS NEEDS A REFACTOR
-        var argTypes = node.getChildren().stream().skip(1)
-                .map(types::getExprType)
-                .toList();
-
-        if (classType.isImported() || table.getImports().contains(classType.name())) {
-            JmmSymbolTable jmmSymbolTable = (JmmSymbolTable) table;
-            var importTable = jmmSymbolTable.getImportedSymbolTable(classType.fullyQualifiedName());
-
-            if (importTable.isPresent() && !importTable.get().getMethods().isEmpty()) {
-                var methods = importTable.get().getMethods(methodname);
-                // verify if the method actually exists in the imported class
-                for (MethodSymbol i : methods) {
-                    List<Symbol> parameters = i.parameters();
-                    boolean exists = false;
-                    if (argTypes.size() == parameters.size()) {
-                        exists = true;
-                        for (int t = 0; t < parameters.size(); t++) {
-                            JmmType actType = parameters.get(t).type();
-                            JmmType callType = argTypes.get(t);
-                            if (!types.canBeconverted(callType, actType)) {
-                                exists = false;
-                            }
-                        }
-                    }
-                    if (exists) {
-                        method = i;
-                    }
-                }
-            }
-        } else {
-            Signature methodSignature = new Signature(methodname, argTypes);
-            method = table.getMethod(methodSignature).get();
-        }
+        MethodSymbol method = types.getExplicitMethodCallSymbol(node);
 
         if (method.isStatic()) {
             code.append("invokestatic(").append(calle.get("name"));
