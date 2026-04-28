@@ -5,12 +5,13 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
-import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
+import pt.up.fe.comp2026.ConfigOptions;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 public class JmmOptimizationImpl implements JmmOptimization {
@@ -38,7 +39,28 @@ public class JmmOptimizationImpl implements JmmOptimization {
             forNode.replace(transformForLoop(forNode));
         } );
 
-        //TODO: Do your AST-based optimizations here
+        boolean hasChanges = true;
+        int passes = 0;
+
+        if (ConfigOptions.getOptimize(semanticsResult.config())) {
+            while (hasChanges) {
+                ConstantPropagationVisitor propagator = new ConstantPropagationVisitor();
+                hasChanges = propagator.visit(rootNode, new HashMap<>());
+
+                ConstantFoldingVisitor folder = new ConstantFoldingVisitor();
+                hasChanges |= folder.visit(rootNode);
+
+                BranchEliminationVisitor branchEliminator = new BranchEliminationVisitor();
+                hasChanges |= branchEliminator.visit(rootNode);
+
+                DeadCodeEliminationVisitor deadCodeEliminator = new DeadCodeEliminationVisitor();
+                hasChanges |= deadCodeEliminator.visit(rootNode);
+
+                passes++;
+            }
+        }
+
+        System.out.println(passes + " passes completed");
         return semanticsResult;
     }
 

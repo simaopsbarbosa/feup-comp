@@ -2,16 +2,19 @@ package pt.up.fe.comp2026.ast;
 
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.Signature;
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
@@ -91,7 +94,7 @@ public class TypeUtils {
             case ARRAY_ACCESS -> getArrayAccessType(expr);
             case NEW_ARRAY, ARRAY_INIT -> getArrayType(expr);
             case PARAM -> convertType(expr.getChild(0));
-            case ARRAY_ELEMENT -> getExprType(expr.getChild(0));
+            case ARRAY_ELEMENT, ARRAY_INITIALIZER -> getExprType(expr.getChild(0));
             case FIELD_ACESS -> getFieldAccessType(expr, table);
             default ->
                     throw new UnsupportedOperationException("Can't compute type for expression kind '" + expr.getKind() + "'");
@@ -275,10 +278,32 @@ public class TypeUtils {
 
             //checks if imported table contains method
             if (importTable.isPresent() && !importTable.get().getMethods().isEmpty()) {
-                return importTable.get().getMethod(methodSignature).get().returnType();
+                MethodSymbol method=null;
+                var methods = importTable.get().getMethods(methodName);
+                // verify if the method actually exists in the imported class
+                for ( MethodSymbol i:methods) {
+                    List<Symbol> parameters = i.parameters();
+                   boolean exists=false;
+                    if (argTypes.size() == parameters.size()) {
+                        exists=true;
+                        for (int t = 0; t < parameters.size(); t++) {
+                            JmmType actType = parameters.get(t).type();
+                            JmmType callType = argTypes.get(t);
+                            if (!canBeconverted(callType, actType)) {
+                                exists = false;
+                            }
+                        }
+                    }
+                    if (exists) {
+                        method = i;
+                    }
+                }
+                if(method!=null){
+                    return method.returnType();
+                }
+
             }
         }
-
         // verifies if in extends (recursive)
         if (table.getSuperFullyQualifiedName() != null) {
             var importTable = table.getImportedSymbolTable(table.getSuperFullyQualifiedName());
@@ -294,11 +319,8 @@ public class TypeUtils {
     }
 
     private JmmType getArrayAccessType(JmmNode arrayAccess) {
-        JmmType arrayType = getVarExprType(arrayAccess.getChild(0));
+        JmmType arrayType = getExprType(arrayAccess.getChild(0));
         int dimsAccessed = arrayAccess.getChildren(EXPR).size() - 1;   // remove expr for var
-
-        System.out.println("-------------------------");
-        System.out.println(dimsAccessed);
 
         if (arrayType instanceof JmmArrayType jmmArrayType) {
             JmmType itemType = jmmArrayType.itemType();
@@ -352,7 +374,33 @@ public class TypeUtils {
         return type;
     }
 
+    public boolean canBeconverted(JmmType src,JmmType tag){
+        if(src.equals(tag)){
+            return true;
+        }
+        if(src instanceof  JmmClassType src1 && tag instanceof  JmmClassType tag1){
+            if(tag1.name().equals("Object")){
+                return  true;
+            }
+            if(superCheckName(table, tag1.name())){
+                return true;
+            }
 
+        }
+        return  false;
+    }
+    private boolean superCheckName(SymbolTable currentTable, String targetName) {
+        String superName = currentTable.getSuperFullyQualifiedName();
 
-
+        if (superName != null && !superName.isEmpty()) {
+            if(superName.equals(targetName)){
+                return true;
+            }
+            var superTable = table.getImportedSymbolTable(superName);
+            if (superTable.isPresent()) {
+                return superCheckName(superTable.get(),targetName);
+            }
+        }
+        return false;
+    }
 }
