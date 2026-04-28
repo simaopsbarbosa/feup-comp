@@ -4,12 +4,11 @@ import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.Signature;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
-import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
+import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
 
@@ -152,9 +151,7 @@ public class TypeUtils {
         // Get name of the method
         var methodName = methodDecl.get("name");
 
-        var params = methodDecl.getChildren(PARAM).stream()
-                .map(param -> this.convertType(param.getChild(0)))
-                .toList();
+        var params = methodDecl.getChildren(PARAM).stream().map(param -> this.convertType(param.getChild(0))).toList();
 
         // Create method signature with method name and types of parameters
         return new Signature(methodName, params);
@@ -261,31 +258,28 @@ public class TypeUtils {
     private JmmType getExplicitMethodCallType(JmmNode explMethodCall) {
         String methodName = explMethodCall.get("methodname");
 
-        var argTypes = explMethodCall.getChildren().stream().skip(1)
-                .map(arg -> getExprType(arg))
-                .toList();
+        var argTypes = explMethodCall.getChildren().stream().skip(1).map(arg -> getExprType(arg)).toList();
 
         Signature methodSignature = new Signature(methodName, argTypes);
 
         //verifies if calls class method
-        if (!table.getMethod(methodSignature).isEmpty())
-            return table.getMethod(methodSignature).get().returnType();
+        if (!table.getMethod(methodSignature).isEmpty()) return table.getMethod(methodSignature).get().returnType();
 
         var calleeType = getExprType(explMethodCall.getChild(0));
 
-        if (calleeType instanceof JmmClassType jmmClass && (jmmClass.isImported() || table.isImplicitImport(jmmClass.name()))) {;
+        if (calleeType instanceof JmmClassType jmmClass && (jmmClass.isImported() || table.isImplicitImport(jmmClass.name()))) {
             var importTable = table.getImportedSymbolTable(jmmClass.fullyQualifiedName());
 
             //checks if imported table contains method
             if (importTable.isPresent() && !importTable.get().getMethods().isEmpty()) {
-                MethodSymbol method=null;
+                MethodSymbol method = null;
                 var methods = importTable.get().getMethods(methodName);
                 // verify if the method actually exists in the imported class
-                for ( MethodSymbol i:methods) {
+                for (MethodSymbol i : methods) {
                     List<Symbol> parameters = i.parameters();
-                   boolean exists=false;
+                    boolean exists = false;
                     if (argTypes.size() == parameters.size()) {
-                        exists=true;
+                        exists = true;
                         for (int t = 0; t < parameters.size(); t++) {
                             JmmType actType = parameters.get(t).type();
                             JmmType callType = argTypes.get(t);
@@ -298,7 +292,7 @@ public class TypeUtils {
                         method = i;
                     }
                 }
-                if(method!=null){
+                if (method != null) {
                     return method.returnType();
                 }
 
@@ -313,7 +307,6 @@ public class TypeUtils {
         }
 
 
-
         //default to int
         return JmmPrimitiveType.INT;
     }
@@ -322,14 +315,11 @@ public class TypeUtils {
         JmmType arrayType = getExprType(arrayAccess.getChild(0));
         int dimsAccessed = arrayAccess.getChildren(EXPR).size() - 1;   // remove expr for var
 
-        if (arrayType instanceof JmmArrayType jmmArrayType) {
-            JmmType itemType = jmmArrayType.itemType();
-            int totalArrayDims = jmmArrayType.dimension();
+        if (arrayType instanceof JmmArrayType(JmmType itemType, int totalArrayDims)) {
 
             if (totalArrayDims > dimsAccessed) {
                 return new JmmArrayType(itemType, totalArrayDims - dimsAccessed);
-            } else if (totalArrayDims == dimsAccessed)
-                return itemType;
+            } else if (totalArrayDims == dimsAccessed) return itemType;
         }
 
         return JmmPrimitiveType.INT;
@@ -346,9 +336,8 @@ public class TypeUtils {
             JmmSymbolTable superTable = (JmmSymbolTable) currentTable.getImportedSymbolTable(currentTable.getSuperFullyQualifiedName()).get();
             return getFieldAccessType(fieldAccess, superTable);
         }
-         return null;
+        return null;
     }
-
 
 
     public Optional<JmmType> getVarTypeFromName(JmmNode node, String varName) {
@@ -368,37 +357,35 @@ public class TypeUtils {
             type = Optional.of(curentMethod.get().getParameter(varName).get().type());
 
         //if var in class field
-        if (table.getField(varName).isPresent())
-            type = Optional.of(table.getField(varName).get().type());
+        if (table.getField(varName).isPresent()) type = Optional.of(table.getField(varName).get().type());
 
         return type;
     }
 
-    public boolean canBeconverted(JmmType src,JmmType tag){
-        if(src.equals(tag)){
+    public boolean canBeconverted(JmmType src, JmmType tag) {
+        if (src.equals(tag)) {
             return true;
         }
-        if(src instanceof  JmmClassType src1 && tag instanceof  JmmClassType tag1){
-            if(tag1.name().equals("Object")){
-                return  true;
-            }
-            if(superCheckName(table, tag1.name())){
+        if (src instanceof JmmClassType src1 && tag instanceof JmmClassType tag1) {
+            if (tag1.name().equals("Object")) {
                 return true;
             }
+            return superCheckName(table, tag1.fullyQualifiedName());
 
         }
-        return  false;
+        return false;
     }
+
     private boolean superCheckName(SymbolTable currentTable, String targetName) {
         String superName = currentTable.getSuperFullyQualifiedName();
 
         if (superName != null && !superName.isEmpty()) {
-            if(superName.equals(targetName)){
+            if (superName.equals(targetName)) {
                 return true;
             }
             var superTable = table.getImportedSymbolTable(superName);
             if (superTable.isPresent()) {
-                return superCheckName(superTable.get(),targetName);
+                return superCheckName(superTable.get(), targetName);
             }
         }
         return false;

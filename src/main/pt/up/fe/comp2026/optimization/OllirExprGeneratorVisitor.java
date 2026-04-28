@@ -124,7 +124,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         }
 
         if (method.isStatic()) {
-            code.append("invokestatic").append(calle.get("name"));
+            code.append("invokestatic(").append(calle.get("name"));
         } else {
             code.append("invokevirtual(").append(calleResult.getCode());
         }
