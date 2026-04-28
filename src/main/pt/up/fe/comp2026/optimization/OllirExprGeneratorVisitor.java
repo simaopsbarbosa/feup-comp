@@ -54,7 +54,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(ARRAY_ACCESS, this::visitArrayAccess);
         addVisit(LENGTH, this::visitLength);
         addVisit(EXPLICIT_METHOD_CALL, this::visitMethodCall);
-        addVisit(IMPLICIT_METHOD_CALL,this::visitMethodCall);
+        addVisit(IMPLICIT_METHOD_CALL, this::visitMethodCall);
         addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(THIS, this::visitThisExpr);
         addVisit(PARENTESES, this::visitParenteses);
@@ -82,10 +82,10 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         String ollirType = ollirTypes.toOllirType(types.getExprType(node));
         String methodname = node.get("methodname");
         JmmNode parent = node.getParent();
-        int skip= node.getKind()==IMPLICIT_METHOD_CALL? 0:1;
+        int skip = node.getKind() == IMPLICIT_METHOD_CALL ? 0 : 1;
         List<OllirExprResult> res = node.getChildren().stream().skip(skip).map(this::visit).toList();
         MethodSymbol method = types.getExplicitMethodCallSymbol(node);
-        if(node.getKind()==EXPLICIT_METHOD_CALL){
+        if (node.getKind() == EXPLICIT_METHOD_CALL) {
             JmmNode calle = node.getChild(0);
             OllirExprResult calleResult = this.visit(calle);
             computation.append(calleResult.getComputation());
@@ -94,8 +94,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             } else {
                 code.append("invokevirtual(").append(calleResult.getCode());
             }
-        }
-        else{
+        } else {
             if (method.isStatic()) {
                 code.append("invokestatic(");
             } else {
