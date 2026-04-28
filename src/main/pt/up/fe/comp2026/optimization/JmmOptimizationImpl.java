@@ -4,6 +4,7 @@ import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
+import pt.up.fe.comp2026.ConfigOptions;
 
 
 import java.util.Collections;
@@ -32,22 +33,24 @@ public class JmmOptimizationImpl implements JmmOptimization {
         boolean hasChanges = true;
         int passes = 0;
 
-        while (hasChanges) {
-            ConstantPropagationVisitor propagator = new ConstantPropagationVisitor();
-            hasChanges = propagator.visit(rootNode, new HashMap<>());
+        if (ConfigOptions.getOptimize(semanticsResult.config())) {
+            while (hasChanges) {
+                ConstantPropagationVisitor propagator = new ConstantPropagationVisitor();
+                hasChanges = propagator.visit(rootNode, new HashMap<>());
 
-            ConstantFoldingVisitor folder = new ConstantFoldingVisitor();
-            hasChanges |= folder.visit(rootNode);
+                ConstantFoldingVisitor folder = new ConstantFoldingVisitor();
+                hasChanges |= folder.visit(rootNode);
 
-            BranchEliminationVisitor branchEliminator = new BranchEliminationVisitor();
-            hasChanges |= branchEliminator.visit(rootNode);
+                BranchEliminationVisitor branchEliminator = new BranchEliminationVisitor();
+                hasChanges |= branchEliminator.visit(rootNode);
 
-            DeadCodeEliminationVisitor deadCodeEliminator = new DeadCodeEliminationVisitor();
-            hasChanges |= deadCodeEliminator.visit(rootNode);
+                DeadCodeEliminationVisitor deadCodeEliminator = new DeadCodeEliminationVisitor();
+                hasChanges |= deadCodeEliminator.visit(rootNode);
 
-            passes++;
+                passes++;
+            }
         }
-
+        
         System.out.println(passes + " passes completed");
         return semanticsResult;
     }
