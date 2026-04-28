@@ -273,7 +273,7 @@ public class TypeUtils {
 
         var calleeType = getExprType(explMethodCall.getChild(0));
 
-        if (calleeType instanceof JmmClassType jmmClass && (true || jmmClass.isImported() || table.isImplicitImport(jmmClass.name()))) {;
+        if (calleeType instanceof JmmClassType jmmClass && (jmmClass.isImported() || table.isImplicitImport(jmmClass.name()))) {;
             var importTable = table.getImportedSymbolTable(jmmClass.fullyQualifiedName());
 
             //checks if imported table contains method
