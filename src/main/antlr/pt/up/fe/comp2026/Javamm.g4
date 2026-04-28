@@ -92,21 +92,21 @@ methodDecl locals[boolean isStatic=false]
     ;
 
 
-forInit : assignment ;
+forInit : assignment (COMMA assignment)* ;
 forCond : expr ;
-forUpdate : assignment ;
+forUpdate : assignment (COMMA assignment)* ;
 
 
 stmt
-    : LCB stmt* RCB #Block
-    | IF LP expr RP stmt (ELSE stmt)? #ElseifBlockStmt
-    | WHILE LP expr RP stmt #WhileStmt
-    | FOR LP (forInit)?SEMICOLON (forCond)? SEMICOLON (forUpdate)? RP body=stmt #ForStmt
-    | DO (expr|stmt) WHILE LP expr RP SEMICOLON #DoWhileStmt
-    | expr SEMICOLON #Expression
-    | expr EQUALS expr SEMICOLON #AssignStmt
-    | RETURN (expr)? SEMICOLON #ReturnStmt
-    ;
+   : LCB stmt* RCB #Block
+   | IF LP expr RP stmt (ELSE stmt)? #ElseifBlockStmt
+   | WHILE LP expr RP stmt #WhileStmt
+   | FOR LP (forInit)?SEMICOLON (forCond)? SEMICOLON (forUpdate)? RP body=stmt #ForStmt
+   | DO (expr|stmt) WHILE LP expr RP SEMICOLON #DoWhileStmt
+   | expr SEMICOLON #Expression
+   | expr EQUALS expr SEMICOLON #AssignStmt
+   | RETURN (expr)? SEMICOLON #ReturnStmt
+   ;
 
 assignment
     : expr EQUALS expr
@@ -146,4 +146,3 @@ expr
     | THIS                                                      #This
     | name=ID                                                   #VarRefExpr
     ;
-

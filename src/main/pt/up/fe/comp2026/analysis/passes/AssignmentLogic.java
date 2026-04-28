@@ -23,9 +23,17 @@ public class AssignmentLogic extends AnalysisVisitorWithTable {
 
     @Override
     public void buildVisitor() {
-        addVisit(JmmKind.ASSIGN_STMT, this::visitAssignment);
         addVisit(JmmKind.VAR_DECL, this::vistVarDecl);
         addVisit(JmmKind.ASSIGNMENT, this::visitAssignment);
+        addVisit(JmmKind.ASSIGN_STMT, this::visitAssignStmt);
+    }
+
+    private Void visitAssignStmt(JmmNode assignStmt, SymbolTable table) {
+        // Grammar: stmt -> expr '=' expr ';'
+        JmmType varType = types.getExprType(assignStmt.getChild(0));
+        if (!canAssign(assignStmt.getChild(0))) return null;
+        this.validateAssignment(assignStmt, varType, table);
+        return null;
     }
 
 

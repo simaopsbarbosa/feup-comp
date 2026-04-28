@@ -66,6 +66,7 @@ public class Launcher {
 
         // Print OLLIR code
         System.out.println(ollirResult.getOllirCode());
+
 //
 //        // Code generation stage
 //        JasminBackendImpl jasminGen = new JasminBackendImpl();

@@ -39,7 +39,8 @@ public class JmmOptimizationImpl implements JmmOptimization {
             forNode.replace(transformForLoop(forNode));
         } );
 
-        System.out.println(semanticsResult);
+        //System.out.println(semanticsResult);
+
 
         boolean hasChanges = true;
         int passes = 0;
@@ -61,13 +62,10 @@ public class JmmOptimizationImpl implements JmmOptimization {
                 passes++;
             }
         }
-        
+
         System.out.println(passes + " passes completed");
         return semanticsResult;
     }
-
-
-
 
 
     public JmmNode transformForLoop(JmmNode forStmt) {
@@ -82,7 +80,8 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
             initNodes.forEach(initNode -> {
                 JmmNode assigntStmt = new JmmNodeImpl(JmmKind.ASSIGN_STMT);
-                assigntStmt.add(initNode);
+                assigntStmt.add(initNode.getChild(0));
+                assigntStmt.add(initNode.getChild(1));
                 outerBlockNode.add(assigntStmt);
             });
         }
@@ -101,26 +100,32 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         JmmNode stmt = forStmt.getChildren(JmmKind.STMT).getFirst();
 
-        if (hasUpdate) {
-            JmmNode innerBlockNode = new JmmNodeImpl(JmmKind.BLOCK);
+            if (hasUpdate) {
+                JmmNode innerBlockNode = new JmmNodeImpl(JmmKind.BLOCK);
 
-            // add stmt from for loop
-            innerBlockNode.add(stmt);
+                // add stmt from for loop
+                innerBlockNode.add(stmt);
 
-            // add updates from for loop
-            List<JmmNode> updateNodes = forStmt.getChildren(JmmKind.FOR_UPDATE).getFirst().getChildren(JmmKind.ASSIGNMENT);
-            updateNodes.forEach(updateNode -> innerBlockNode.add(updateNode));
+                // add updates from for loop
+                List<JmmNode> updateNodes = forStmt.getChildren(JmmKind.FOR_UPDATE).getFirst().getChildren(JmmKind.ASSIGNMENT);
+                updateNodes.forEach(updateNode -> {
+                    JmmNode assignStmt = new JmmNodeImpl(JmmKind.ASSIGN_STMT);
+                    assignStmt.add(updateNode.getChild(0));
+                    assignStmt.add(updateNode.getChild(1));
+                    innerBlockNode.add(assignStmt);
+                });
 
-            whileNode.add(innerBlockNode);
-        } else {
-            whileNode.add(stmt);
-        }
+                whileNode.add(innerBlockNode);
+            } else {
+                whileNode.add(stmt);
+            }
 
         //add while loop to block
         outerBlockNode.add(whileNode);
 
         return outerBlockNode;
     }
+
 
     @Override
     public OllirResult transformOllir(OllirResult ollirResult) {

@@ -109,6 +109,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
 
+
     //TODO: Spaces are weird
     private String visitIfStmt(JmmNode ifStmt, Void unused) {
         StringBuilder code = new StringBuilder();
@@ -206,7 +207,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         }
     }
 
-
     private String simpleVarDecl(JmmNode varDecl, Void unused) {
         if (!varDecl.getChildren(EXPR).isEmpty()) {
             String varName = varDecl.get(JmmAttributes.VAR_DECL.NAME);
@@ -258,11 +258,11 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(name);
 
         // params
-        var paramsCode = node.getChildren(PARAM).stream().map(this::visit).collect(Collectors.joining(", ", " (", ")"));
+        var paramsCode = node.getChildren(PARAM).stream().map(this::visit).collect(Collectors.joining(", ", " (", ")"));;
         code.append(paramsCode);
 
         // type
-        var retType = ollirTypes.toOllirType(currentMethod.returnType());
+        var retType = ollirTypes.toOllirType(currentMethod.returnType());//table.getReturnType(node.get("name")));
         code.append(retType);
         code.append(L_BRACKET);
 
@@ -297,7 +297,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
-    // a parte do extends só tentei diferentes variações até passar os testes, então não sei se tá correto
     private String visitClass(JmmNode node, Void unused) {
 
         StringBuilder code = new StringBuilder();
