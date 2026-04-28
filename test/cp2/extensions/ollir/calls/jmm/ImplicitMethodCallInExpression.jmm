@@ -1,0 +1,18 @@
+package cp2.extensions.ollir.calls.jmm;
+
+class ImplicitMethodCallInExpression {
+
+    public int method() {
+        int result;
+        result = add(5, 10) + multiply(3, 4);
+        return result;
+    }
+
+    public int add(int a, int b) {
+        return a + b;
+    }
+
+    public int multiply(int a, int b) {
+        return a * b;
+    }
+}

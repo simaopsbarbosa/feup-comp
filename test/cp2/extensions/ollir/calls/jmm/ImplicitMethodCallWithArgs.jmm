@@ -1,0 +1,14 @@
+package cp2.extensions.ollir.calls.jmm;
+
+class ImplicitMethodCallWithArgs {
+
+    public int method() {
+        int result;
+        result = add(10, 20);
+        return result;
+    }
+
+    public int add(int a, int b) {
+        return a + b;
+    }
+}

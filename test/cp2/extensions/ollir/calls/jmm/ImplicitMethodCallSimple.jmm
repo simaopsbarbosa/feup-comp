@@ -1,0 +1,14 @@
+package cp2.extensions.ollir.calls.jmm;
+
+class ImplicitMethodCallSimple {
+
+    public int method() {
+        int result;
+        result = compute();
+        return result;
+    }
+
+    public int compute() {
+        return 42;
+    }
+}
