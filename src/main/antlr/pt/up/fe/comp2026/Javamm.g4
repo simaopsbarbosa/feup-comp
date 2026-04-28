@@ -91,11 +91,17 @@ methodDecl locals[boolean isStatic=false]
       LCB varDecl* stmt*RCB
     ;
 
+
+forInit : assignment ;
+forCond : expr ;
+forUpdate : assignment ;
+
+
 stmt
     : LCB stmt* RCB #Block
     | IF LP expr RP stmt (ELSE stmt)? #ElseifBlockStmt
     | WHILE LP expr RP stmt #WhileStmt
-    | FOR LP (assignment(COMMA assignment)*)?SEMICOLON (expr(COMMA expr)*)? SEMICOLON(assignment(COMMA assignment)*)? RP body=stmt #ForStmt
+    | FOR LP (forInit)?SEMICOLON (forCond)? SEMICOLON (forUpdate)? RP body=stmt #ForStmt
     | DO (expr|stmt) WHILE LP expr RP SEMICOLON #DoWhileStmt
     | expr SEMICOLON #Expression
     | expr EQUALS expr SEMICOLON #AssignStmt

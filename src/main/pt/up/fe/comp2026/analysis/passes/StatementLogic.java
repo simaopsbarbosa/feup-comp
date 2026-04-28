@@ -7,6 +7,7 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.Kind;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
+import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.utils.ReportUtils;
 
@@ -58,12 +59,12 @@ public class StatementLogic extends AnalysisVisitorWithTable {
     }
 
     private Void visitForStmt(JmmNode jmmNode, SymbolTable table) {
-        var children = jmmNode.getChildren();
-        if (children.isEmpty()) return null;
+        if (jmmNode.getChildren(JmmKind.FOR_COND).isEmpty()) return null;
+
+        //get conditional expressions
+        var children = jmmNode.getChildren(JmmKind.FOR_COND).getFirst().getChildren(JmmKind.EXPR);
 
         children.stream()
-                .limit(children.size() - 1) // Ignore the last child (the body)
-                .filter(child -> child.getKind() != JmmKind.ASSIGNMENT) // Keep only conditions
                 .forEach(child -> { // Use forEach instead of map
                     var conditionType = super.types.getExprType(child);
                     if (conditionType != JmmPrimitiveType.BOOLEAN) {

@@ -49,6 +49,8 @@ public class Launcher {
 
 //        // Optimization stage
         JmmOptimizationImpl ollirGen = new JmmOptimizationImpl();
+
+        semanticsResult = ollirGen.transformAst(semanticsResult);
 //
 //        // AST-based optimizations
         if(semanticsResult.config().get("optimize") != null && semanticsResult.config().get("optimize").equals("true")){
