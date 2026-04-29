@@ -1,0 +1,9 @@
+package cp2.extensions.ollir.arrays.jmm;
+
+class MultiDimArrayWriteVarIndex {
+    public void method(int i, int j) {
+        int[][] a;
+        a = new int[2][3];
+        a[i][j] = 5;
+    }
+}

@@ -8,6 +8,7 @@ import org.specs.comp.ollir.inst.AssignInstruction;
 import org.specs.comp.ollir.inst.CallInstruction;
 import org.specs.comp.ollir.type.ArrayType;
 import pt.up.fe.comp.test.env.OllirTestEnv;
+import org.specs.comp.ollir.inst.BinaryOpInstruction;
 
 public class MultidimensionalArrayInitOllirTest extends OllirTestEnv {
     private static final String BASE_PATH = "cp2/extensions/ollir/arrays/jmm/";
@@ -83,5 +84,63 @@ public class MultidimensionalArrayInitOllirTest extends OllirTestEnv {
                 .count();
 
         assertTrue("Method should contain an array store operation", arrayStores >= 1);
+    }
+
+    @Test
+    public void testMultiDimArrayReadVarIndex() {
+        var method = toOllir("MultiDimArrayReadVarIndex.jmm", "method");
+
+        var assigns = assertInstExists(AssignInstruction.class, method);
+
+        long arrayReads = assigns.stream()
+                .flatMap(assign -> getElements(assign.getRhs()).stream())
+                .filter(element -> element instanceof ArrayOperand)
+                .count();
+
+        assertTrue("Method should contain an array read operation", arrayReads >= 1);
+    }
+
+    @Test
+    public void testMultiDimArrayWriteVarIndex() {
+        var method = toOllir("MultiDimArrayWriteVarIndex.jmm", "method");
+
+        var assigns = assertInstExists(AssignInstruction.class, method);
+
+        long arrayStores = assigns.stream()
+                .filter(assign -> assign.getDest() instanceof ArrayOperand)
+                .count();
+
+        assertTrue("Method should contain an array store operation", arrayStores >= 1);
+    }
+
+    @Test
+    public void testMultiDimArrayReadExprIndex() {
+        var method = toOllir("MultiDimArrayReadExprIndex.jmm", "method");
+
+        var assigns = assertInstExists(AssignInstruction.class, method);
+        var binOps = assertInstExists(BinaryOpInstruction.class, method);
+
+        long arrayReads = assigns.stream()
+                .flatMap(assign -> getElements(assign.getRhs()).stream())
+                .filter(element -> element instanceof ArrayOperand)
+                .count();
+
+        assertTrue("Method should contain an array read operation", arrayReads >= 1);
+        assertTrue("Method should calculate indices using BinaryOpInstructions", binOps.size() >= 2);
+    }
+
+    @Test
+    public void testMultiDimArrayWriteExprIndex() {
+        var method = toOllir("MultiDimArrayWriteExprIndex.jmm", "method");
+
+        var assigns = assertInstExists(AssignInstruction.class, method);
+        var binOps = assertInstExists(BinaryOpInstruction.class, method);
+
+        long arrayStores = assigns.stream()
+                .filter(assign -> assign.getDest() instanceof ArrayOperand)
+                .count();
+
+        assertTrue("Method should contain an array store operation", arrayStores >= 1);
+        assertTrue("Method should calculate indices using BinaryOpInstructions", binOps.size() >= 2);
     }
 }

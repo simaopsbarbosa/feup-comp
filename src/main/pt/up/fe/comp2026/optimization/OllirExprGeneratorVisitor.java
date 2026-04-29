@@ -152,21 +152,19 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
     private OllirExprResult visitArrayAccess(JmmNode jmmNode, Void unused) {
         var arrayExpr = visit(jmmNode.getChild(0));
-        var indexExpr = visit(jmmNode.getChild(1));
-
+        var indexExpr = jmmNode.getChildren().stream().skip(1).map(this::visit).toList();
+        var indexCodes= new StringBuilder();
         StringBuilder computation = new StringBuilder();
         computation.append(arrayExpr.getComputation());
-        computation.append(indexExpr.getComputation());
+        for (int i=0;i< indexExpr.size();i++){
+            OllirExprResult res=indexExpr.get(i);
+            computation.append(res.getComputation());
+            indexCodes.append("[").append(res.getCode()).append("]");
 
-        String arrayCode = arrayExpr.getCode();
-        String indexCode = indexExpr.getCode();
-
-        if (indexCode.contains("[")) {
-            String temp = ollirTypes.nextTemp() + ".i32";
-            computation.append(temp).append(" :=.i32 ").append(indexCode).append(END_STMT);
-            indexCode = temp;
         }
 
+
+        String arrayCode = arrayExpr.getCode();
         if (arrayCode.contains("[")) {
             JmmType arrayType = types.getExprType(jmmNode.getChild(0));
             String arrayOllirType = ollirTypes.toOllirType(arrayType);
@@ -179,7 +177,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         boolean isAssignmentLHS = parent != null && parent.getKind() == ASSIGN_STMT && parent.getChild(0) == jmmNode;
 
         String elementOllirType = ollirTypes.toOllirType(types.getExprType(jmmNode));
-        String code = arrayCode + '[' + indexCode + ']' + elementOllirType;
+        String code = arrayCode + indexCodes+ elementOllirType;
 
         if (isAssignmentLHS) {
             return new OllirExprResult(code, computation);

@@ -1,0 +1,9 @@
+package cp2.extensions.ollir.arrays.jmm;
+
+class MultiDimArrayReadVarIndex {
+    public int method(int i, int j) {
+        int[][] a;
+        a = new int[2][3];
+        return a[i][j];
+    }
+}
