@@ -163,7 +163,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         String temp;
         for (int i = 0; i < indexExpr.size(); i++) {
             OllirExprResult element = indexExpr.get(i);
-            int dims = arrayType.dimension() - indexExpr.size() - i + 1;
+            int dims = arrayType.dimension() - (i + 1);
             String type = dims == 0 ? ollirTypes.toOllirType(arrayType.itemType()) : ollirTypes.toOllirType(new JmmArrayType(arrayType.itemType(), dims));
 
 
@@ -182,7 +182,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             }
             temp = ollirTypes.nextTemp() + type;
             computation.append(temp).append(ASSIGN).append(type).append(SPACE).append(current).append(END_STMT);
-
+            currentRef=temp;
         }
         return new OllirExprResult(code.toString(), computation);
     }
