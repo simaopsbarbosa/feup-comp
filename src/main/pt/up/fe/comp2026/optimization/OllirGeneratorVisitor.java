@@ -1,8 +1,6 @@
 package pt.up.fe.comp2026.optimization;
 
-import org.apache.commons.lang3.StringUtils;
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
-import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
@@ -10,8 +8,6 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -110,7 +106,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         return code.toString();
     }
-
 
 
     //TODO: Spaces are weird
@@ -261,7 +256,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(name);
 
         // params
-        var paramsCode = node.getChildren(PARAM).stream().map(this::visit).collect(Collectors.joining(", ", " (", ")"));;
+        var paramsCode = node.getChildren(PARAM).stream().map(this::visit).collect(Collectors.joining(", ", " (", ")"));
+        ;
         code.append(paramsCode);
 
         // type

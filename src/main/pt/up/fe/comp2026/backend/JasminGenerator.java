@@ -1,22 +1,20 @@
 package pt.up.fe.comp2026.backend;
 
 import org.specs.comp.ollir.*;
-import org.specs.comp.ollir.inst.*;
+import org.specs.comp.ollir.inst.AssignInstruction;
+import org.specs.comp.ollir.inst.BinaryOpInstruction;
+import org.specs.comp.ollir.inst.ReturnInstruction;
+import org.specs.comp.ollir.inst.SingleOpInstruction;
 import org.specs.comp.ollir.tree.TreeNode;
-import org.specs.comp.ollir.type.ArrayType;
-import org.specs.comp.ollir.type.BuiltinKind;
-import org.specs.comp.ollir.type.BuiltinType;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp2026.optimization.OptUtils;
-import pt.up.fe.specs.util.SpecsCheck;
 import pt.up.fe.specs.util.classmap.FunctionClassMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -101,7 +99,7 @@ public class JasminGenerator {
         code.append(".class ").append(nameWithPackage).append(NL).append(NL);
 
         // TODO: When you support 'extends', this must be updated
-        var fullSuperClass =  "java/lang/Object";
+        var fullSuperClass = "java/lang/Object";
 
         code.append(".super ").append(fullSuperClass).append(NL);
 

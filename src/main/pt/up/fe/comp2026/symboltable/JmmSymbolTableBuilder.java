@@ -4,14 +4,9 @@ import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Visibility;
 import pt.up.fe.comp.jmm.analysis.table.reflection.Importer;
-import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
-import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
-import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
-import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
-import pt.up.fe.comp.jmm.utils.Attributes;
 import pt.up.fe.comp2026.ast.NodeUtils;
 import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
@@ -19,8 +14,6 @@ import pt.up.fe.specs.util.SpecsCheck;
 
 import java.util.*;
 
-import static java.util.Collections.frequency;
-import static java.util.Collections.list;
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
 public class JmmSymbolTableBuilder {
@@ -92,21 +85,22 @@ public class JmmSymbolTableBuilder {
 
 
         var methods = buildMethods(classDecl);
-        var fields= buildFields(classDecl);
+        var fields = buildFields(classDecl);
 
         var symbolTable = new JmmSymbolTable(imports, fullyQualifiedName, superQualified, fields, methods, importer);
 
         return new SymbolTableBuilderResult(symbolTable, reports);
     }
-    private List<Symbol> buildFields(JmmNode classDecl){
-        var seen=new HashSet<>();
+
+    private List<Symbol> buildFields(JmmNode classDecl) {
+        var seen = new HashSet<>();
 
         return classDecl.getChildren(FIELD_DECL).stream()
-                .filter(decl ->{
-                    var name=decl.getChild(0).get("name");
-                    if(seen.contains(name)){
-                        reports.add(newError(decl,"Same name Variables"));
-                        return  false;
+                .filter(decl -> {
+                    var name = decl.getChild(0).get("name");
+                    if (seen.contains(name)) {
+                        reports.add(newError(decl, "Same name Variables"));
+                        return false;
                     }
                     seen.add(name);
                     return true;
@@ -116,20 +110,19 @@ public class JmmSymbolTableBuilder {
     }
 
     private List<MethodSymbol> buildMethods(JmmNode classDecl) {
-        var seen=new HashSet<>();
-        return  classDecl.getChildren(METHOD_DECL).stream()
+        var seen = new HashSet<>();
+        return classDecl.getChildren(METHOD_DECL).stream()
                 .map(this::buildMethod)
-                .filter(methodSymbol ->{
-                    String signature=methodSymbol.signature().toString();
-                    if(seen.contains(signature)){
-                       reports.add(newError(classDecl,"Methods with same signature"));
-                       return  false;
+                .filter(methodSymbol -> {
+                    String signature = methodSymbol.signature().toString();
+                    if (seen.contains(signature)) {
+                        reports.add(newError(classDecl, "Methods with same signature"));
+                        return false;
                     }
                     seen.add(signature);
                     return true;
                 })
                 .toList();
-
 
 
     }
@@ -138,27 +131,27 @@ public class JmmSymbolTableBuilder {
         var methodName = method.get("name");
 
         var returnType = type.convertType(method.getObject("returnType", JmmNode.class));
-        var seenParams=new HashSet<>();
+        var seenParams = new HashSet<>();
         var params = method.getChildren(PARAM).stream()
-                .filter(param->{
-                    String name=param.get(JmmAttributes.PARAM.NAME);
-                    if(seenParams.contains(name)){
-                        reports.add(newError(param,"Duplicate parameters"));
-                        return  false;
+                .filter(param -> {
+                    String name = param.get(JmmAttributes.PARAM.NAME);
+                    if (seenParams.contains(name)) {
+                        reports.add(newError(param, "Duplicate parameters"));
+                        return false;
                     }
                     seenParams.add(name);
                     return true;
                 })
-                .map(param -> new Symbol(type.convertType(param.getChild(0)),param.get(JmmAttributes.VAR_DECL.NAME)))
+                .map(param -> new Symbol(type.convertType(param.getChild(0)), param.get(JmmAttributes.VAR_DECL.NAME)))
                 .toList();
 
-        var seenLocals=new HashSet<>();
+        var seenLocals = new HashSet<>();
         var locals = method.getChildren(VAR_DECL).stream()
-                .filter(decl ->{
-                    String name=decl.get(JmmAttributes.VAR_DECL.NAME);
-                    if(seenLocals.contains(name)||seenParams.contains(name)){
-                        reports.add(newError(decl,"Same name Variables"));
-                        return  false;
+                .filter(decl -> {
+                    String name = decl.get(JmmAttributes.VAR_DECL.NAME);
+                    if (seenLocals.contains(name) || seenParams.contains(name)) {
+                        reports.add(newError(decl, "Same name Variables"));
+                        return false;
                     }
                     seenLocals.add(name);
                     return true;
@@ -184,15 +177,15 @@ public class JmmSymbolTableBuilder {
 
             if (!nameToPath.containsKey(className)) {
                 if (importer.tryClassOf(real_path).isEmpty()) {
-                    reports.add(newError(importDecl, "'"+real_path+"."+className+"' imported class does not exist"));
+                    reports.add(newError(importDecl, "'" + real_path + "." + className + "' imported class does not exist"));
                 }
                 nameToPath.put(className, real_path);
                 imports.add(real_path);
                 continue;
             }
 
-            if(!nameToPath.get(className).equals(real_path)) {
-                reports.add(newError(importDecl, "'"+real_path+"."+className+"' is already defined"));
+            if (!nameToPath.get(className).equals(real_path)) {
+                reports.add(newError(importDecl, "'" + real_path + "." + className + "' is already defined"));
             }
         }
     }
@@ -209,14 +202,14 @@ public class JmmSymbolTableBuilder {
         }
 
         //confirm if has been imported
-        for(var importStr : imports) {
+        for (var importStr : imports) {
             if (importStr.endsWith("." + superName.get()) || importStr.equals(superName.get())) {
                 return importStr;
             }
         }
 
         //if has not found its import, report error
-        reports.add(newError(classDecl, "'" + superName.get() +  "' has no import declaration "));
+        reports.add(newError(classDecl, "'" + superName.get() + "' has no import declaration "));
         return null;
     }
 

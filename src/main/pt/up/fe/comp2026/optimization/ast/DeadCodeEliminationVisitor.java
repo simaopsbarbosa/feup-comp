@@ -1,4 +1,4 @@
-package pt.up.fe.comp2026.optimization;
+package pt.up.fe.comp2026.optimization.ast;
 
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;

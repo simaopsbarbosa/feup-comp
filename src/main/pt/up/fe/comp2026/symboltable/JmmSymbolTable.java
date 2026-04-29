@@ -6,6 +6,7 @@ import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.reflection.Importer;
 import pt.up.fe.specs.util.SpecsCheck;
+
 import java.util.*;
 import java.util.stream.Collectors;
 

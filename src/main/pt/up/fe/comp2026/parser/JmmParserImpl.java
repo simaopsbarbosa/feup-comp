@@ -2,8 +2,8 @@ package pt.up.fe.comp2026.parser;
 
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ListTokenSource;
-import pt.up.fe.comp.jmm.ast.antlr.AntlrParser;
 import pt.up.fe.comp.jmm.ast.Kind;
+import pt.up.fe.comp.jmm.ast.antlr.AntlrParser;
 import pt.up.fe.comp.jmm.lexer.JmmLexerResult;
 import pt.up.fe.comp.jmm.parser.JmmParser;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;

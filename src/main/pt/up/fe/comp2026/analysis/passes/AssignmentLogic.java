@@ -1,6 +1,5 @@
 package pt.up.fe.comp2026.analysis.passes;
 
-import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
@@ -11,8 +10,6 @@ import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.utils.ReportUtils;
-
-import java.util.Optional;
 
 public class AssignmentLogic extends AnalysisVisitorWithTable {
 
@@ -61,14 +58,14 @@ public class AssignmentLogic extends AnalysisVisitorWithTable {
         JmmType exprType = types.getExprType(assignmentNode.getChildren(JmmKind.EXPR).getLast());
 
         // verifies if both types are classes
-        if(varType instanceof JmmClassType varTypeClass && exprType instanceof JmmClassType exprTypeClass) {
+        if (varType instanceof JmmClassType varTypeClass && exprType instanceof JmmClassType exprTypeClass) {
             // var type has to be parent of expr
             if (isParentClass(varTypeClass.fullyQualifiedName(), exprTypeClass.fullyQualifiedName()))
                 return;
         }
 
         // handle array level logic
-        boolean isVarArray  = (varType instanceof JmmArrayType);
+        boolean isVarArray = (varType instanceof JmmArrayType);
         boolean isExprArray = (exprType instanceof JmmArrayType);
 
         // mismatched array type
@@ -91,7 +88,7 @@ public class AssignmentLogic extends AnalysisVisitorWithTable {
             // mismatched dimensions
             if (varArrayType.dimension() != exprArrayType.dimension()) {
                 addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, assignmentNode,
-                        "Array dimension assignment does not match. Variable has " + varType + " dims and Expr has " + exprType +" dims"));
+                        "Array dimension assignment does not match. Variable has " + varType + " dims and Expr has " + exprType + " dims"));
             }
             return;
         }
@@ -136,7 +133,6 @@ public class AssignmentLogic extends AnalysisVisitorWithTable {
                 "Variable cannot be assigned to. Variable is Node type " + leftExpr));
         return false;
     }
-
 
 
 }

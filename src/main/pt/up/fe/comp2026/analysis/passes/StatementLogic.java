@@ -4,10 +4,8 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp.jmm.ast.Kind;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
-import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.utils.ReportUtils;
 

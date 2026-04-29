@@ -78,8 +78,7 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
         if (!(type instanceof JmmArrayType arrayType)) {
             addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, arrayAccess,
                     "Variable is not subscriptable. Variable is type " + type));
-        }
-        else {
+        } else {
             int totalDims = arrayType.dimension();
             int accessedDims = arrayAccess.getChildren(EXPR).size() - 1;
 
@@ -92,23 +91,23 @@ public class ArrayLogic extends AnalysisVisitorWithTable {
 
         return null;
     }
-    private Void visitArrayInit(JmmNode arrayInit,SymbolTable table){
+
+    private Void visitArrayInit(JmmNode arrayInit, SymbolTable table) {
         checkVoidType(arrayInit);
-        var type=super.types.getExprType(arrayInit).asArray().itemType();
-        var arrayElement=arrayInit.getChild(1).getChildren(JmmKind.ARRAY_ELEMENT);
-        if(arrayElement.isEmpty()) {
-           return  null;
+        var type = super.types.getExprType(arrayInit).asArray().itemType();
+        var arrayElement = arrayInit.getChild(1).getChildren(JmmKind.ARRAY_ELEMENT);
+        if (arrayElement.isEmpty()) {
+            return null;
         }
-        var children= arrayElement.stream().allMatch(e -> super.types.getExprType(e).equals(type));
+        var children = arrayElement.stream().allMatch(e -> super.types.getExprType(e).equals(type));
 
-        if(!children){
+        if (!children) {
             addReport(ReportUtils.buildErrorReport(Stage.SEMANTIC, arrayInit,
-                    "Type mismatch array expects "+ type + " but at leats one child is of wrong type"   ));
+                    "Type mismatch array expects " + type + " but at leats one child is of wrong type"));
         }
 
-        return  null;
+        return null;
     }
-
 
 
     private Void visitArrayLength(JmmNode arrayLengthExpr, SymbolTable table) {

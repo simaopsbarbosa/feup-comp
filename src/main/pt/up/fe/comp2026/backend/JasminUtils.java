@@ -1,11 +1,11 @@
 package pt.up.fe.comp2026.backend;
 
-import org.specs.comp.ollir.*;
-import org.specs.comp.ollir.type.*;
+import org.specs.comp.ollir.AccessModifier;
+import org.specs.comp.ollir.Descriptor;
+import org.specs.comp.ollir.type.BuiltinType;
+import org.specs.comp.ollir.type.Type;
 import pt.up.fe.comp.jmm.analysis.table.reflection.Importer;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
-import pt.up.fe.specs.util.SpecsCheck;
-import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +40,6 @@ public class JasminUtils {
     }
 
 
-
     public String getTypePrefix(Type type) {
         System.out.println("[TODO] JasminUtils.getTypePrefix(): Assumes it is always int, needs to be expanded");
         return "i";
@@ -60,8 +59,6 @@ public class JasminUtils {
     }
 
 
-
-
     public String getModifier(AccessModifier accessModifier) {
         return accessModifier.name().toLowerCase() + " ";
     }
@@ -79,7 +76,6 @@ public class JasminUtils {
 
         return prefix + "store " + value;
     }
-
 
 
 }

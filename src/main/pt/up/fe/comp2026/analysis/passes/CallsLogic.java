@@ -1,21 +1,14 @@
 package pt.up.fe.comp2026.analysis.passes;
 
+import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.Signature;
-import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
-import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
-import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
 import pt.up.fe.comp2026.ast.NodeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
-
-import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
-import pt.up.fe.comp2026.utils.ReportUtils;
-
-import java.util.List;
 
 
 public class CallsLogic extends AnalysisVisitorWithTable {
@@ -30,7 +23,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
     protected void buildVisitor() {
         addVisit(JmmKind.METHOD_DECL, this::visitMethodDecl);
         addVisit(JmmKind.EXPLICIT_METHOD_CALL, this::visitExplicitMethodCall);
-        addVisit(JmmKind.IMPLICIT_METHOD_CALL,this::visitImplicitMethodCall);
+        addVisit(JmmKind.IMPLICIT_METHOD_CALL, this::visitImplicitMethodCall);
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
@@ -90,6 +83,7 @@ public class CallsLogic extends AnalysisVisitorWithTable {
         }
         return null;
     }
+
     private Void visitImplicitMethodCall(JmmNode methodCall, SymbolTable table) {
 
         String methodName = methodCall.get("methodname");

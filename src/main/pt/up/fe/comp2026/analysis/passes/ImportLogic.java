@@ -2,16 +2,11 @@ package pt.up.fe.comp2026.analysis.passes;
 
 import pt.up.fe.comp.jmm.analysis.table.Signature;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
-import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
-import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.utils.ReportUtils;
-import pt.up.fe.comp2026.symboltable.JmmSymbolTable;
-
-import java.util.Optional;
 
 
 public class ImportLogic extends AnalysisVisitorWithTable {

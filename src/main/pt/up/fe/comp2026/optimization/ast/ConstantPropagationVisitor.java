@@ -1,4 +1,4 @@
-package pt.up.fe.comp2026.optimization;
+package pt.up.fe.comp2026.optimization.ast;
 
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
@@ -164,7 +164,6 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
     }
 
 
-
     private Boolean handleAssignment(String variableName, JmmNode rightSide, Map<String, JmmNode> constants) {
         if (rightSide.getKind() == JmmKind.INTEGER_LITERAL || rightSide.getKind() == JmmKind.BOOL_LITERAL) {
             // the right side is constant (x = 10 or y = True)
@@ -185,7 +184,7 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
             boolean isLeftSide = (parent.getKind().equals(JmmKind.ASSIGN_STMT) ||
                     parent.getKind().equals(JmmKind.ASSIGNMENT)) ||
                     parent.getKind().equals(JmmKind.VAR_DECL) &&
-                    parent.getChild(0) == jmmNode;
+                            parent.getChild(0) == jmmNode;
 
             if (!isLeftSide) {
                 JmmNode constantNode = constants.get(variableName);

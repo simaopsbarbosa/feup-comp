@@ -1,4 +1,4 @@
-package pt.up.fe.comp2026.optimization;
+package pt.up.fe.comp2026.optimization.ast;
 
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
@@ -44,7 +44,7 @@ public class ConstantFoldingVisitor extends AJmmVisitor<Void, Boolean> {
             }
 
             JmmNode newNode = new JmmNodeImpl(JmmKind.INTEGER_LITERAL);
-            newNode.put("value",newVal);
+            newNode.put("value", newVal);
             jmmNode.replace(newNode);
             return true;
         }
@@ -88,7 +88,7 @@ public class ConstantFoldingVisitor extends AJmmVisitor<Void, Boolean> {
             }
 
             JmmNode newNode = new JmmNodeImpl(JmmKind.BOOL_LITERAL);
-            newNode.put("bool",newVal);
+            newNode.put("bool", newVal);
             jmmNode.replace(newNode);
             return true;
         } else if (leftNode.getKind().equals(JmmKind.BOOL_LITERAL) && rightNode.getKind().equals(JmmKind.BOOL_LITERAL)) {
@@ -111,7 +111,7 @@ public class ConstantFoldingVisitor extends AJmmVisitor<Void, Boolean> {
             }
 
             JmmNode newNode = new JmmNodeImpl(JmmKind.BOOL_LITERAL);
-            newNode.put("bool",newVal);
+            newNode.put("bool", newVal);
             jmmNode.replace(newNode);
             return true;
         }

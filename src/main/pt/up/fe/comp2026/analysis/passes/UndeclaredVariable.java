@@ -3,22 +3,13 @@ package pt.up.fe.comp2026.analysis.passes;
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.Signature;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
-import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp.jmm.ast.Kind;
-import pt.up.fe.comp.jmm.ast.NodeAttribute;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
-import pt.up.fe.comp2026.analysis.AnalysisVisitor;
 import pt.up.fe.comp2026.analysis.AnalysisVisitorWithTable;
 import pt.up.fe.comp2026.ast.NodeUtils;
-import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
-import pt.up.fe.comp2026.symboltable.JmmSymbolTableBuilder;
 import pt.up.fe.comp2026.utils.ReportUtils;
-
-import java.util.List;
-import java.util.Objects;
 
 public class UndeclaredVariable extends AnalysisVisitorWithTable {
 

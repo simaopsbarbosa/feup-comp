@@ -1,21 +1,16 @@
 package pt.up.fe.comp2026.optimization;
 
-import org.specs.comp.ollir.Element;
-import org.specs.comp.ollir.LiteralElement;
-import org.specs.comp.ollir.type.BuiltinKind;
-import org.specs.comp.ollir.type.BuiltinType;
-import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
+import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmPrimitiveType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.specs.util.collections.AccumulatorMap;
 
-import java.sql.Array;
 import java.util.Set;
 
-import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
+import static pt.up.fe.comp2026.jmm.ast.JmmKind.TYPE;
 
 /**
  * Utility methods related to the optimization middle-end.
@@ -54,7 +49,6 @@ public class OptUtils {
     }
 
 
-
     public String nextLabel(String prefix) {
 
         // Subtract 1 because the base is 1
@@ -72,23 +66,23 @@ public class OptUtils {
     }
 
     public String toOllirType(JmmType type) {
-            return  switch (type){
-                case JmmArrayType ar-> {
-                    StringBuilder res=new StringBuilder();
-                    for (int i =0;i<ar.dimension();i++){
-                        res.append(".array");
-                    }
-                    res.append(toOllirType(ar.itemType()));
-                    yield res.toString();
+        return switch (type) {
+            case JmmArrayType ar -> {
+                StringBuilder res = new StringBuilder();
+                for (int i = 0; i < ar.dimension(); i++) {
+                    res.append(".array");
                 }
-                case JmmClassType c -> "."+c.name();
-                case  JmmPrimitiveType p->"."+toPrimitiveOllirType(p);
-                default -> ".V";
-            };
+                res.append(toOllirType(ar.itemType()));
+                yield res.toString();
+            }
+            case JmmClassType c -> "." + c.name();
+            case JmmPrimitiveType p -> "." + toPrimitiveOllirType(p);
+            default -> ".V";
+        };
     }
 
     private String toPrimitiveOllirType(JmmPrimitiveType type) {
-        return switch(type) {
+        return switch (type) {
             case INT -> "i32";
             case BOOLEAN -> "bool";
             case VOID -> "V";

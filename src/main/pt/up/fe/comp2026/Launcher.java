@@ -1,11 +1,8 @@
 package pt.up.fe.comp2026;
 
-import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
-import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2026.analysis.JmmAnalysisImpl;
-import pt.up.fe.comp2026.backend.JasminBackendImpl;
 import pt.up.fe.comp2026.lexer.JmmLexerImpl;
 import pt.up.fe.comp2026.optimization.JmmOptimizationImpl;
 import pt.up.fe.comp2026.parser.JmmParserImpl;
@@ -37,7 +34,6 @@ public class Launcher {
         //System.out.println(parserResult.rootNode().toTree());
 
 
-
         // Semantic Analysis stage
         JmmAnalysisImpl sema = new JmmAnalysisImpl();
         JmmSemanticsResult semanticsResult = sema.semanticAnalysis(parserResult);
@@ -53,7 +49,7 @@ public class Launcher {
         semanticsResult = ollirGen.transformAst(semanticsResult);
 //
 //        // AST-based optimizations
-        if(semanticsResult.config().get("optimize") != null && semanticsResult.config().get("optimize").equals("true")){
+        if (semanticsResult.config().get("optimize") != null && semanticsResult.config().get("optimize").equals("true")) {
             semanticsResult = ollirGen.transformAst(semanticsResult);
 
             System.out.println("Optimized AST:");
