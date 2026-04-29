@@ -1,0 +1,9 @@
+package cp2.extensions.ollir.arrays.jmm;
+
+class MultiDimArrayWrite {
+    public void method() {
+        int[][] a;
+        a = new int[2][3];
+        a[0][0] = 5;
+    }
+}

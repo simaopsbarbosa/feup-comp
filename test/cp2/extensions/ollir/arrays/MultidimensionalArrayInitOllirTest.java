@@ -57,4 +57,31 @@ public class MultidimensionalArrayInitOllirTest extends OllirTestEnv {
 
         assertTrue("Method should contain a new array initialization instruction", hasNewArray);
     }
+
+    @Test
+    public void testMultiDimArrayRead() {
+        var method = toOllir("MultiDimArrayRead.jmm", "method");
+
+        var assigns = assertInstExists(AssignInstruction.class, method);
+
+        long arrayReads = assigns.stream()
+                .flatMap(assign -> getElements(assign.getRhs()).stream())
+                .filter(element -> element instanceof ArrayOperand)
+                .count();
+
+        assertTrue("Method should contain an array read operation", arrayReads >= 1);
+    }
+
+    @Test
+    public void testMultiDimArrayWrite() {
+        var method = toOllir("MultiDimArrayWrite.jmm", "method");
+
+        var assigns = assertInstExists(AssignInstruction.class, method);
+
+        long arrayStores = assigns.stream()
+                .filter(assign -> assign.getDest() instanceof ArrayOperand)
+                .count();
+
+        assertTrue("Method should contain an array store operation", arrayStores >= 1);
+    }
 }
