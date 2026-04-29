@@ -85,7 +85,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         MethodSymbol method = types.getExplicitMethodCallSymbol(node);
         if (node.getKind() == EXPLICIT_METHOD_CALL) {
             JmmNode calle = node.getChild(0);
-            JmmClassType classtype= types.getExprType(calle).asClass();
+            JmmClassType classtype = types.getExprType(calle).asClass();
             OllirExprResult calleResult = this.visit(calle);
             computation.append(calleResult.getComputation());
             if (method.isStatic()) {
@@ -154,7 +154,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     private OllirExprResult visitArrayAccess(JmmNode jmmNode, Void unused) {
         var arrayExpr = visit(jmmNode.getChild(0));
         var indexExpr = jmmNode.getChildren().stream().skip(1).map(this::visit).toList();
-        StringBuilder code= new StringBuilder();
+        StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
         String currentRef = arrayExpr.getCode();
         JmmArrayType arrayType = types.getExprType(jmmNode.getChild(0)).asArray();
@@ -163,25 +163,25 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         String temp;
         for (int i = 0; i < indexExpr.size(); i++) {
             OllirExprResult element = indexExpr.get(i);
-            int dims=arrayType.dimension()-indexExpr.size()-i+1;
-            String type=dims==0? ollirTypes.toOllirType(arrayType.itemType()):ollirTypes.toOllirType(new JmmArrayType(arrayType.itemType(),dims));
+            int dims = arrayType.dimension() - indexExpr.size() - i + 1;
+            String type = dims == 0 ? ollirTypes.toOllirType(arrayType.itemType()) : ollirTypes.toOllirType(new JmmArrayType(arrayType.itemType(), dims));
 
 
             computation.append(element.getComputation());
-            String current=currentRef+"["+element.getCode()+"]"+type;
+            String current = currentRef + "[" + element.getCode() + "]" + type;
             boolean isLast = (i == indexExpr.size() - 1);
             if (isLast) {
                 if (isAssignmentLHS) {
                     return new OllirExprResult(current, computation);
                 } else {
-                    temp=ollirTypes.nextTemp()+type;
+                    temp = ollirTypes.nextTemp() + type;
                     computation.append(temp).append(ASSIGN).append(type).append(SPACE).append(current).append(END_STMT);
                     code.append(temp);
-                    return  new OllirExprResult(code.toString(),computation);
+                    return new OllirExprResult(code.toString(), computation);
                 }
             }
-            temp= ollirTypes.nextTemp() + type;
-            computation.append(temp).append(ASSIGN).append(type).append(current).append(END_STMT);
+            temp = ollirTypes.nextTemp() + type;
+            computation.append(temp).append(ASSIGN).append(type).append(SPACE).append(current).append(END_STMT);
 
         }
         return new OllirExprResult(code.toString(), computation);
