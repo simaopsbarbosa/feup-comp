@@ -3,6 +3,7 @@ package pt.up.fe.comp2026.optimization;
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
+import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
@@ -153,36 +154,59 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     private OllirExprResult visitArrayAccess(JmmNode jmmNode, Void unused) {
         var arrayExpr = visit(jmmNode.getChild(0));
         var indexExpr = jmmNode.getChildren().stream().skip(1).map(this::visit).toList();
-        var indexCodes= new StringBuilder();
+        StringBuilder code= new StringBuilder();
         StringBuilder computation = new StringBuilder();
         computation.append(arrayExpr.getComputation());
-        for (int i=0;i< indexExpr.size();i++){
-            OllirExprResult res=indexExpr.get(i);
-            computation.append(res.getComputation());
-            indexCodes.append("[").append(res.getCode()).append("]");
-        }
-        String arrayCode = arrayExpr.getCode();
-        if (arrayCode.contains("[")) {
-            JmmType arrayType = types.getExprType(jmmNode.getChild(0));
-            String arrayOllirType = ollirTypes.toOllirType(arrayType);
-            String temp = ollirTypes.nextTemp() + arrayOllirType;
-            computation.append(temp).append(" :=").append(arrayOllirType).append(" ").append(arrayCode).append(END_STMT);
-            arrayCode = temp;
-        }
-
+        JmmArrayType arrayType = types.getExprType(jmmNode.getChild(0)).asArray();
         var parent = jmmNode.getParent();
         boolean isAssignmentLHS = parent != null && parent.getKind() == ASSIGN_STMT && parent.getChild(0) == jmmNode;
 
-        String elementOllirType = ollirTypes.toOllirType(types.getExprType(jmmNode));
-        String code = arrayCode + indexCodes+ elementOllirType;
+        String arrayCode = arrayExpr.getCode();
+        String lastTemp="";
+        String temp="";
+        if(indexExpr.size()>1) {
+            for (int i = 0; i < indexExpr.size(); i++) {
+                OllirExprResult element = indexExpr.get(i);
+                int dims=i+1;
+                JmmArrayType current =  new JmmArrayType(arrayType.itemType(),arrayType.dimension()-indexExpr.size()+dims);
+                String arrayOllirType = ollirTypes.toOllirType(current);
+                String elementollir=ollirTypes.toOllirType(arrayType.itemType());
+                temp= ollirTypes.nextTemp() + arrayOllirType;
+                computation.append(element.getComputation());
 
-        if (isAssignmentLHS) {
-            return new OllirExprResult(code, computation);
-        } else {
-            String temp = ollirTypes.nextTemp() + elementOllirType;
-            computation.append(temp).append(SPACE).append(ASSIGN).append(elementOllirType).append(SPACE).append(code).append(END_STMT);
-            return new OllirExprResult(temp, computation);
+                boolean isLast = (i == indexExpr.size() - 1);
+                if (i == 0) {
+                    computation.append(temp).append(ASSIGN).append(arrayOllirType).append(SPACE).append(arrayCode).append("[").append(element.getCode()).append("]").append(arrayOllirType).append(END_STMT);
+                } else if (!isLast) {
+                    computation.append(temp).append(ASSIGN).append(arrayOllirType).append(SPACE).append(lastTemp).append("[").append(element.getCode()).append("]").append(arrayOllirType).append(END_STMT);
+                    code.append(temp);
+                } else {
+                    if (isAssignmentLHS) {
+                        code = code.append(lastTemp).append("[").append(element.getCode()).append("]").append(elementollir);
+                        return new OllirExprResult(code.toString(), computation);
+                    } else {
+                        temp=ollirTypes.nextTemp()+elementollir;
+                        computation.append(temp).append(ASSIGN).append(elementollir).append(SPACE).append(lastTemp).append("[").append(element.getCode()).append("]").append(elementollir).append(END_STMT);
+                        code.append(temp);
+                    }
+                }
+                lastTemp = temp;
+            }
         }
+        else{
+            int dims=arrayType.dimension()-indexExpr.size();
+            computation.append(indexExpr.get(0).getComputation());
+            String finalArray= dims==0? ollirTypes.toOllirType(arrayType.itemType()):ollirTypes.toOllirType(new JmmArrayType(arrayType.itemType(),arrayType.dimension()-indexExpr.size()));
+            if (isAssignmentLHS) {
+                code.append(arrayCode).append("[").append(indexExpr.get(0).getCode()).append("]")
+                        .append(finalArray);
+            } else {
+                lastTemp=ollirTypes.nextTemp()+finalArray;
+                computation.append(lastTemp).append(ASSIGN).append(finalArray).append(SPACE).append(arrayCode).append("[").append(indexExpr.get(0).getCode()).append("]").append(finalArray).append(END_STMT);
+                code.append(lastTemp);
+            }
+        }
+        return new OllirExprResult(code.toString(), computation);
     }
 
     private OllirExprResult visitLength(JmmNode node, Void unused) {
