@@ -1,0 +1,8 @@
+package cp2.core.ollir.entitiesandops.jmm;
+
+class PreIncrement {
+
+    public int method(int x) {
+        return ++x;
+    }
+}

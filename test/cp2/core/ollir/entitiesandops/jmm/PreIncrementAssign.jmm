@@ -1,0 +1,10 @@
+package cp2.core.ollir.entitiesandops.jmm;
+
+class PreIncrementAssign {
+
+    public int method(int x) {
+        int y;
+        y = ++x;
+        return y;
+    }
+}

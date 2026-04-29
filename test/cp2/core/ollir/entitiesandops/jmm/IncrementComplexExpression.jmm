@@ -1,0 +1,8 @@
+package cp2.core.ollir.entitiesandops.jmm;
+
+class IncrementComplexExpression {
+
+    public int method(int x, int y) {
+        return ++x + y * 2 - y++;
+    }
+}

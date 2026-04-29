@@ -1,0 +1,11 @@
+package cp2.core.ollir.entitiesandops.jmm;
+
+class IncrementInCondition {
+
+    public boolean method(int x) {
+        if (++x > 0) {
+            return true;
+        }
+        return false;
+    }
+}

@@ -1,0 +1,8 @@
+package cp2.core.ollir.entitiesandops.jmm;
+
+class IncrementWithArithmetic {
+
+    public int method(int x) {
+        return ++x * 2;
+    }
+}

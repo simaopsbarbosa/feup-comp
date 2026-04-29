@@ -1,0 +1,13 @@
+package cp2.core.ollir.entitiesandops.jmm;
+
+class IncrementInWhile {
+
+    public int method(int limit) {
+        int count;
+        count = 0;
+        while (count < limit) {
+            count = count + 1;
+        }
+        return count;
+    }
+}
