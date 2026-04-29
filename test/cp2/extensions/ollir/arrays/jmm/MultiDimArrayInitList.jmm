@@ -1,0 +1,9 @@
+package cp2.extensions.ollir.arrays.jmm;
+
+class MultiDimArrayInitList {
+    public int method() {
+        int[][] a;
+        a = new int[][]{{1, 2}, {3, 4}};
+        return a[0][0];
+    }
+}
