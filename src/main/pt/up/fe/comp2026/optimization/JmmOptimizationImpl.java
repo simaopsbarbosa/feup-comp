@@ -31,10 +31,11 @@ public class JmmOptimizationImpl implements JmmOptimization {
     public JmmSemanticsResult transformAst(JmmSemanticsResult semanticsResult) {
         JmmNode rootNode = semanticsResult.getRootNode();
         ForLoopVisitor forLoopTransformation = new ForLoopVisitor();
-
+        DoWhileVisitor doWhileVisitor=new DoWhileVisitor();
         //replace for loops
         rootNode.getDescendants(JmmKind.FOR_STMT).forEach(forLoopTransformation::visit);
-
+        //replace do while
+        rootNode.getDescendants(JmmKind.DO_WHILE_STMT).forEach(doWhileVisitor::visit);
         //System.out.println(semanticsResult);
 
 
