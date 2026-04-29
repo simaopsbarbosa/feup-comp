@@ -9,7 +9,7 @@ import org.specs.comp.ollir.inst.ReturnInstruction;
 import pt.up.fe.comp.test.env.OllirTestEnv;
 
 public class DoWhileOllirTest extends OllirTestEnv {
-    private static final String BASE_PATH = "pt/up/fe/comp/extensions/ollir/statements/jmm/";
+    private static final String BASE_PATH = "cp2/extensions/ollir/statements/jmm/";
     private static final String RESOURCES_LOCATION = "test";
 
     public DoWhileOllirTest() {
