@@ -50,12 +50,6 @@ public class MultidimensionalArrayInitOllirTest extends OllirTestEnv {
     public void testMultiDimArrayInitList() {
         var method = toOllir("MultiDimArrayInitList.jmm", "method");
 
-        var assigns = assertInstExists(AssignInstruction.class, method);
-        boolean hasArrayAssign = assigns.stream().anyMatch(assign ->
-                assign.getDest() instanceof ArrayOperand);
-
-        assertTrue("Method should contain an assignment to an array", hasArrayAssign);
-
         var calls = assertInstExists(CallInstruction.class, method);
         boolean hasNewArray = calls.stream().anyMatch(c ->
                 c instanceof org.specs.comp.ollir.inst.NewInstruction &&

@@ -126,9 +126,9 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         if (node.getKind() == ARRAY_INIT) {
             var elements = node.getDescendants().stream().skip(2).filter(n -> n.getKind().equals(ARRAY_INITIALIZER)).map(n -> n.getChildren(ARRAY_ELEMENT).size()).toList();
-            for (int i = 1; i <= elements.size(); i++) {
-                dims.append(i).append(".i32");
-                if (i < elements.size()) {
+            for (int i = 0; i < elements.size(); i++) {
+                dims.append(elements.get(i)).append(".i32");
+                if (i < elements.size() - 1) {
                     dims.append(", ");
                 }
             }
