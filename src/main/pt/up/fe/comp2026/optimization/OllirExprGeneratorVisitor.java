@@ -3,6 +3,7 @@ package pt.up.fe.comp2026.optimization;
 import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
+import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp2026.ast.TypeUtils;
@@ -83,10 +84,11 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         MethodSymbol method = types.getExplicitMethodCallSymbol(node);
         if (node.getKind() == EXPLICIT_METHOD_CALL) {
             JmmNode calle = node.getChild(0);
+            JmmClassType classtype= types.getExprType(calle).asClass();
             OllirExprResult calleResult = this.visit(calle);
             computation.append(calleResult.getComputation());
             if (method.isStatic()) {
-                code.append("invokestatic(").append(calle.get("name"));
+                code.append("invokestatic(").append(classtype.name());
             } else {
                 code.append("invokevirtual(").append(calleResult.getCode());
             }
