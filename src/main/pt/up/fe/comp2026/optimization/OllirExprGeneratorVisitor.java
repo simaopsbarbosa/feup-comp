@@ -156,55 +156,33 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         var indexExpr = jmmNode.getChildren().stream().skip(1).map(this::visit).toList();
         StringBuilder code= new StringBuilder();
         StringBuilder computation = new StringBuilder();
-        computation.append(arrayExpr.getComputation());
+        String currentRef = arrayExpr.getCode();
         JmmArrayType arrayType = types.getExprType(jmmNode.getChild(0)).asArray();
         var parent = jmmNode.getParent();
         boolean isAssignmentLHS = parent != null && parent.getKind() == ASSIGN_STMT && parent.getChild(0) == jmmNode;
+        String temp;
+        for (int i = 0; i < indexExpr.size(); i++) {
+            OllirExprResult element = indexExpr.get(i);
+            int dims=arrayType.dimension()-indexExpr.size()-i+1;
+            String type=dims==0? ollirTypes.toOllirType(arrayType.itemType()):ollirTypes.toOllirType(new JmmArrayType(arrayType.itemType(),dims));
 
-        String arrayCode = arrayExpr.getCode();
-        String lastTemp="";
-        String temp="";
-        if(indexExpr.size()>1) {
-            for (int i = 0; i < indexExpr.size(); i++) {
-                OllirExprResult element = indexExpr.get(i);
-                int dims=i+1;
-                JmmArrayType current =  new JmmArrayType(arrayType.itemType(),arrayType.dimension()-indexExpr.size()+dims);
-                String arrayOllirType = ollirTypes.toOllirType(current);
-                String elementollir=ollirTypes.toOllirType(arrayType.itemType());
-                temp= ollirTypes.nextTemp() + arrayOllirType;
-                computation.append(element.getComputation());
 
-                boolean isLast = (i == indexExpr.size() - 1);
-                if (i == 0) {
-                    computation.append(temp).append(ASSIGN).append(arrayOllirType).append(SPACE).append(arrayCode).append("[").append(element.getCode()).append("]").append(arrayOllirType).append(END_STMT);
-                } else if (!isLast) {
-                    computation.append(temp).append(ASSIGN).append(arrayOllirType).append(SPACE).append(lastTemp).append("[").append(element.getCode()).append("]").append(arrayOllirType).append(END_STMT);
-                    code.append(temp);
+            computation.append(element.getComputation());
+            String current=currentRef+"["+element.getCode()+"]"+type;
+            boolean isLast = (i == indexExpr.size() - 1);
+            if (isLast) {
+                if (isAssignmentLHS) {
+                    return new OllirExprResult(current, computation);
                 } else {
-                    if (isAssignmentLHS) {
-                        code = code.append(lastTemp).append("[").append(element.getCode()).append("]").append(elementollir);
-                        return new OllirExprResult(code.toString(), computation);
-                    } else {
-                        temp=ollirTypes.nextTemp()+elementollir;
-                        computation.append(temp).append(ASSIGN).append(elementollir).append(SPACE).append(lastTemp).append("[").append(element.getCode()).append("]").append(elementollir).append(END_STMT);
-                        code.append(temp);
-                    }
+                    temp=ollirTypes.nextTemp()+type;
+                    computation.append(temp).append(ASSIGN).append(type).append(SPACE).append(current).append(END_STMT);
+                    code.append(temp);
+                    return  new OllirExprResult(code.toString(),computation);
                 }
-                lastTemp = temp;
             }
-        }
-        else{
-            int dims=arrayType.dimension()-indexExpr.size();
-            computation.append(indexExpr.get(0).getComputation());
-            String finalArray= dims==0? ollirTypes.toOllirType(arrayType.itemType()):ollirTypes.toOllirType(new JmmArrayType(arrayType.itemType(),arrayType.dimension()-indexExpr.size()));
-            if (isAssignmentLHS) {
-                code.append(arrayCode).append("[").append(indexExpr.get(0).getCode()).append("]")
-                        .append(finalArray);
-            } else {
-                lastTemp=ollirTypes.nextTemp()+finalArray;
-                computation.append(lastTemp).append(ASSIGN).append(finalArray).append(SPACE).append(arrayCode).append("[").append(indexExpr.get(0).getCode()).append("]").append(finalArray).append(END_STMT);
-                code.append(lastTemp);
-            }
+            temp= ollirTypes.nextTemp() + type;
+            computation.append(temp).append(ASSIGN).append(type).append(current).append(END_STMT);
+
         }
         return new OllirExprResult(code.toString(), computation);
     }
