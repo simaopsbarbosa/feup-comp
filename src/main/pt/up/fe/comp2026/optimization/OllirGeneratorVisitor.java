@@ -115,8 +115,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         String exitLabel = ollirTypes.nextLabel("if_exit");
 
         JmmNode condNode = ifStmt.getChildren(EXPR).get(0);
-        String cond = exprVisitor.visit(condNode).getCode();
-        code.append("if(" + cond + ") goto " + trueLabel + END_STMT);
+        OllirExprResult cond = exprVisitor.visit(condNode);
+        code.append("   " + cond.getComputation());
+        code.append("if(" + cond.getCode() + ") goto " + trueLabel + END_STMT);
 
         //handle else stmt
         if (ifStmt.getChildren(STMT).size() > 1) {
@@ -287,7 +288,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 code.append(res.getCode());
             }
         }
-
+        if(node.getChildren(RETURN_STMT).isEmpty()){
+            code.append("ret").append(retType).append(END_STMT);
+        }
         code.append(R_BRACKET);
         code.append(NL);
 

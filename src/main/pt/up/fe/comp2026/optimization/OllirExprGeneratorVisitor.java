@@ -160,10 +160,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             OllirExprResult res=indexExpr.get(i);
             computation.append(res.getComputation());
             indexCodes.append("[").append(res.getCode()).append("]");
-
         }
-
-
         String arrayCode = arrayExpr.getCode();
         if (arrayCode.contains("[")) {
             JmmType arrayType = types.getExprType(jmmNode.getChild(0));
