@@ -58,7 +58,7 @@ public class ArrayInitVisitor extends AJmmVisitor<Void, Boolean> {
         JmmNode newArrayExpr = new JmmNodeImpl(NEW_ARRAY);
         newArrayExpr.add(node.getChild(0).copy());
         String sizes= String.valueOf(node.getChild(1).getChildren(JmmKind.ARRAY_ELEMENT).size());
-        newArrayExpr.put("size",sizes);
+        newArrayExpr.put("size",node.get("dims").toString());
         JmmNode size=new JmmNodeImpl(INTEGER_LITERAL);
         size.put("value",sizes);
         newArrayExpr.add(size);

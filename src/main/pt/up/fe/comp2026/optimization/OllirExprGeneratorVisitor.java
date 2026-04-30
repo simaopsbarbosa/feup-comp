@@ -121,20 +121,17 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         StringBuilder comp = new StringBuilder();
         StringBuilder dims = new StringBuilder();
         JmmType type = types.getExprType(node);
-        int size;
         String t = ollirTypes.toOllirType(type);
-
-
-        size = node.get("size").split(",").length;
-        for (int i = 1; i <= size; i++) {
-            JmmNode child = node.getChild(i);
+        node.getChildren().stream().skip(1).forEach(child-> {
             OllirExprResult res = visit(child);
             comp.append(res.getComputation());
             dims.append(res.getCode());
-            if (i < size) {
+            if (child != node.getChildren().getLast()) {
                 dims.append(", ");
             }
-        }
+        });
+
+
 
         String code = "new(array, " + dims + ")" + t;
         return new OllirExprResult(code, comp);
