@@ -32,10 +32,14 @@ public class JmmOptimizationImpl implements JmmOptimization {
         JmmNode rootNode = semanticsResult.getRootNode();
         ForLoopVisitor forLoopTransformation = new ForLoopVisitor();
         DoWhileVisitor doWhileVisitor=new DoWhileVisitor();
+        UnaryExprVisitor unaryExprVisitor=new UnaryExprVisitor();
         //replace for loops
         rootNode.getDescendants(JmmKind.FOR_STMT).forEach(forLoopTransformation::visit);
         //replace do while
         rootNode.getDescendants(JmmKind.DO_WHILE_STMT).forEach(doWhileVisitor::visit);
+        //replace unary expressions
+        rootNode.getDescendants(JmmKind.RIGHT_UNARY_EXPR).forEach(unaryExprVisitor::visit);
+        rootNode.getDescendants(JmmKind.LEFT_UNARY_EXPR).forEach(unaryExprVisitor::visit);
         //System.out.println(semanticsResult);
 
 

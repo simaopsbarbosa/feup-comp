@@ -2,11 +2,9 @@ package extensions.semantics.calls;
 
 class NonStaticOnClassFail {
     int nonStatic() {
-        return 0;
-    }
-
-    public static void main(String[] args) {
-        int x;
-        x = NonStaticOnClassFail.nonStatic();
+        int i = 10;
+        i = -i;
+        i = i * (-1);
+        return i;
     }
 }

@@ -165,6 +165,32 @@ public class ConstantFoldingVisitor extends AJmmVisitor<Void, Boolean> {
         return changed;
     }
 
+    private Boolean visitUnaryExpr(JmmNode jmmNode, Void unused) {
+        boolean changed = false;
+
+        JmmNode variable = jmmNode.getChild(0);
+        String op = jmmNode.get("op");
+
+        switch (op) {
+            case "++" -> {
+
+                JmmNode newExpr = new JmmNodeImpl(JmmKind.BINARY_EXPR);
+
+
+                changed = true;
+            }
+            case "--" -> {
+
+                changed = true;
+            }
+            default -> {
+                return changed;
+            }
+        }
+
+        return changed;
+    }
+
     private Boolean defaultVisit(JmmNode node, Void unused) {
         boolean changed = false;
 
