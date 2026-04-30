@@ -105,7 +105,7 @@ public class TypeUtils {
         if (array.getKind() == ARRAY_INIT) {
             size = array.getObjectAsList("dims").size();
         } else {
-            size = array.getObjectAsList("size").size();
+            size = array.get("size").split(",").length;
         }
 
         var name = array.getChild(0).get("name");

@@ -32,10 +32,13 @@ public class JmmOptimizationImpl implements JmmOptimization {
         JmmNode rootNode = semanticsResult.getRootNode();
         ForLoopVisitor forLoopTransformation = new ForLoopVisitor();
         DoWhileVisitor doWhileVisitor=new DoWhileVisitor();
+        ArrayInitVisitor arrayInitVisitor=new ArrayInitVisitor();
         //replace for loops
         rootNode.getDescendants(JmmKind.FOR_STMT).forEach(forLoopTransformation::visit);
         //replace do while
         rootNode.getDescendants(JmmKind.DO_WHILE_STMT).forEach(doWhileVisitor::visit);
+        //replace arrayinit
+        rootNode.getDescendants(JmmKind.ARRAY_INIT).forEach(arrayInitVisitor::visit);
         //System.out.println(semanticsResult);
 
 
@@ -63,6 +66,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
         }
 
         System.out.println(passes + " passes completed");
+        System.out.println("transfoorm"+semanticsResult.getRootNode().toTree());
         return semanticsResult;
     }
 

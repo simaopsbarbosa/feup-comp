@@ -48,7 +48,6 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(LOGICAL_NOT, this::visitNot);
         addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(NEW_ARRAY, this::visitNewArray);
-        addVisit(ARRAY_INIT, this::visitNewArray);
         addVisit(ARRAY_ACCESS, this::visitArrayAccess);
         addVisit(LENGTH, this::visitLength);
         addVisit(EXPLICIT_METHOD_CALL, this::visitMethodCall);
@@ -125,27 +124,18 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         int size;
         String t = ollirTypes.toOllirType(type);
 
-        if (node.getKind() == ARRAY_INIT) {
-            var elements = node.getDescendants().stream().skip(2).filter(n -> n.getKind().equals(ARRAY_INITIALIZER)).map(n -> n.getChildren(ARRAY_ELEMENT).size()).toList();
-            for (int i = 0; i < elements.size(); i++) {
-                dims.append(elements.get(i)).append(".i32");
-                if (i < elements.size() - 1) {
-                    dims.append(", ");
-                }
-            }
 
-        } else {
-            size = node.getObjectAsList("size").size();
-            for (int i = 1; i <= size; i++) {
-                JmmNode child = node.getChild(i);
-                OllirExprResult res = visit(child);
-                comp.append(res.getComputation());
-                dims.append(res.getCode());
-                if (i < size) {
-                    dims.append(", ");
-                }
+        size = node.get("size").split(",").length;
+        for (int i = 1; i <= size; i++) {
+            JmmNode child = node.getChild(i);
+            OllirExprResult res = visit(child);
+            comp.append(res.getComputation());
+            dims.append(res.getCode());
+            if (i < size) {
+                dims.append(", ");
             }
         }
+
         String code = "new(array, " + dims + ")" + t;
         return new OllirExprResult(code, comp);
 
