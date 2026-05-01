@@ -132,10 +132,11 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         });
 
 
-
-        String code = "new(array, " + dims + ")" + t;
-        return new OllirExprResult(code, comp);
-
+        // passed new array inst to computation
+        String temp = ollirTypes.nextTemp() + t;
+        String newInst = "new(array, " + dims + ")" + t;
+        comp.append(temp + SPACE + ASSIGN + t + SPACE + newInst + END_STMT);
+        return new OllirExprResult(temp, comp);
     }
 
     private OllirExprResult visitArrayAccess(JmmNode jmmNode, Void unused) {
