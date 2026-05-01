@@ -29,12 +29,12 @@ public class UnaryOperators extends AJmmVisitor<Void, Boolean> {
                 node.replace(outerBlockNode);
             }
             case"+"->{
-                JmmNode right = node.getChild(0).copy();
+                JmmNode right = node.getChild(0);
                 node.replace(right);
             }
             case"++","--"->{
                 JmmNode left = new JmmNodeImpl(JmmKind.INTEGER_LITERAL);
-                JmmNode right = node.getChild(0).copy();
+                JmmNode right = node.getChild(0);
                 left.put("value", "1");
                 op= op.equals("++") ?"+":"-";
                 outerBlockNode.add(left);

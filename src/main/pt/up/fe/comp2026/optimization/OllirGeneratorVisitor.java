@@ -61,7 +61,20 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(FIELD_DECL, this::FieldDecl);
         addVisit(WHILE_STMT, this::visitWhileStmt);
         addVisit(VAR_DECL, this::simpleVarDecl);
+        addVisit(EXPRESSION,this::visitExpr);
         setDefaultVisit(this::defaultVisit);
+    }
+    private String visitExpr(JmmNode node,Void unused){
+        StringBuilder code=new StringBuilder();
+        OllirExprResult res = exprVisitor.visit(node.getChild(0));
+        if(node.getChild(0).getKind()==EXPLICIT_METHOD_CALL||node.getChild(0).getKind()==IMPLICIT_METHOD_CALL){
+            code.append(res.getComputation());
+            code.append(res.getCode());
+        }
+        else {
+            code.append(res.getComputation());
+        }
+        return code.toString();
     }
 
     private String FieldDecl(JmmNode node, Void unused) {
@@ -279,15 +292,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             var stmtsCode = stmts.stream().map(this::visit).collect(Collectors.joining("\n   ", "   ", ""));
             code.append(stmtsCode);
         }
-        var expr = node.getChildren(EXPRESSION).stream().flatMap(n -> n.getChildren().stream()).filter(n -> n.getKind() == EXPLICIT_METHOD_CALL ||
-                n.getKind() == IMPLICIT_METHOD_CALL).toList();
-        if (!expr.isEmpty()) {
-            for (var n : expr) {
-                OllirExprResult res = exprVisitor.visit(n);
-                code.append(res.getComputation());
-                code.append(res.getCode());
-            }
-        }
+
         if(node.getChildren(RETURN_STMT).isEmpty()){
             code.append("ret").append(retType).append(END_STMT);
         }
