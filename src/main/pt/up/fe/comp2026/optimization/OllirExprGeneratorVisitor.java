@@ -56,7 +56,6 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(THIS, this::visitThisExpr);
         addVisit(PARENTESES, this::visitParenteses);
     }
-
     private OllirExprResult visitNot(JmmNode node, Void unused) {
 
         StringBuilder computation = new StringBuilder();

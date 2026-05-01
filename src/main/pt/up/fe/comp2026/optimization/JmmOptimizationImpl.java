@@ -33,13 +33,17 @@ public class JmmOptimizationImpl implements JmmOptimization {
         ForLoopVisitor forLoopTransformation = new ForLoopVisitor();
         DoWhileVisitor doWhileVisitor=new DoWhileVisitor();
         ArrayInitVisitor arrayInitVisitor=new ArrayInitVisitor();
+        UnaryOperators unaryOperators=new UnaryOperators();
         //replace for loops
         rootNode.getDescendants(JmmKind.FOR_STMT).forEach(forLoopTransformation::visit);
         //replace do while
         rootNode.getDescendants(JmmKind.DO_WHILE_STMT).forEach(doWhileVisitor::visit);
         //replace arrayinit
         rootNode.getDescendants(JmmKind.ARRAY_INIT).forEach(arrayInitVisitor::visit);
+        //replace leftunary
+        rootNode.getDescendants(JmmKind.LEFT_UNARY_EXPR).forEach(unaryOperators::visit);
         //System.out.println(semanticsResult);
+
 
 
         boolean hasChanges = true;
