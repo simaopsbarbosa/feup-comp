@@ -13,7 +13,22 @@ public class UnaryOperators extends AJmmVisitor<Void, Boolean> {
     @Override
     protected void buildVisitor() {
         addVisit(JmmKind.LEFT_UNARY_EXPR, this::visitLeftUnary);
+        addVisit(JmmKind.RIGHT_UNARY_EXPR,this::visitRightUnary);
     }
+    private boolean visitRightUnary(JmmNode node, Void unused) {
+        JmmNode outerBlockNode = new JmmNodeImpl(JmmKind.BINARY_EXPR);
+        String op=node.get("op");
+        JmmNode right = new JmmNodeImpl(JmmKind.INTEGER_LITERAL);
+        JmmNode left = node.getChild(0);
+        right.put("value", "1");
+        op= op.equals("++") ?"+":"-";
+        outerBlockNode.add(left);
+        outerBlockNode.add(right);
+        outerBlockNode.put("op", op);
+        node.replace(outerBlockNode);
+        return true;
+    }
+
 
     private boolean visitLeftUnary(JmmNode node, Void unused) {
         JmmNode outerBlockNode = new JmmNodeImpl(JmmKind.BINARY_EXPR);

@@ -42,6 +42,8 @@ public class JmmOptimizationImpl implements JmmOptimization {
         rootNode.getDescendants(JmmKind.ARRAY_INIT).forEach(arrayInitVisitor::visit);
         //replace leftunary
         rootNode.getDescendants(JmmKind.LEFT_UNARY_EXPR).forEach(unaryOperators::visit);
+        //replace rightunary
+        rootNode.getDescendants(JmmKind.RIGHT_UNARY_EXPR).forEach(unaryOperators::visit);
         //System.out.println(semanticsResult);
 
 

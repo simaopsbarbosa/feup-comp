@@ -45,7 +45,7 @@ public class ArrayInitVisitor extends AJmmVisitor<Void, Boolean> {
                     arrayAccess.add(index);
                 }
                 assignment.add(arrayAccess);
-                assignment.add(value.copy());
+                assignment.add(value);
                 targetParent.add(assignment,pos);
                 pos++;
             }
