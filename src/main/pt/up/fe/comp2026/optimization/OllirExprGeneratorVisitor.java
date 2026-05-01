@@ -11,6 +11,7 @@ import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
@@ -46,7 +47,6 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(LOGICAL_EXPR, this::visitBinExpr);
         addVisit(EQUALITY_EXPR, this::visitBinExpr);
         addVisit(LOGICAL_NOT, this::visitNot);
-        addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(NEW_ARRAY, this::visitNewArray);
         addVisit(ARRAY_ACCESS, this::visitArrayAccess);
         addVisit(LENGTH, this::visitLength);
@@ -301,16 +301,25 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     // invoke(temp, init);
     private OllirExprResult visitClassInit(JmmNode classInit, Void unused) {
         StringBuilder computation = new StringBuilder();
-        String className = classInit.get(JmmAttributes.CLASS_INITIALIZATION.NAME);
-        String temp = ollirTypes.nextTemp() + "." + className;
+        StringBuilder var=new StringBuilder();
+        String className = classInit.get("name");
+        String temp= ollirTypes.nextTemp()+"."+className;
 
-        //assign object to temp
-        computation.append(temp + SPACE + ASSIGN + "." + className + " new(%s).%s".formatted(className, className) + END_STMT);
+        computation.append(temp).append(ASSIGN).append(".").append(className).append(" new(").append(className).append( ").").append(className).append(END_STMT);
+        List<JmmNode> children=classInit.getChildren();
+        List<OllirExprResult> res= children.stream().map(this::visit).toList();
+        for(int i=0; i<res.size();i++){
+            OllirExprResult child=res.get(i);
+            computation.append(child.getComputation());
+            var.append(",").append(SPACE);
+            var.append(child.getCode());
+        }
 
-        //call object init
-        computation.append("invokespecial(" + temp + ", " + "\"<init>\").V" + END_STMT);
+        computation.append("invokespecial(").append(temp).append(", ").append("\"<init>\"").append(var).append(")").append(".V").append(END_STMT);
 
-        return new OllirExprResult(temp, computation.toString());
+
+
+        return new OllirExprResult(temp, computation);
     }
 
 }
