@@ -1,4 +1,4 @@
-package pt.up.fe.comp.cp1.extensions.semantics.calls;
+package pt.up.fe.comp.cp1.extensions.semantics;
 
 import org.junit.Test;
 
