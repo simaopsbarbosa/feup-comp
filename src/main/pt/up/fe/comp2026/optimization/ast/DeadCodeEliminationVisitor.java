@@ -16,7 +16,6 @@ public class DeadCodeEliminationVisitor extends AJmmVisitor<Void, Boolean> {
         addVisit(JmmKind.BLOCK, this::visitBlock);
         setDefaultVisit(this::defaultVisit);
     }
-
     private Boolean visitWhileStmt(JmmNode jmmNode, Void unused) {
         boolean changed = false;
 
@@ -36,15 +35,16 @@ public class DeadCodeEliminationVisitor extends AJmmVisitor<Void, Boolean> {
 
     private Boolean visitBlock(JmmNode node, Void unused) {
         boolean changed = false;
-
-        for (var child : new ArrayList<>(node.getChildren())) {
+        List<JmmNode> children = new ArrayList<>(node.getChildren());
+        if(children.isEmpty()){
+            node.delete();
+            return true;
+        }
+        for (var child :children) {
             changed |= visit(child);
         }
 
         boolean foundReturn = false;
-
-        List<JmmNode> children = new ArrayList<>(node.getChildren());
-
         for (JmmNode child : children) {
             if (!JmmKind.STMT.check(child)) {
                 continue;
@@ -70,20 +70,21 @@ public class DeadCodeEliminationVisitor extends AJmmVisitor<Void, Boolean> {
             return true;
         }
 
-        if (!JmmKind.BLOCK.check(node)) {
-            return false;
-        }
-
-        for (var child : node.getChildren()) {
-            if (!JmmKind.STMT.check(child)) {
-                continue;
-            }
-
-            if (alwaysReturns(child)) {
-                return true;
+        if (JmmKind.BLOCK.check(node)) {
+            for (var child : node.getChildren()) {
+                if (alwaysReturns(child)) {
+                    return true;
+                }
             }
         }
-
+        if(JmmKind.ELSEIF_BLOCK_STMT.check(node)){
+            if(node.getChildren().size()<3){
+                return false;
+            }
+            JmmNode thenBranch = node.getChild(1);
+            JmmNode elseBranch = node.getChild(2);
+            return alwaysReturns(thenBranch) && alwaysReturns(elseBranch);
+        }
         return false;
     }
 

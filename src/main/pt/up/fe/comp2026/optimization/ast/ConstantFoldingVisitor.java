@@ -3,7 +3,10 @@ package pt.up.fe.comp2026.optimization.ast;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
+
+import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
+
 
 public class ConstantFoldingVisitor extends AJmmVisitor<Void, Boolean> {
 
@@ -12,9 +15,36 @@ public class ConstantFoldingVisitor extends AJmmVisitor<Void, Boolean> {
         addVisit(JmmKind.BINARY_EXPR, this::visitBinaryExpr);
         addVisit(JmmKind.LOGICAL_EXPR, this::visitLogicalExpr);
         addVisit(JmmKind.EQUALITY_EXPR, this::visitEqualityExpr);
+        addVisit(JmmKind.LOGICAL_NOT,this::visitNot);
+        addVisit(JmmKind.PARENTESES,this::visitParenteses);
         setDefaultVisit(this::defaultVisit);
     }
+    private boolean visitParenteses(JmmNode node,Void unused){
+        boolean changed = false;
+        JmmNode child=node.getChild(0);
+        changed |= visit(child);
+        node.replace(child);
+        return true;
+    }
 
+    private boolean visitNot(JmmNode node,Void unused){
+        boolean changed = false;
+        JmmNode child=node.getChild(0);
+        changed = visit(child);
+        if(child.getKind()== JmmKind.BOOL_LITERAL){
+            var value=child.get("bool").equals("true")?"false":"true";
+            JmmNodeImpl boolLiteral=new JmmNodeImpl(JmmKind.BOOL_LITERAL);
+            boolLiteral.put("bool",value);
+            node.replace(boolLiteral);
+        }
+        if(child.getKind()==JmmKind.LOGICAL_NOT){
+            JmmNode grandChild=child.getChild(0);
+            node.replace(grandChild);
+            return true;
+        }
+
+        return changed;
+    }
     private Boolean visitBinaryExpr(JmmNode jmmNode, Void unused) {
         boolean changed = false;
 

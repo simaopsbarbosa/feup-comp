@@ -293,7 +293,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             code.append(stmtsCode);
         }
 
-        if(node.getChildren(RETURN_STMT).isEmpty()){
+        if(node.getDescendants(RETURN_STMT).isEmpty()){
             code.append("ret").append(retType).append(END_STMT);
         }
         code.append(R_BRACKET);
