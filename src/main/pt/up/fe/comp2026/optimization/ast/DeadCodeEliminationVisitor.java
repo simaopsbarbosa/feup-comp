@@ -46,16 +46,12 @@ public class DeadCodeEliminationVisitor extends AJmmVisitor<Void, Boolean> {
 
         boolean foundReturn = false;
         for (JmmNode child : children) {
-            if (!JmmKind.STMT.check(child)) {
-                continue;
-            }
-
             if (foundReturn) {
                 child.delete();
                 changed = true;
                 continue;
             }
-
+            changed|=visit(child);
             if (alwaysReturns(child)) {
                 foundReturn = true;
             }
