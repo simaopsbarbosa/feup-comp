@@ -66,19 +66,20 @@ public class DeadCodeEliminationVisitor extends AJmmVisitor<Void, Boolean> {
     }
 
     private boolean alwaysReturns(JmmNode node) {
+        List<JmmNode> children=node.getChildren();
         if (JmmKind.RETURN_STMT.check(node)) {
             return true;
         }
 
         if (JmmKind.BLOCK.check(node)) {
-            for (var child : node.getChildren()) {
+            for (var child :children) {
                 if (alwaysReturns(child)) {
                     return true;
                 }
             }
         }
         if(JmmKind.ELSEIF_BLOCK_STMT.check(node)){
-            if(node.getChildren().size()<3){
+            if(children.size()<3){
                 return false;
             }
             JmmNode thenBranch = node.getChild(1);
