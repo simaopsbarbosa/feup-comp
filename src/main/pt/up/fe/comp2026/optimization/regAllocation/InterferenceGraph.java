@@ -100,7 +100,7 @@ public class InterferenceGraph {
             }
 
             // color node
-            for (int i = 0; i < numRegs; i++) {
+            for (int i = 1; i <= numRegs; i++) {
                 if (!usedColors.contains(i)) {
                     nodeToColor.setColor(i);
                     break;
@@ -113,6 +113,11 @@ public class InterferenceGraph {
         }
 
         return true;
+    }
+
+
+    public InterferenceNode matchNodeFromVar(String var) {
+        return this.nodes.get(var);
     }
 
 
@@ -148,4 +153,5 @@ public class InterferenceGraph {
     }
 
 
+    public Map<String, InterferenceNode> getNodes() {return nodes;}
 }

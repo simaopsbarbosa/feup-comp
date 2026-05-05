@@ -9,7 +9,9 @@ import pt.up.fe.comp2026.ConfigOptions;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.optimization.ast.*;
 import pt.up.fe.comp2026.optimization.regAllocation.InterferenceGraph;
+import pt.up.fe.comp2026.optimization.regAllocation.InterferenceNode;
 import pt.up.fe.comp2026.optimization.regAllocation.LivenessAnalysis;
+import pt.up.fe.comp2026.utils.ReportUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -96,6 +98,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         var classUnit = ollirResult.getOllirClass();
         classUnit.buildCFGs();
+        classUnit.buildVarTables();
 
         for(var method : classUnit.getMethods()) {
             LivenessAnalysis livenessAnalysis = new LivenessAnalysis(method);
@@ -103,9 +106,30 @@ public class JmmOptimizationImpl implements JmmOptimization {
             livenessAnalysis.printLivenessTable();
 
             InterferenceGraph graph = new InterferenceGraph(livenessAnalysis.getInstructionTable());
-            graph.printGraph();
+            //graph.printGraph();
 
-            graph.colorGraph(num_regs);
+            if (!graph.colorGraph(num_regs)) {
+                // add error
+            }
+
+            var varTable = method.getVarTable();
+
+            System.out.println("HERE ARE THE VAR NAMES TO USE");
+            System.out.println(varTable.keySet());
+
+            for (String var : graph.getNodes().keySet()) {
+                InterferenceNode node = graph.matchNodeFromVar(var);
+
+                if (node == null) {
+                    System.out.println("VAR NAME NOT IN GRAPH TABLE\n\n\n\n");
+                    continue;
+                }
+
+                method.getVarTable().get(var).setVirtualReg(node.getColor());
+            }
+
+
+
             graph.printGraph();
         }
 
