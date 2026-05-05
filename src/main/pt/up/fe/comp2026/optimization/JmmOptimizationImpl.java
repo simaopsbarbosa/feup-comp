@@ -1,5 +1,6 @@
 package pt.up.fe.comp2026.optimization;
 
+import org.specs.comp.ollir.OllirErrorException;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
@@ -7,6 +8,7 @@ import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2026.ConfigOptions;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.optimization.ast.*;
+import pt.up.fe.comp2026.optimization.regAllocation.LivenessAnalysis;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -84,6 +86,24 @@ public class JmmOptimizationImpl implements JmmOptimization {
             System.out.println("OLLIR CODE:");
             System.out.println(ollirResult.getOllirCode());
         }
+
+        int num_regs = ConfigOptions.getRegisterAllocation(ollirResult.config());
+        //if (num_regs == -1) return ollirResult;
+
+        var classUnit = ollirResult.getOllirClass();
+        classUnit.buildCFGs();
+
+        for(var method : classUnit.getMethods()) {
+            LivenessAnalysis livenessAnalysis = new LivenessAnalysis(method);
+            //method.show();
+//            System.out.println("INSTS ------------------------------------------------------");
+//            for (var inst : method.getInstructions()) {
+//                inst.show();
+//                //inst.showNode();
+//            }
+            livenessAnalysis.printLivenessTable();
+        }
+
 
         //TODO: Do your OLLIR-based optimizations here
 
