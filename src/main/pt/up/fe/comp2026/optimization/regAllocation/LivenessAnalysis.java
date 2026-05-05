@@ -25,6 +25,8 @@ public class LivenessAnalysis {
         }
     }
 
+    public void performAnalysis() {}
+
 
 
 

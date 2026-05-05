@@ -24,7 +24,7 @@ public class InstructionLiveness {
     }
 
     public static Set<String> computeUse(Instruction instruction) {
-        return Set.of();
+        return LivenessHelper.computeUse(instruction);
     }
 
 
