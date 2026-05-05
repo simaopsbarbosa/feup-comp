@@ -88,4 +88,7 @@ public class LivenessAnalysis {
         }
         System.out.println();
     }
+
+
+    public List<InstructionLiveness> getInstructionTable() {return instructionTable;}
 }

@@ -8,6 +8,7 @@ import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2026.ConfigOptions;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.optimization.ast.*;
+import pt.up.fe.comp2026.optimization.regAllocation.InterferenceGraph;
 import pt.up.fe.comp2026.optimization.regAllocation.LivenessAnalysis;
 
 import java.util.Collections;
@@ -97,6 +98,9 @@ public class JmmOptimizationImpl implements JmmOptimization {
             LivenessAnalysis livenessAnalysis = new LivenessAnalysis(method);
             livenessAnalysis.performAnalysis();
             livenessAnalysis.printLivenessTable();
+
+            InterferenceGraph graph = new InterferenceGraph(livenessAnalysis.getInstructionTable());
+            graph.printGraph();
         }
 
 
