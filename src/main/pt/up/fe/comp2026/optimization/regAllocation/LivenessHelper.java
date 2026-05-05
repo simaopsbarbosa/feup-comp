@@ -13,16 +13,16 @@ import java.util.Set;
 
 public class LivenessHelper {
 
-    public static Optional<String> getElementVarName(Element element) {
-        if (element instanceof ArrayOperand) return Optional.empty();
-        if (element instanceof Operand op) return Optional.of(op.getName());
-
-        return Optional.empty();
-    }
 
     public static void addElementToSet(Set<String> set, Element element) {
-        if (getElementVarName(element).isPresent()) {
-            set.add(getElementVarName(element).get());
+
+        if (element instanceof ArrayOperand arrOp) {
+            set.add(arrOp.getName());
+            AddElementsToSet(set, arrOp.getIndexOperands());
+        }
+
+        else if (element instanceof Operand op) {
+            set.add(op.getName());
         }
     }
 
@@ -39,8 +39,13 @@ public class LivenessHelper {
 
         if (type != InstructionType.ASSIGN) return use;
 
+
         AssignInstruction assignInstruction = (AssignInstruction) instruction;
         Element dest = assignInstruction.getDest();
+
+        // array access should not be in def set
+        if (dest instanceof ArrayOperand) return use;
+
         addElementToSet(use, dest);
 
         return use;
@@ -56,6 +61,12 @@ public class LivenessHelper {
 
             case ASSIGN -> {
                 AssignInstruction assign = (AssignInstruction) instruction;
+
+                // when arr[i] = _; 'i' needs to be in use set
+                if (assign.getDest() instanceof ArrayOperand) {
+                    addElementToSet(use, assign.getDest());
+                }
+
                 Instruction rhs = assign.getRhs();
                 use.addAll(computeUse(rhs));
             }
@@ -98,10 +109,6 @@ public class LivenessHelper {
                 AddElementsToSet(use, field.getOperands());
             }
 
-            //dont know what this is
-            case LDC -> {
-
-            }
             case RETURN -> {
                 ReturnInstruction returnInst = (ReturnInstruction) instruction;
                 Optional<Element> optElement = returnInst.getOperand();

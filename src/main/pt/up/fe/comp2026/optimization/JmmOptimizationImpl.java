@@ -95,12 +95,6 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         for(var method : classUnit.getMethods()) {
             LivenessAnalysis livenessAnalysis = new LivenessAnalysis(method);
-            //method.show();
-//            System.out.println("INSTS ------------------------------------------------------");
-//            for (var inst : method.getInstructions()) {
-//                inst.show();
-//                //inst.showNode();
-//            }
             livenessAnalysis.printLivenessTable();
         }
 
