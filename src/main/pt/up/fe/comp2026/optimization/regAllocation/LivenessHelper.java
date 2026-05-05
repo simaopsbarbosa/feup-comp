@@ -121,4 +121,16 @@ public class LivenessHelper {
         return use;
     }
 
+
+    public static InstructionLiveness getLivenessInstFromTable
+            (List<InstructionLiveness> livenessTable, Instruction instruction)
+    {
+        for (InstructionLiveness liveness : livenessTable) {
+            if (liveness.getInstruction().equals(instruction)) {
+                return liveness;
+            }
+        }
+        return null;
+    }
+
 }

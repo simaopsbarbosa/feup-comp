@@ -95,6 +95,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         for(var method : classUnit.getMethods()) {
             LivenessAnalysis livenessAnalysis = new LivenessAnalysis(method);
+            livenessAnalysis.performAnalysis();
             livenessAnalysis.printLivenessTable();
         }
 

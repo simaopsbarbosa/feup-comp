@@ -25,7 +25,40 @@ public class LivenessAnalysis {
         }
     }
 
-    public void performAnalysis() {}
+    public void performAnalysis() {
+        boolean hasChanges = true;
+
+        while (hasChanges) {
+            hasChanges = false;
+
+            for (InstructionLiveness liveness : this.instructionTable) {
+
+                int prevInSize = liveness.getIn().size();
+                int prevOutSize = liveness.getOut().size();
+
+                // compute new In set
+                liveness.getIn().addAll(liveness.getOut());
+                liveness.getIn().removeAll(liveness.getDef());
+                liveness.getIn().addAll(liveness.getUse());
+
+                //compute new Out set
+                Instruction instruction = liveness.getInstruction();
+                for (Instruction nextInst : instruction.getSuccessorsAsInst()) {
+                    InstructionLiveness nextLiveness = LivenessHelper.getLivenessInstFromTable(this.instructionTable, nextInst);
+
+                    if (nextLiveness != null) {
+                        liveness.getOut().addAll(nextLiveness.getIn());
+                    }
+                }
+
+                int newInSize = liveness.getIn().size();
+                int newOutSize = liveness.getOut().size();
+
+                if (newInSize != prevInSize || newOutSize != prevOutSize)
+                    hasChanges = true;
+            }
+        }
+    }
 
 
 
