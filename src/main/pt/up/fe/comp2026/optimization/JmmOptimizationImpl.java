@@ -91,6 +91,9 @@ public class JmmOptimizationImpl implements JmmOptimization {
         int num_regs = ConfigOptions.getRegisterAllocation(ollirResult.config());
         //if (num_regs == -1) return ollirResult;
 
+        //TEMP
+        num_regs = 4;
+
         var classUnit = ollirResult.getOllirClass();
         classUnit.buildCFGs();
 
@@ -101,6 +104,8 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
             InterferenceGraph graph = new InterferenceGraph(livenessAnalysis.getInstructionTable());
             graph.printGraph();
+
+            graph.colorGraph(num_regs);
         }
 
 

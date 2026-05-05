@@ -8,10 +8,13 @@ public class InterferenceNode {
     private Set<InterferenceNode> neighbors;
     private int color;
 
+    private boolean removed;
+
     public InterferenceNode(String varName) {
         this.varName = varName;
         neighbors = new HashSet<>();
         color = -1;
+        removed = false;
     }
 
 
@@ -22,12 +25,24 @@ public class InterferenceNode {
         node.addNeighbor(this);
     }
 
-    public void setColor(int color) {this.color = color;}
+    public int getNumActiveNeighbors() {
+        int count = 0;
+        for (InterferenceNode neighbor : neighbors) {
+            if (!neighbor.isRemoved()) {
+                count++;
+            }
+        }
+        return count;
+    }
 
+
+    public void setColor(int color) {this.color = color;}
+    public void setRemoved(boolean removed) {this.removed = removed;}
 
     public String getVarName() {return varName;}
     public Set<InterferenceNode> getNeighbors() {return neighbors;}
     public int getColor() {return color;}
+    public boolean isRemoved() {return removed;}
 
 
     @Override
@@ -43,5 +58,11 @@ public class InterferenceNode {
     @Override
     public int hashCode() {
         return this.varName.hashCode();
+    }
+
+
+    @Override
+    public String toString() {
+        return varName;
     }
 }

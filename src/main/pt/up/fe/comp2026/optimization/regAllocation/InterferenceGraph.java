@@ -13,7 +13,7 @@ public class InterferenceGraph {
     }
 
 
-    public void createNodes(List<InstructionLiveness> livenessTable) {
+    private void createNodes(List<InstructionLiveness> livenessTable) {
         Set<String> allVarNames = new HashSet<>();
 
         for (InstructionLiveness liveness : livenessTable) {
@@ -27,7 +27,7 @@ public class InterferenceGraph {
         }
     }
 
-    public void populateNodes(List<InstructionLiveness> livenessTable) {
+    private void populateNodes(List<InstructionLiveness> livenessTable) {
 
         for (InstructionLiveness liveness : livenessTable) {
             Set<String> in = liveness.getIn();
@@ -39,7 +39,7 @@ public class InterferenceGraph {
     }
 
 
-    public void createEdgesInSet(Set<String> vars) {
+    private void createEdgesInSet(Set<String> vars) {
         List<String> varList = new ArrayList<>(vars);
 
         for (int i = 0; i < vars.size()-1; i++) {
@@ -53,7 +53,43 @@ public class InterferenceGraph {
             }
         }
     }
-    
+
+
+
+    private InterferenceNode getNodeWithLessThanK(int numEdges) {
+        for (InterferenceNode node : nodes.values()) {
+            if (!node.isRemoved() && node.getNumActiveNeighbors() < numEdges) {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    private Stack<InterferenceNode> getColoringOrder(int numEdges) {
+        Stack<InterferenceNode> stack = new Stack<>();
+
+        while (stack.size() < nodes.size()) {
+            InterferenceNode toRemove = getNodeWithLessThanK(numEdges);
+
+            if (toRemove == null) {
+                System.out.println("DID NOT FIND LESS THANK K NODE \n\n\n\n");
+                break;
+            }
+
+            toRemove.setRemoved(true);
+            stack.push(toRemove);
+        }
+
+        return stack;
+    }
+
+
+    public boolean colorGraph(int numRegs) {
+        Stack<InterferenceNode> coloringOrder = getColoringOrder(numRegs);
+        System.out.println(coloringOrder);
+        return true;
+    }
+
 
 
     public void printGraph() {
