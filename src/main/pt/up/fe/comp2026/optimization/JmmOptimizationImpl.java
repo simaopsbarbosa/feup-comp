@@ -106,6 +106,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
             graph.printGraph();
 
             graph.colorGraph(num_regs);
+            graph.printGraph();
         }
 
 

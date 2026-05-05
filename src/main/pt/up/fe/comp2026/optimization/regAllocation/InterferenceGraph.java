@@ -86,7 +86,32 @@ public class InterferenceGraph {
 
     public boolean colorGraph(int numRegs) {
         Stack<InterferenceNode> coloringOrder = getColoringOrder(numRegs);
+
         System.out.println(coloringOrder);
+
+        while (!coloringOrder.isEmpty()) {
+            InterferenceNode nodeToColor = coloringOrder.pop();
+            Set<Integer> usedColors = new HashSet<>();
+
+            // what colors are being used
+            for (InterferenceNode neighbor : nodeToColor.getNeighbors()) {
+                int color = neighbor.getColor();
+                if (color != -1) usedColors.add(color);
+            }
+
+            // color node
+            for (int i = 0; i < numRegs; i++) {
+                if (!usedColors.contains(i)) {
+                    nodeToColor.setColor(i);
+                    break;
+                }
+            }
+
+            if (nodeToColor.getColor() == -1)
+                return false;
+
+        }
+
         return true;
     }
 
