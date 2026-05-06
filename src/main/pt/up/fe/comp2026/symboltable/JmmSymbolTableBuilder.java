@@ -139,7 +139,7 @@ public class JmmSymbolTableBuilder {
         var seenParams = new HashSet<>();
         var params = method.getChildren(PARAM).stream()
                 .filter(param -> {
-                    if(type.convertType(param.getChild(0).getChild(0)).toString().equals("VOID")){
+                    if(type.convertType(param.getChild(0)).toString().equals("VOID")){
                         reports.add(newError(param, "Parameter cannot be of type void"));
                         return false;
                     }
@@ -158,7 +158,7 @@ public class JmmSymbolTableBuilder {
         var locals = method.getChildren(VAR_DECL).stream()
                 .filter(decl -> {
                     String name = decl.get(JmmAttributes.VAR_DECL.NAME);
-                    if(type.convertType(decl.getChild(0).getChild(0)).toString().equals("VOID")){
+                    if(type.convertType(decl.getChild(0)).toString().equals("VOID")){
                         reports.add(newError(decl, "Variable cannot be of type void"));
                         return false;
                     }

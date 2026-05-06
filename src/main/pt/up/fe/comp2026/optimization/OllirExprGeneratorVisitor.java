@@ -7,8 +7,10 @@ import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 import pt.up.fe.comp2026.ast.TypeUtils;
 import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
+import pt.up.fe.comp2026.jmm.ast.JmmKind;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,7 +57,33 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(THIS, this::visitThisExpr);
         addVisit(PARENTESES, this::visitParenteses);
+        addVisit(RIGHT_UNARY_EXPR,this::visitRightUnary);
+        addVisit(LEFT_UNARY_EXPR,this::visitLeftUnary);
     }
+    private  OllirExprResult visitLeftUnary(JmmNode node, Void unused){
+        StringBuilder computation = new StringBuilder();
+        String op= node.get("op").equals("++")?"+":"-";
+        String type=ollirTypes.toOllirType(types.getExprType(node.getChild(0)));
+        JmmNode child=node.getChild(0);
+        var ls=visit(child);
+        computation.append(ls.getComputation());
+        computation.append(ls.getCode()).append(SPACE).append(ASSIGN).append(type).append(SPACE).append(ls.getCode()).append(SPACE).append(op).append(type).append(SPACE).append("1.i32").append(END_STMT);
+        return  new OllirExprResult(ls.getCode(),computation);
+    }
+    private OllirExprResult visitRightUnary(JmmNode node, Void unused) {
+        StringBuilder computation = new StringBuilder();
+        String op= node.get("op").equals("++")?"+":"-";
+        String type=ollirTypes.toOllirType(types.getExprType(node.getChild(0)));
+        JmmNode child=node.getChild(0);
+        var ls=visit(child);
+        String temp= ollirTypes.nextTemp()+type;
+        computation.append(ls.getComputation());
+        computation.append(temp).append(SPACE).append(ASSIGN).append(type).append(SPACE).append(ls.getCode()).append(END_STMT);
+        computation.append(ls.getCode()).append(SPACE).append(ASSIGN).append(type).append(SPACE).append(ls.getCode()).append(SPACE).append(op).append(type).append(SPACE).append("1.i32").append(END_STMT);
+        return  new OllirExprResult(temp,computation);
+
+    }
+
     private OllirExprResult visitNot(JmmNode node, Void unused) {
 
         StringBuilder computation = new StringBuilder();
