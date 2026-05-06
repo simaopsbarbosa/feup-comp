@@ -181,16 +181,16 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             String computation = rhs.getComputation();
             String tempCode = rhs.getCode();
 
-            // visitBinExpr always adds a temp, so try to replace it with real var name (not sure if the correct way)
-            if (!computation.isEmpty() && computation.contains(tempCode + " :=")) {
-                computation = computation.replace(tempCode + " :=", varCode + " :=");
-                code.append(computation);
-            } else {
-                code.append(computation);
-                code.append(varCode).append(SPACE)
-                        .append(ASSIGN).append(typeString).append(SPACE)
-                        .append(tempCode).append(END_STMT);
-            }
+//            // visitBinExpr always adds a temp, so try to replace it with real var name (not sure if the correct way)
+//            if (!computation.isEmpty() && computation.contains(tempCode + " :=")) {
+//                computation = computation.replace(tempCode + " :=", varCode + " :=");
+//                code.append(computation);
+//            } else {
+            code.append(computation);
+            code.append(varCode).append(SPACE)
+                    .append(ASSIGN).append(typeString).append(SPACE)
+                    .append(tempCode).append(END_STMT);
+
         }
 
         return code.toString();

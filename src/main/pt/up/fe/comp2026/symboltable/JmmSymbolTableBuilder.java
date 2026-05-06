@@ -4,6 +4,7 @@ import pt.up.fe.comp.jmm.analysis.table.MethodSymbol;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Visibility;
 import pt.up.fe.comp.jmm.analysis.table.reflection.Importer;
+import pt.up.fe.comp.jmm.analysis.table.type.JmmType;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
@@ -97,6 +98,10 @@ public class JmmSymbolTableBuilder {
 
         return classDecl.getChildren(FIELD_DECL).stream()
                 .filter(decl -> {
+                    if(type.convertType(decl.getChild(0).getChild(0)).toString().equals("VOID")){
+                        reports.add(newError(decl, "Field cannot be of type void"));
+                        return false;
+                    }
                     var name = decl.getChild(0).get("name");
                     if (seen.contains(name)) {
                         reports.add(newError(decl, "Same name Variables"));
@@ -134,6 +139,10 @@ public class JmmSymbolTableBuilder {
         var seenParams = new HashSet<>();
         var params = method.getChildren(PARAM).stream()
                 .filter(param -> {
+                    if(type.convertType(param.getChild(0)).toString().equals("VOID")){
+                        reports.add(newError(param, "Parameter cannot be of type void"));
+                        return false;
+                    }
                     String name = param.get(JmmAttributes.PARAM.NAME);
                     if (seenParams.contains(name)) {
                         reports.add(newError(param, "Duplicate parameters"));
@@ -149,6 +158,10 @@ public class JmmSymbolTableBuilder {
         var locals = method.getChildren(VAR_DECL).stream()
                 .filter(decl -> {
                     String name = decl.get(JmmAttributes.VAR_DECL.NAME);
+                    if(type.convertType(decl.getChild(0)).toString().equals("VOID")){
+                        reports.add(newError(decl, "Variable cannot be of type void"));
+                        return false;
+                    }
                     if (seenLocals.contains(name) || seenParams.contains(name)) {
                         reports.add(newError(decl, "Same name Variables"));
                         return false;
