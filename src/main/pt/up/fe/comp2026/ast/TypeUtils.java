@@ -375,6 +375,13 @@ public class TypeUtils {
             if (tag1.name().equals("Object")) {
                 return true;
             }
+            if(resolveClass(src1.name()).asClass().fullyQualifiedName().equals(resolveClass(tag1.name()).asClass().fullyQualifiedName())){
+                return true;
+            }
+            if(src1.isImported()|| table.isImplicitImport(src1.name())){
+                SymbolTable table1=table.getImportedSymbolTable(src1.fullyQualifiedName()).get();
+                return superCheckName(table1, tag1.fullyQualifiedName());
+            }
             return superCheckName(table, tag1.fullyQualifiedName());
 
         }
@@ -383,7 +390,6 @@ public class TypeUtils {
 
     private boolean superCheckName(SymbolTable currentTable, String targetName) {
         String superName = currentTable.getSuperFullyQualifiedName();
-
         if (superName != null && !superName.isEmpty()) {
             if (superName.equals(targetName)) {
                 return true;
