@@ -6,10 +6,7 @@ import org.specs.comp.ollir.InstructionType;
 import org.specs.comp.ollir.Operand;
 import org.specs.comp.ollir.inst.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class LivenessHelper {
 
@@ -18,7 +15,7 @@ public class LivenessHelper {
 
         if (element instanceof ArrayOperand arrOp) {
             set.add(arrOp.getName());
-            AddElementsToSet(set, arrOp.getIndexOperands());
+            addElementsToSet(set, arrOp.getIndexOperands());
         }
 
         else if (element instanceof Operand op) {
@@ -26,7 +23,7 @@ public class LivenessHelper {
         }
     }
 
-    public static void AddElementsToSet(Set<String> set, List<Element> elements) {
+    public static void addElementsToSet(Set<String> set, List<Element> elements) {
         for (Element element : elements) {
             addElementToSet(set, element);
         }
@@ -73,7 +70,7 @@ public class LivenessHelper {
 
             case BINARYOPER -> {
                 BinaryOpInstruction binary = (BinaryOpInstruction) instruction;
-                AddElementsToSet(use, binary.getOperands());
+                addElementsToSet(use, binary.getOperands());
             }
 
             case NOPER -> {
@@ -84,29 +81,34 @@ public class LivenessHelper {
 
             case BRANCH -> {
                 CondBranchInstruction branch = (CondBranchInstruction) instruction;
-                AddElementsToSet(use, branch.getOperands());
+                addElementsToSet(use, branch.getOperands());
             }
 
             //test this
             case UNARYOPER -> {
                 UnaryOpInstruction unary = (UnaryOpInstruction) instruction;
-                AddElementsToSet(use, unary.getOperands());
+                addElementsToSet(use, unary.getOperands());
             }
 
-            //TODO: not sure how to do
+            //not sure if correct
             case CALL -> {
-
+                CallInstruction call = (CallInstruction) instruction;
+                addElementsToSet(use, call.getArguments());
+                String callKind = call.getInvocationKind();
+                if (!callKind.equals( "InvokeStatic") && !callKind.equals("New")) {
+                    addElementToSet(use, call.getCaller());
+                }
             }
 
             // not sure if these are correct
             case GETFIELD -> {
                 GetFieldInstruction field = (GetFieldInstruction) instruction;
-                AddElementsToSet(use, field.getOperands());
+                addElementsToSet(use, field.getOperands());
             }
 
             case PUTFIELD ->  {
                 PutFieldInstruction field = (PutFieldInstruction) instruction;
-                AddElementsToSet(use, field.getOperands());
+                addElementsToSet(use, field.getOperands());
             }
 
             case RETURN -> {

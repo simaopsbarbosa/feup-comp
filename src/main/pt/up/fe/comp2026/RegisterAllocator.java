@@ -52,7 +52,6 @@ public class RegisterAllocator {
     private boolean tryAllocationWithK(Method method, int numRegs) {
         LivenessAnalysis livenessAnalysis = new LivenessAnalysis(method);
         livenessAnalysis.performAnalysis();
-
         livenessAnalysis.printLivenessTable();
 
         InterferenceGraph graph = new InterferenceGraph(livenessAnalysis.getInstructionTable());
@@ -62,9 +61,6 @@ public class RegisterAllocator {
         }
 
         var varTable = method.getVarTable();
-        System.out.println("HERE ARE THE VAR NAMES TO USE");
-        System.out.println(varTable.keySet());
-
         int numParamReserved = method.getParams().size();
 
         for (String var : varTable.keySet()) {
