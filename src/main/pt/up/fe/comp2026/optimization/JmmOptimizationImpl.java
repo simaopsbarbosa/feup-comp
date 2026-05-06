@@ -5,6 +5,7 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2026.ConfigOptions;
+import pt.up.fe.comp2026.optimization.regAllocation.RegisterAllocator;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.optimization.ast.*;
 
@@ -83,7 +84,11 @@ public class JmmOptimizationImpl implements JmmOptimization {
             System.out.println(ollirResult.getOllirCode());
         }
 
-        //TODO: Do your OLLIR-based optimizations here
+        int num_regs = ConfigOptions.getRegisterAllocation(ollirResult.config());
+        if (num_regs == -1) return ollirResult;
+
+        RegisterAllocator allocator = new RegisterAllocator(ollirResult, num_regs);
+        allocator.performClassAllocations();
 
         return ollirResult;
     }
