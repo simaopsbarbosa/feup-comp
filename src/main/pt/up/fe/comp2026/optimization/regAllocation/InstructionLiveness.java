@@ -1,6 +1,7 @@
 package pt.up.fe.comp2026.optimization.regAllocation;
 
-import org.specs.comp.ollir.InstructionType;
+import org.specs.comp.ollir.Method;
+import org.specs.comp.ollir.VarScope;
 import org.specs.comp.ollir.inst.Instruction;
 
 import java.util.HashSet;
@@ -15,12 +16,15 @@ public class InstructionLiveness {
     private final Set<String> use;
     private final Set<String> def;
 
-    public InstructionLiveness(Instruction instruction) {
+    public InstructionLiveness(Instruction instruction, Method method) {
         this.instruction = instruction;
         this.in = new HashSet<>();
         this.out = new HashSet<>();
         this.use = computeUse(this.instruction);
         this.def = computeDef(this.instruction);
+
+        ignoreParams(this.use, method);
+        ignoreParams(this.def, method);
     }
 
     public static Set<String> computeUse(Instruction instruction) {
@@ -32,6 +36,16 @@ public class InstructionLiveness {
         return LivenessHelper.computeDef(instruction);
     }
 
+
+    private void ignoreParams(Set<String> set, Method method) {
+        set.removeIf(varName -> {
+            var descriptor = method.getVarTable().get(varName);
+            if (descriptor == null) return false;
+
+            VarScope scope = descriptor.getScope();
+            return scope == VarScope.PARAMETER;
+        });
+    }
 
     public void setIn(Set<String> in) {this.in = in;}
 

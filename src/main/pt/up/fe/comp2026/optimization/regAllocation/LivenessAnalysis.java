@@ -20,7 +20,7 @@ public class LivenessAnalysis {
     public void computeInitialTable() {
         List<Instruction> methodInstructions = this.method.getInstructions();
         for (Instruction instruction : methodInstructions) {
-            InstructionLiveness liveness = new InstructionLiveness(instruction);
+            InstructionLiveness liveness = new InstructionLiveness(instruction, this.method);
             instructionTable.add(liveness);
         }
     }

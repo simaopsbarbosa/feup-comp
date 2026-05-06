@@ -1,6 +1,8 @@
 package pt.up.fe.comp2026.optimization;
 
+import org.specs.comp.ollir.Descriptor;
 import org.specs.comp.ollir.OllirErrorException;
+import org.specs.comp.ollir.VarScope;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
@@ -93,8 +95,8 @@ public class JmmOptimizationImpl implements JmmOptimization {
         int num_regs = ConfigOptions.getRegisterAllocation(ollirResult.config());
         //if (num_regs == -1) return ollirResult;
 
-        //TEMP
-        num_regs = 4;
+        // TODO: IF NUM REGS IS LOWER THAN 0 SHOULD ITERATE ON NUM REGS POSSIBLE UNTIL IT IS DONE
+        if (num_regs <= 0) num_regs = 8;
 
         var classUnit = ollirResult.getOllirClass();
         classUnit.buildCFGs();
@@ -106,7 +108,6 @@ public class JmmOptimizationImpl implements JmmOptimization {
             livenessAnalysis.printLivenessTable();
 
             InterferenceGraph graph = new InterferenceGraph(livenessAnalysis.getInstructionTable());
-            //graph.printGraph();
 
             if (!graph.colorGraph(num_regs)) {
                 // add error
@@ -117,18 +118,27 @@ public class JmmOptimizationImpl implements JmmOptimization {
             System.out.println("HERE ARE THE VAR NAMES TO USE");
             System.out.println(varTable.keySet());
 
-            for (String var : graph.getNodes().keySet()) {
-                InterferenceNode node = graph.matchNodeFromVar(var);
 
-                if (node == null) {
-                    System.out.println("VAR NAME NOT IN GRAPH TABLE\n\n\n\n");
+            int numParamReserved = method.getParams().size();
+
+            for (String var : varTable.keySet()) {
+                Descriptor descriptor = varTable.get(var);
+
+                // skip parameters
+                if (descriptor.getScope() == VarScope.PARAMETER) {
                     continue;
                 }
 
-                method.getVarTable().get(var).setVirtualReg(node.getColor());
+                InterferenceNode node = graph.matchNodeFromVar(var);
+
+                // skip this keyword and other stuff i do not know
+                if (node == null) {
+                    System.out.println("VAR NOT IN GRAPH TABLE");
+                    continue;
+                }
+
+                method.getVarTable().get(var).setVirtualReg(node.getColor() + numParamReserved);
             }
-
-
 
             graph.printGraph();
         }
