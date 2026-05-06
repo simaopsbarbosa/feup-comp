@@ -65,7 +65,7 @@ public class InterferenceGraph {
         return null;
     }
 
-    private Stack<InterferenceNode> getColoringOrder(int numEdges) {
+    private Optional<Stack<InterferenceNode>> getColoringOrder(int numEdges) {
         Stack<InterferenceNode> stack = new Stack<>();
 
         while (stack.size() < nodes.size()) {
@@ -73,19 +73,22 @@ public class InterferenceGraph {
 
             if (toRemove == null) {
                 System.out.println("DID NOT FIND LESS THANK K NODE \n\n\n\n");
-                break;
+                return Optional.empty();
             }
 
             toRemove.setRemoved(true);
             stack.push(toRemove);
         }
 
-        return stack;
+        return Optional.of(stack);
     }
 
 
     public boolean colorGraph(int numRegs) {
-        Stack<InterferenceNode> coloringOrder = getColoringOrder(numRegs);
+        var opt = getColoringOrder(numRegs);
+        if (opt.isEmpty()) return false;
+
+        Stack<InterferenceNode> coloringOrder = opt.get();
 
         System.out.println(coloringOrder);
 

@@ -8,6 +8,7 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2026.ConfigOptions;
+import pt.up.fe.comp2026.RegisterAllocator;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.optimization.ast.*;
 import pt.up.fe.comp2026.optimization.regAllocation.InterferenceGraph;
@@ -93,58 +94,10 @@ public class JmmOptimizationImpl implements JmmOptimization {
         }
 
         int num_regs = ConfigOptions.getRegisterAllocation(ollirResult.config());
-        //if (num_regs == -1) return ollirResult;
+        if (num_regs == -1) return ollirResult;
 
-        // TODO: IF NUM REGS IS LOWER THAN 0 SHOULD ITERATE ON NUM REGS POSSIBLE UNTIL IT IS DONE
-        if (num_regs <= 0) num_regs = 8;
-
-        var classUnit = ollirResult.getOllirClass();
-        classUnit.buildCFGs();
-        classUnit.buildVarTables();
-
-        for(var method : classUnit.getMethods()) {
-            LivenessAnalysis livenessAnalysis = new LivenessAnalysis(method);
-            livenessAnalysis.performAnalysis();
-            livenessAnalysis.printLivenessTable();
-
-            InterferenceGraph graph = new InterferenceGraph(livenessAnalysis.getInstructionTable());
-
-            if (!graph.colorGraph(num_regs)) {
-                // add error
-            }
-
-            var varTable = method.getVarTable();
-
-            System.out.println("HERE ARE THE VAR NAMES TO USE");
-            System.out.println(varTable.keySet());
-
-
-            int numParamReserved = method.getParams().size();
-
-            for (String var : varTable.keySet()) {
-                Descriptor descriptor = varTable.get(var);
-
-                // skip parameters
-                if (descriptor.getScope() == VarScope.PARAMETER) {
-                    continue;
-                }
-
-                InterferenceNode node = graph.matchNodeFromVar(var);
-
-                // skip this keyword and other stuff i do not know
-                if (node == null) {
-                    System.out.println("VAR NOT IN GRAPH TABLE");
-                    continue;
-                }
-
-                method.getVarTable().get(var).setVirtualReg(node.getColor() + numParamReserved);
-            }
-
-            graph.printGraph();
-        }
-
-
-        //TODO: Do your OLLIR-based optimizations here
+        RegisterAllocator allocator = new RegisterAllocator(ollirResult, num_regs);
+        allocator.performClassAllocations();
 
         return ollirResult;
     }
