@@ -1,13 +1,10 @@
-package pt.up.fe.comp2026;
+package pt.up.fe.comp2026.optimization.regAllocation;
 
 import org.specs.comp.ollir.ClassUnit;
 import org.specs.comp.ollir.Descriptor;
 import org.specs.comp.ollir.Method;
 import org.specs.comp.ollir.VarScope;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
-import pt.up.fe.comp2026.optimization.regAllocation.InterferenceGraph;
-import pt.up.fe.comp2026.optimization.regAllocation.InterferenceNode;
-import pt.up.fe.comp2026.optimization.regAllocation.LivenessAnalysis;
 
 public class RegisterAllocator {
 

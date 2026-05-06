@@ -1,20 +1,13 @@
 package pt.up.fe.comp2026.optimization;
 
-import org.specs.comp.ollir.Descriptor;
-import org.specs.comp.ollir.OllirErrorException;
-import org.specs.comp.ollir.VarScope;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2026.ConfigOptions;
-import pt.up.fe.comp2026.RegisterAllocator;
+import pt.up.fe.comp2026.optimization.regAllocation.RegisterAllocator;
 import pt.up.fe.comp2026.jmm.ast.JmmKind;
 import pt.up.fe.comp2026.optimization.ast.*;
-import pt.up.fe.comp2026.optimization.regAllocation.InterferenceGraph;
-import pt.up.fe.comp2026.optimization.regAllocation.InterferenceNode;
-import pt.up.fe.comp2026.optimization.regAllocation.LivenessAnalysis;
-import pt.up.fe.comp2026.utils.ReportUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
