@@ -24,41 +24,31 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
         setDefaultVisit(this::defaultVisit);
     }
 
-    // reset the map of constants at the start of every method
     private Boolean visitMethodDecl(JmmNode methodDecl, Map<String, JmmNode> constants) {
         boolean changed = false;
-
         Map<String, JmmNode> methodConstants = new HashMap<>(constants);
-
         for (var child : methodDecl.getChildren()) {
             changed |= visit(child, methodConstants);
         }
-
         return changed;
     }
 
     private Boolean visitWhileStmt(JmmNode whileStmt, Map<String, JmmNode> constants) {
         boolean changed = visit(whileStmt.getChild(0), constants);
-
         JmmNode condition = whileStmt.getChild(0);
-        if (condition.getKind() == JmmKind.BOOL_LITERAL && condition.get("bool").equals("false")) {
+        if (condition.getKind().equals(JmmKind.BOOL_LITERAL.toString()) && condition.get("bool").equals("false")) {
             return changed;
         }
-
         Map<String, JmmNode> bodyConstants = new HashMap<>(constants);
-
         changed |= visit(whileStmt.getChild(1), bodyConstants);
-
         removeAssignedVariables(whileStmt.getChild(1), constants);
-
         return changed;
     }
 
     private Boolean visitIfStmt(JmmNode jmmNode, Map<String, JmmNode> constants) {
         boolean changed = visit(jmmNode.getChild(0), constants);
-
         JmmNode condition = jmmNode.getChild(0);
-        if (condition.getKind() == JmmKind.BOOL_LITERAL) {
+        if (JmmKind.BOOL_LITERAL.check(condition)) {
             if (condition.get("bool").equals("true")) {
                 changed |= visit(jmmNode.getChild(1), constants);
             } else if (jmmNode.getChildren().size() > 2) {
@@ -66,33 +56,24 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
             }
             return changed;
         }
-
         Map<String, JmmNode> thenConstants = new HashMap<>(constants);
         Map<String, JmmNode> elseConstants = new HashMap<>(constants);
-
         changed |= visit(jmmNode.getChild(1), thenConstants);
-
         if (jmmNode.getChildren().size() > 2) {
             changed |= visit(jmmNode.getChild(2), elseConstants);
-        } else {
-            elseConstants = new HashMap<>(constants);
         }
-
         removeAssignedVariables(jmmNode.getChild(1), constants);
         if (jmmNode.getChildren().size() > 2) {
             removeAssignedVariables(jmmNode.getChild(2), constants);
         }
-
         return changed;
     }
 
     private void removeAssignedVariables(JmmNode jmmNode, Map<String, JmmNode> constants) {
-        if ((jmmNode.getKind() == JmmKind.ASSIGN_STMT ||
-                jmmNode.getKind() == JmmKind.ASSIGNMENT) &&
-                jmmNode.getChild(0).getKind() == JmmKind.VAR_REF_EXPR) {
+        if ((JmmKind.ASSIGN_STMT.check(jmmNode) || JmmKind.ASSIGNMENT.check(jmmNode)) &&
+                JmmKind.VAR_REF_EXPR.check(jmmNode.getChild(0))) {
             constants.remove(jmmNode.getChild(0).get("name"));
         }
-
         for (var child : jmmNode.getChildren()) {
             removeAssignedVariables(child, constants);
         }
@@ -100,18 +81,12 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
 
     private Boolean visitAssignment(JmmNode jmmNode, Map<String, JmmNode> constants) {
         JmmNode leftSide = jmmNode.getChild(0);
-
-        if (leftSide.getKind() != JmmKind.VAR_REF_EXPR) {
-            return false;
-        }
-
+        if (!JmmKind.VAR_REF_EXPR.check(leftSide)) return false;
         String variableName = leftSide.get("name");
         JmmNode rightSide = jmmNode.getChild(jmmNode.getChildren().size() - 1);
-
-        boolean changed = handleAssignment(variableName, rightSide, constants);
-
-        changed |= visit(rightSide, constants);
-
+        boolean changed = visit(rightSide, constants);
+        JmmNode newRightSide = jmmNode.getChild(jmmNode.getChildren().size() - 1);
+        changed |= handleAssignment(variableName, newRightSide, constants);
         return changed;
     }
 
@@ -119,34 +94,26 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
         if (jmmNode.getChildren().size() == 2) {
             String variableName = jmmNode.get("name");
             JmmNode rightSide = jmmNode.getChild(1);
-            return handleAssignment(variableName, rightSide, constants);
+            boolean changed = visit(rightSide, constants);
+            JmmNode newRightSide = jmmNode.getChild(1);
+            changed |= handleAssignment(variableName, newRightSide, constants);
+            return changed;
         }
         return false;
     }
 
     private Boolean visitUnaryExpr(JmmNode jmmNode, Map<String, JmmNode> constants) {
         JmmNode child = jmmNode.getChild(0);
-
-        if (child.getKind() != JmmKind.VAR_REF_EXPR) {
-            return visit(child, constants);
-        }
-
+        if (!JmmKind.VAR_REF_EXPR.check(child)) return visit(child, constants);
         String variableName = child.get("name");
-
-        if (!constants.containsKey(variableName)) {
-            return false;
-        }
-
+        if (!constants.containsKey(variableName)) return false;
         JmmNode constantNode = constants.get(variableName);
-
-        if (constantNode.getKind() != JmmKind.INTEGER_LITERAL) {
+        if (!JmmKind.INTEGER_LITERAL.check(constantNode)) {
             constants.remove(variableName);
             return false;
         }
-
         int value = Integer.parseInt(constantNode.get("value"));
         String op = jmmNode.get("op");
-
         int newValue = switch (op) {
             case "++" -> value + 1;
             case "--" -> value - 1;
@@ -155,19 +122,14 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
                 yield value;
             }
         };
-
         JmmNode newConstantNode = new JmmNodeImpl(JmmKind.INTEGER_LITERAL);
         newConstantNode.put("value", String.valueOf(newValue));
         constants.put(variableName, newConstantNode);
-
         return false;
     }
 
-
     private Boolean handleAssignment(String variableName, JmmNode rightSide, Map<String, JmmNode> constants) {
-        if (rightSide.getKind() == JmmKind.INTEGER_LITERAL || rightSide.getKind() == JmmKind.BOOL_LITERAL) {
-            // the right side is constant (x = 10 or y = True)
-            // add it to the map
+        if (JmmKind.INTEGER_LITERAL.check(rightSide) || JmmKind.BOOL_LITERAL.check(rightSide)) {
             constants.put(variableName, rightSide);
             return false;
         }
@@ -177,20 +139,12 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
 
     private Boolean visitVarRefExpr(JmmNode jmmNode, Map<String, JmmNode> constants) {
         String variableName = jmmNode.get("name");
-
         if (constants.containsKey(variableName)) {
             JmmNode parent = jmmNode.getParent();
-
-            boolean isLeftSide = (parent.getKind().equals(JmmKind.ASSIGN_STMT) ||
-                    parent.getKind().equals(JmmKind.ASSIGNMENT)) ||
-                    parent.getKind().equals(JmmKind.VAR_DECL) &&
-                            parent.getChild(0) == jmmNode;
-
+            boolean isLeftSide = (JmmKind.ASSIGN_STMT.check(parent) || JmmKind.ASSIGNMENT.check(parent) || JmmKind.VAR_DECL.check(parent)) &&
+                    parent.getChild(0) == jmmNode;
             if (!isLeftSide) {
-                JmmNode constantNode = constants.get(variableName);
-                JmmNode newNode = constantNode.copy();
-
-                jmmNode.replace(newNode);
+                jmmNode.replace(constants.get(variableName).copy());
                 return true;
             }
         }
@@ -199,11 +153,9 @@ public class ConstantPropagationVisitor extends AJmmVisitor<Map<String, JmmNode>
 
     private Boolean defaultVisit(JmmNode node, Map<String, JmmNode> constants) {
         boolean changed = false;
-
         for (var child : node.getChildren()) {
             changed |= visit(child, constants);
         }
-
         return changed;
     }
 }
