@@ -1,8 +1,10 @@
 package pt.up.fe.comp2026;
 
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
+import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp2026.analysis.JmmAnalysisImpl;
+import pt.up.fe.comp2026.backend.JasminBackendImpl;
 import pt.up.fe.comp2026.lexer.JmmLexerImpl;
 import pt.up.fe.comp2026.optimization.JmmOptimizationImpl;
 import pt.up.fe.comp2026.parser.JmmParserImpl;
@@ -68,14 +70,13 @@ public class Launcher {
         System.out.println("Transformed ollir:");
         System.out.println(ollirResult);
 
-//
-//        // Code generation stage
-//        JasminBackendImpl jasminGen = new JasminBackendImpl();
-//        JasminResult jasminResult = jasminGen.toJasmin(ollirResult);
-//        jasminResult.throwIfErrors();
+        // Code generation stage
+        JasminBackendImpl jasminGen = new JasminBackendImpl();
+        JasminResult jasminResult = jasminGen.toJasmin(ollirResult);
+        jasminResult.throwIfErrors();
 //
 //        // Print Jasmin code
-//        System.out.println(jasminResult.getJasminCode());
+        System.out.println(jasminResult.getJasminCode());
     }
 
 }

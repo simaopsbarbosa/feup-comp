@@ -96,7 +96,7 @@ public class JasminGenerator {
 
         // generate class name
         var nameWithPackage = ollirResult.getOllirClass().getClassFullyQualifiedName().replace('.', '/');
-        code.append(".class ").append(nameWithPackage).append(NL).append(NL);
+        code.append(".class public ").append(nameWithPackage).append(NL).append(NL);
 
         // TODO: When you support 'extends', this must be updated
         var fullSuperClass = "java/lang/Object";
