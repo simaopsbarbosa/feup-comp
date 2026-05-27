@@ -66,7 +66,7 @@ public class JasminUtils {
         }
 
         if (type instanceof ClassType classType) {
-            String qualifiedName = fullClassnames.get(classType.getName());
+            String qualifiedName = this.getQualifiedNameFromClass(classType);
             return "L" +  qualifiedName + ";";
         }
 
@@ -92,5 +92,24 @@ public class JasminUtils {
         return prefix + "store " + value;
     }
 
+
+    public String getQualifiedNameFromClass(ClassType classType) {
+
+        String qualifiedName = fullClassnames.get(classType.getName());
+
+        //verify implicit with importer later
+        if (importer.isImplicitImport(classType.getName())) {
+            var implicitImport = importer.tryImplicitImport(classType.getName());
+            if (implicitImport.isPresent()) {
+                String dotted = implicitImport.get().getFullyQualifiedName();
+                qualifiedName = dotted.replace('.', '/');
+            }
+        }
+
+        //default to object
+        //if (qualifiedName == null) qualifiedName = "java/lang/Object";
+
+        return qualifiedName;
+    }
 
 }
