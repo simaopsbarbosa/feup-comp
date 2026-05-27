@@ -58,8 +58,8 @@ public class JasminUtils {
         if (type instanceof BuiltinType builtinType) {
             return switch (builtinType.getKind()) {
                 case INT32 -> "I";
-                case VOID -> "V";
                 case BOOLEAN -> "Z";
+                case VOID -> "V";
                 default ->
                         throw new RuntimeException("Not implemented for element type '" + builtinType.getKind() + "'");
             };

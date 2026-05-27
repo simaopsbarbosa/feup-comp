@@ -99,7 +99,9 @@ public class JasminGenerator {
         code.append(".class public ").append(nameWithPackage).append(NL).append(NL);
 
         // TODO: When you support 'extends', this must be updated
-        var fullSuperClass = "java/lang/Object";
+        var fullSuperClass=ollirResult.getClass().getSuperclass().getPackageName()+"."+ollirResult.getOllirClass().getSuperClass();
+        fullSuperClass=fullSuperClass.replace('.','/');
+
 
         code.append(".super ").append(fullSuperClass).append(NL);
 
@@ -141,7 +143,7 @@ public class JasminGenerator {
         var code = new StringBuilder();
 
         // TODO: Modifier is hard-coded
-        var modifier = types.getModifier(AccessModifier.PUBLIC);
+        var modifier = types.getModifier(method.getMethodAccessModifier());
 
 
         var staticMod = method.isStaticMethod() ? "static " : "";

@@ -7,13 +7,10 @@ import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 import pt.up.fe.comp2026.ast.TypeUtils;
-import pt.up.fe.comp2026.jmm.ast.JmmAttributes;
-import pt.up.fe.comp2026.jmm.ast.JmmKind;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static pt.up.fe.comp2026.jmm.ast.JmmKind.*;
 
@@ -109,6 +106,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         int skip = node.getKind() == IMPLICIT_METHOD_CALL ? 0 : 1;
         List<OllirExprResult> res = node.getChildren().stream().skip(skip).map(this::visit).toList();
         MethodSymbol method = types.getExplicitMethodCallSymbol(node);
+        List<String> parameters=method.parameters().stream().map(s->ollirTypes.toOllirType(s.type())).toList();
         if (node.getKind() == EXPLICIT_METHOD_CALL) {
             JmmNode calle = node.getChild(0);
             JmmClassType classtype = types.getExprType(calle).asClass();
@@ -130,9 +128,23 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         code.append(SPACE).append(",").append(DOUBLE_Quote).append(methodname).append(DOUBLE_Quote);
         for (int i = 0; i < res.size(); i++) {
+            String actualT=parameters.get(i);
+            StringBuilder adtComp=new StringBuilder();
             OllirExprResult r = res.get(i);
+            List<String> code2 =Arrays.stream(r.getCode().split("\\.")).toList();
+            String passedT= code2.getLast();
+            if(!passedT.equals(actualT)){
+                String tempVar = ollirTypes.nextTemp() + actualT;
+                adtComp.append(tempVar).append(SPACE).append(ASSIGN).append(actualT).append(SPACE).append(code2.getFirst()).append(".").append(code2.getLast()).append(END_STMT);
+                System.out.println("this is the actual Type:"+passedT+"expected type"+actualT);
+                code.append(",").append(SPACE).append(tempVar);
+            }
+            else {
+                code.append(",").append(SPACE).append(r.getCode());
+            }
             computation.append(r.getComputation());
-            code.append(",").append(SPACE).append(r.getCode());
+            computation.append(adtComp);
+
         }
         code.append(")").append(ollirType);
         if (parent.getKind() == EXPRESSION) {
