@@ -4,6 +4,7 @@ import org.specs.comp.ollir.*;
 import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.tree.TreeNode;
 import org.specs.comp.ollir.type.ClassType;
+import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp2026.optimization.OptUtils;
@@ -64,6 +65,8 @@ public class JasminGenerator {
         generators.put(Field.class,this::generateField);
         generators.put(NewInstruction.class, this::generateNewClass);
         generators.put(InvokeSpecialInstruction.class, this::generateInvokeSpecialInstruction);
+        generators.put(PutFieldInstruction.class,this::putFieldInstruction);
+        generators.put(GetFieldInstruction.class,this::getFieldInstruction);
     }
 
 
@@ -103,22 +106,8 @@ public class JasminGenerator {
 
         // TODO: When you support 'extends', this must be updated
         List<String> imports=ollirResult.getOllirClass().getImports();
-        var fullSuperClass=ollirResult.getOllirClass().getSuperClass();
-        if(imports.isEmpty()&& !fullSuperClass.isEmpty() && !fullSuperClass.equals("Object")){
-            fullSuperClass=ollirResult.getOllirClass().getPackage()+"."+fullSuperClass;
-        } else if (fullSuperClass.equals("Object")) {
-            fullSuperClass="java/lang/Object";
+        var fullSuperClass=types.getQualifiedNameFromClass(ollirResult.getOllirClass().getSuperClass());
 
-        } else {
-            for(String name:imports){
-                var t= Arrays.stream(name.split("\\.")).toList().getLast();
-                if(fullSuperClass.equals(t)){
-                    fullSuperClass=name;
-                }
-            }
-
-        }
-        fullSuperClass=fullSuperClass.replace('.', '/');
         code.append(".super ").append(fullSuperClass).append(NL).append(NL);
 
         for(var field:ollirResult.getOllirClass().getFields()){
@@ -298,7 +287,7 @@ public class JasminGenerator {
         var code = new StringBuilder();
 
         ClassType classType = (ClassType) newInst.getReturnType();
-        String qualifiedName = types.getQualifiedNameFromClass(classType);
+        String qualifiedName = types.getQualifiedNameFromClass(classType.getName());
         code.append("new " + qualifiedName + NL);
         return code.toString();
     }
@@ -307,4 +296,16 @@ public class JasminGenerator {
         return "";
     }
 
+    private String putFieldInstruction(PutFieldInstruction putFieldInstruction){
+        var code =new StringBuilder();
+        Operand fieldEL=putFieldInstruction.getField();
+        Operand objectEl= putFieldInstruction.getObject();
+        code.append(apply(objectEl));
+        code.append(apply(putFieldInstruction.getValue()));
+        code.append("putfield").append(Space).append(types.getQualifiedNameFromClass(objectEl.getName())).append("/").append(fieldEL.getName()).append(Space).append(types.getTypeDescriptor(fieldEL.getType()));
+        return code.toString();
+    }
+    private String getFieldInstruction (GetFieldInstruction getFieldInstruction) {
+        return "";
+    }
 }

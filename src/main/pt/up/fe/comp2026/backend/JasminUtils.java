@@ -28,7 +28,7 @@ public class JasminUtils {
         fullClassnames = new HashMap<>();
 
         // Predefined classnames
-        fullClassnames.put("this", ollirResult.getOllirClass().getClassFullyQualifiedName());
+        fullClassnames.put("this", ollirResult.getOllirClass().getClassFullyQualifiedName().replace('.', '/'));
         // This will be get caught as STRING OLLIR element type.
         // And classes cannot be named String, since it is an OLLIR reserved keyword
         //imports.put("String", "java/lang/String");
@@ -70,7 +70,7 @@ public class JasminUtils {
             };
         }
         if (type instanceof ClassType classType) {
-            String qualifiedName = this.getQualifiedNameFromClass(classType);
+            String qualifiedName = this.getQualifiedNameFromClass(classType.getName());
             return "L" +  qualifiedName + ";";
         }
 
@@ -97,18 +97,18 @@ public class JasminUtils {
     }
 
 
-    public String getQualifiedNameFromClass(ClassType classType) {
+    public String getQualifiedNameFromClass(String className) {
         String l;
-        if(classType.getName().equals(ollirResult.getOllirClass().getClassName())){
+        if(className.equals(ollirResult.getOllirClass().getClassName())){
             l="this";
         }
         else{
-           l=classType.getName();
+           l=className;
         }
         String qualifiedName = fullClassnames.get(l);
         //verify implicit with importer later
-        if (importer.isImplicitImport(classType.getName())) {
-            var implicitImport = importer.tryImplicitImport(classType.getName());
+        if (importer.isImplicitImport(className)) {
+            var implicitImport = importer.tryImplicitImport(className);
             if (implicitImport.isPresent()) {
                 String dotted = implicitImport.get().getFullyQualifiedName();
                 qualifiedName = dotted.replace('.', '/');
@@ -116,7 +116,7 @@ public class JasminUtils {
         }
 
         //default to object
-        //if (qualifiedName == null) qualifiedName = "java/lang/Object";
+        if (qualifiedName == null) qualifiedName = "java/lang/Object";
 
         return qualifiedName;
     }
