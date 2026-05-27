@@ -1,11 +1,9 @@
 package pt.up.fe.comp2026.backend;
 
 import org.specs.comp.ollir.*;
-import org.specs.comp.ollir.inst.AssignInstruction;
-import org.specs.comp.ollir.inst.BinaryOpInstruction;
-import org.specs.comp.ollir.inst.ReturnInstruction;
-import org.specs.comp.ollir.inst.SingleOpInstruction;
+import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.tree.TreeNode;
+import org.specs.comp.ollir.type.ClassType;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp2026.optimization.OptUtils;
@@ -64,6 +62,8 @@ public class JasminGenerator {
         generators.put(BinaryOpInstruction.class, this::generateBinaryOp);
         generators.put(ReturnInstruction.class, this::generateReturn);
         generators.put(Field.class,this::generateField);
+        generators.put(NewInstruction.class, this::generateNewClass);
+        generators.put(InvokeSpecialInstruction.class, this::generateInvokeSpecialInstruction);
     }
 
 
@@ -290,6 +290,21 @@ public class JasminGenerator {
         code.append(typePrefix).append("return").append(NL);
 
         return code.toString();
+    }
+
+
+    //may have to add dups
+    private String generateNewClass(NewInstruction newInst) {
+        var code = new StringBuilder();
+
+        ClassType classType = (ClassType) newInst.getReturnType();
+        String qualifiedName = types.getQualifiedNameFromClass(classType);
+        code.append("new " + qualifiedName + NL);
+        return code.toString();
+    }
+
+    private String generateInvokeSpecialInstruction (InvokeSpecialInstruction invokeSpecialInst) {
+        return "";
     }
 
 }
