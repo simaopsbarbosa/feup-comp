@@ -7,6 +7,7 @@ import org.specs.comp.ollir.type.BuiltinType;
 import org.specs.comp.ollir.type.ClassType;
 import org.specs.comp.ollir.type.Type;
 import pt.up.fe.comp.jmm.analysis.table.reflection.Importer;
+import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmArrayType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 
@@ -72,6 +73,9 @@ public class JasminUtils {
         if (type instanceof ClassType classType) {
             String qualifiedName = this.getQualifiedNameFromClass(classType.getName());
             return "L" +  qualifiedName + ";";
+        }
+        if(type instanceof ArrayType arrayType){
+            return new StringBuilder().repeat("[",arrayType.getNumDimensions())+this.getTypeDescriptor(arrayType.getElementType());
         }
 
         throw new RuntimeException("Not implemented for element type '" + type + "'");
