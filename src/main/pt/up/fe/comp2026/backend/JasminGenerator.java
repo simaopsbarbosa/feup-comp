@@ -274,7 +274,7 @@ public class JasminGenerator {
 
         ClassType classType = (ClassType) newInst.getReturnType();
         String qualifiedName = types.getQualifiedNameFromClass(classType);
-        code.append("new " + qualifiedName);
+        code.append("new " + qualifiedName + NL);
         return code.toString();
     }
 
