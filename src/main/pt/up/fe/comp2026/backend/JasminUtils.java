@@ -2,10 +2,12 @@ package pt.up.fe.comp2026.backend;
 
 import org.specs.comp.ollir.AccessModifier;
 import org.specs.comp.ollir.Descriptor;
+import org.specs.comp.ollir.type.ArrayType;
 import org.specs.comp.ollir.type.BuiltinType;
 import org.specs.comp.ollir.type.ClassType;
 import org.specs.comp.ollir.type.Type;
 import pt.up.fe.comp.jmm.analysis.table.reflection.Importer;
+import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 
 import java.util.HashMap;
@@ -26,7 +28,7 @@ public class JasminUtils {
         fullClassnames = new HashMap<>();
 
         // Predefined classnames
-        fullClassnames.put("this", ollirResult.getOllirClass().getClassName());
+        fullClassnames.put("this", ollirResult.getOllirClass().getClassFullyQualifiedName());
         // This will be get caught as STRING OLLIR element type.
         // And classes cannot be named String, since it is an OLLIR reserved keyword
         //imports.put("String", "java/lang/String");
@@ -47,8 +49,11 @@ public class JasminUtils {
         if (type instanceof BuiltinType builtinType) {
             switch (builtinType.getKind()) {
                 case VOID -> ret = "";
-
+                case INT32,BOOLEAN -> ret="i";
             }
+        }
+        if(type instanceof  ClassType || type instanceof ArrayType){
+            ret="a";
         }
         return ret;
     }
@@ -64,7 +69,6 @@ public class JasminUtils {
                         throw new RuntimeException("Not implemented for element type '" + builtinType.getKind() + "'");
             };
         }
-
         if (type instanceof ClassType classType) {
             String qualifiedName = this.getQualifiedNameFromClass(classType);
             return "L" +  qualifiedName + ";";
@@ -94,9 +98,14 @@ public class JasminUtils {
 
 
     public String getQualifiedNameFromClass(ClassType classType) {
-
-        String qualifiedName = fullClassnames.get(classType.getName());
-
+        String l;
+        if(classType.getName().equals(ollirResult.getOllirClass().getClassName())){
+            l="this";
+        }
+        else{
+           l=classType.getName();
+        }
+        String qualifiedName = fullClassnames.get(l);
         //verify implicit with importer later
         if (importer.isImplicitImport(classType.getName())) {
             var implicitImport = importer.tryImplicitImport(classType.getName());
