@@ -3,6 +3,7 @@ package pt.up.fe.comp2026.backend;
 import org.specs.comp.ollir.AccessModifier;
 import org.specs.comp.ollir.Descriptor;
 import org.specs.comp.ollir.type.BuiltinType;
+import org.specs.comp.ollir.type.ClassType;
 import org.specs.comp.ollir.type.Type;
 import pt.up.fe.comp.jmm.analysis.table.reflection.Importer;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
@@ -42,7 +43,14 @@ public class JasminUtils {
 
     public String getTypePrefix(Type type) {
         System.out.println("[TODO] JasminUtils.getTypePrefix(): Assumes it is always int, needs to be expanded");
-        return "i";
+        String ret = "i";
+        if (type instanceof BuiltinType builtinType) {
+            switch (builtinType.getKind()) {
+                case VOID -> ret = "";
+
+            }
+        }
+        return ret;
     }
 
     public String getTypeDescriptor(Type type) {
@@ -50,9 +58,16 @@ public class JasminUtils {
         if (type instanceof BuiltinType builtinType) {
             return switch (builtinType.getKind()) {
                 case INT32 -> "I";
+                case VOID -> "V";
+                case BOOLEAN -> "Z";
                 default ->
                         throw new RuntimeException("Not implemented for element type '" + builtinType.getKind() + "'");
             };
+        }
+
+        if (type instanceof ClassType classType) {
+            String qualifiedName = fullClassnames.get(classType.getName());
+            return "L" +  qualifiedName + ";";
         }
 
         throw new RuntimeException("Not implemented for element type '" + type + "'");
