@@ -14,6 +14,7 @@ import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,7 @@ public class JasminGenerator {
 
     private static final String NL = "\n";
     private static final String TAB = "   ";
+    private  static  final String Space=" ";
 
     private final OllirResult ollirResult;
 
@@ -61,6 +63,7 @@ public class JasminGenerator {
         generators.put(Operand.class, this::generateOperand);
         generators.put(BinaryOpInstruction.class, this::generateBinaryOp);
         generators.put(ReturnInstruction.class, this::generateReturn);
+        generators.put(Field.class,this::generateField);
     }
 
 
@@ -99,11 +102,28 @@ public class JasminGenerator {
         code.append(".class public ").append(nameWithPackage).append(NL).append(NL);
 
         // TODO: When you support 'extends', this must be updated
-        var fullSuperClass=ollirResult.getClass().getSuperclass().getPackageName()+"."+ollirResult.getOllirClass().getSuperClass();
-        fullSuperClass=fullSuperClass.replace('.','/');
+        List<String> imports=ollirResult.getOllirClass().getImports();
+        var fullSuperClass=ollirResult.getOllirClass().getSuperClass();
+        if(imports.isEmpty()&& !fullSuperClass.isEmpty() && !fullSuperClass.equals("Object")){
+            fullSuperClass=ollirResult.getOllirClass().getPackage()+"."+fullSuperClass;
+        } else if (fullSuperClass.equals("Object")) {
+            fullSuperClass="java/lang/Object";
 
+        } else {
+            for(String name:imports){
+                var t= Arrays.stream(name.split("\\.")).toList().getLast();
+                if(fullSuperClass.equals(t)){
+                    fullSuperClass=name;
+                }
+            }
 
-        code.append(".super ").append(fullSuperClass).append(NL);
+        }
+        fullSuperClass=fullSuperClass.replace('.', '/');
+        code.append(".super ").append(fullSuperClass).append(NL).append(NL);
+
+        for(var field:ollirResult.getOllirClass().getFields()){
+            code.append(apply(field));
+        }
 
         // generate a single constructor method
         var defaultConstructor = """
@@ -181,6 +201,11 @@ public class JasminGenerator {
         // unset method
         currentMethod = null;
         //System.out.println("ENDING METHOD " + method.getMethodName());
+        return code.toString();
+    }
+    private String generateField(Field field){
+        var code = new StringBuilder();
+        code.append(".field").append(Space).append(field.getFieldAccessModifier().toString().toLowerCase()).append(Space).append("'").append(field.getFieldName()).append("'").append(Space).append(types.getTypeDescriptor(field.getFieldType())).append(NL).append(NL);
         return code.toString();
     }
 
