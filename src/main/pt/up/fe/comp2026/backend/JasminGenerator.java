@@ -302,10 +302,16 @@ public class JasminGenerator {
         Operand objectEl= putFieldInstruction.getObject();
         code.append(apply(objectEl));
         code.append(apply(putFieldInstruction.getValue()));
-        code.append("putfield").append(Space).append(types.getQualifiedNameFromClass(objectEl.getName())).append("/").append(fieldEL.getName()).append(Space).append(types.getTypeDescriptor(fieldEL.getType()));
+        code.append("putfield").append(Space).append(types.getQualifiedNameFromClass(objectEl.getName())).append("/").append(fieldEL.getName()).append(Space).append(types.getTypeDescriptor(fieldEL.getType())).append(NL);
         return code.toString();
     }
     private String getFieldInstruction (GetFieldInstruction getFieldInstruction) {
-        return "";
+        var code =new StringBuilder();
+        Operand fieldEL=getFieldInstruction.getField();
+        Operand objectEl= getFieldInstruction.getObject();
+        code.append(apply(objectEl));
+        var p=fieldEL.getName();
+        code.append("getfield").append(Space).append(types.getQualifiedNameFromClass(objectEl.getName())).append("/").append(fieldEL.getName()).append(Space).append(types.getTypeDescriptor(fieldEL.getType())).append(NL);
+        return code.toString();
     }
 }
