@@ -299,12 +299,12 @@ public class JasminGenerator {
         String trueValue = loadID + "1";
         String elseValue = loadID + "0";
 
-        code.append(ifInstruction + Space + trueLabel + NL);
-        code.append(elseValue + NL);
-        code.append("goto" + Space + endLabel + NL);
-        code.append(trueLabel + ":" + NL);
-        code.append(trueValue + NL);
-        code.append(endLabel + ":" + NL);
+        code.append(ifInstruction).append(Space).append(trueLabel).append(NL);
+        code.append(elseValue).append(NL);
+        code.append("goto" + Space).append(endLabel).append(NL);
+        code.append(trueLabel).append(":").append(NL);
+        code.append(trueValue).append(NL);
+        code.append(endLabel).append(":").append(NL);
 
         return code.toString();
     }
@@ -331,7 +331,7 @@ public class JasminGenerator {
 
         ClassType classType = (ClassType) newInst.getReturnType();
         String qualifiedName = types.getQualifiedNameFromClass(classType.getName());
-        code.append("new " + qualifiedName + NL);
+        code.append("new ").append(qualifiedName).append(NL);
         return code.toString();
     }
 
@@ -360,6 +360,12 @@ public class JasminGenerator {
     }
 
 
+    private String generateGotoInstruction(GotoInstruction gotoInst) {
+        StringBuilder code = new StringBuilder();
+        code.append("goto " + gotoInst.getLabel()).append(NL);
+        return code.toString();
+    }
+
     private String generateSingleOpCondInstruction(SingleOpCondInstruction singleCondInst) {
         StringBuilder code = new StringBuilder();
 
@@ -367,28 +373,26 @@ public class JasminGenerator {
 
         String cond = this.apply(singleCondInst.getCondition());
         code.append(cond);
-        code.append("ifne" + Space + true_label + NL);
+        code.append("ifne" + Space).append(true_label).append(NL);
 
         return code.toString();
     }
 
 
-    private String generateGotoInstruction(GotoInstruction gotoInst) {
-        StringBuilder code = new StringBuilder();
-
-        code.append("goto " + gotoInst.getLabel()).append(NL);
-        return code.toString();
-    }
-
-    // i dont think this will ever be used/called
+    // called when if condition is not trivial
     private String generateOpCondInstruction(OpCondInstruction opCondInst) {
         StringBuilder code = new StringBuilder();
+
         String true_label = opCondInst.getLabel();
         OpInstruction cond = opCondInst.getCondition();
+
         String ifInst = types.getIfInstructionCode(opCondInst.getCondition().getOperation().getOpType());
-        code.append("HEEERERERERERER");
+        if (cond instanceof UnaryOpInstruction unaryInst) {
+            ifInst = "ifne";
+        }
         code.append(this.apply(cond));
         code.append(ifInst + Space + true_label + NL);
+
         return code.toString();
     }
 

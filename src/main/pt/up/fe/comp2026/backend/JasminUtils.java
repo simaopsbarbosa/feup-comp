@@ -137,6 +137,9 @@ public class JasminUtils {
             case LTE -> id = "le";
             case GTE -> id = "ge";
             case NEQ -> id = "ne";
+
+            case LOGICAL_AND -> id = "";
+            case LOGICAL_OR -> id = "";
         }
 
         return "if_icmp" + id;
