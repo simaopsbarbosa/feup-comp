@@ -26,7 +26,7 @@ public class JasminGenerator {
 
     private static final String NL = "\n";
     private static final String TAB = "   ";
-    private  static  final String Space=" ";
+    private static final String Space = " ";
 
     private final OllirResult ollirResult;
 
@@ -62,11 +62,13 @@ public class JasminGenerator {
         generators.put(Operand.class, this::generateOperand);
         generators.put(BinaryOpInstruction.class, this::generateBinaryOp);
         generators.put(ReturnInstruction.class, this::generateReturn);
-        generators.put(Field.class,this::generateField);
+        generators.put(Field.class, this::generateField);
         generators.put(NewInstruction.class, this::generateNewClass);
         generators.put(InvokeSpecialInstruction.class, this::generateInvokeSpecialInstruction);
-        generators.put(PutFieldInstruction.class,this::putFieldInstruction);
-        generators.put(GetFieldInstruction.class,this::getFieldInstruction);
+        generators.put(PutFieldInstruction.class, this::putFieldInstruction);
+        generators.put(GetFieldInstruction.class, this::getFieldInstruction);
+        generators.put(SingleOpCondInstruction.class, this::generateSingleOpCondInstruction);
+        generators.put(GotoInstruction.class, this::generateGotoInstruction);
     }
 
 
@@ -105,12 +107,12 @@ public class JasminGenerator {
         code.append(".class public ").append(nameWithPackage).append(NL).append(NL);
 
         // TODO: When you support 'extends', this must be updated
-        List<String> imports=ollirResult.getOllirClass().getImports();
-        var fullSuperClass=types.getQualifiedNameFromClass(ollirResult.getOllirClass().getSuperClass());
+        List<String> imports = ollirResult.getOllirClass().getImports();
+        var fullSuperClass = types.getQualifiedNameFromClass(ollirResult.getOllirClass().getSuperClass());
 
         code.append(".super ").append(fullSuperClass).append(NL).append(NL);
 
-        for(var field:ollirResult.getOllirClass().getFields()){
+        for (var field : ollirResult.getOllirClass().getFields()) {
             code.append(apply(field));
         }
 
@@ -173,6 +175,12 @@ public class JasminGenerator {
 
         var bodyCode = new StringBuilder();
         for (var inst : method.getInstructions()) {
+
+            //generate label
+            for (var label : method.getLabels(inst)) {
+                bodyCode.append(TAB).append(label).append(":").append(NL);
+            }
+
             var instCode = StringLines.getLines(apply(inst)).stream()
                     .collect(Collectors.joining(NL + TAB, TAB, NL));
 
@@ -192,7 +200,8 @@ public class JasminGenerator {
         //System.out.println("ENDING METHOD " + method.getMethodName());
         return code.toString();
     }
-    private String generateField(Field field){
+
+    private String generateField(Field field) {
         var code = new StringBuilder();
         code.append(".field").append(Space).append(field.getFieldAccessModifier().toString().toLowerCase()).append(Space).append("'").append(field.getFieldName()).append("'").append(Space).append(types.getTypeDescriptor(field.getFieldType())).append(NL).append(NL);
         return code.toString();
@@ -292,26 +301,49 @@ public class JasminGenerator {
         return code.toString();
     }
 
-    private String generateInvokeSpecialInstruction (InvokeSpecialInstruction invokeSpecialInst) {
+    private String generateInvokeSpecialInstruction(InvokeSpecialInstruction invokeSpecialInst) {
         return "";
     }
 
-    private String putFieldInstruction(PutFieldInstruction putFieldInstruction){
-        var code =new StringBuilder();
-        Operand fieldEL=putFieldInstruction.getField();
-        Operand objectEl= putFieldInstruction.getObject();
+    private String putFieldInstruction(PutFieldInstruction putFieldInstruction) {
+        var code = new StringBuilder();
+        Operand fieldEL = putFieldInstruction.getField();
+        Operand objectEl = putFieldInstruction.getObject();
         code.append(apply(objectEl));
         code.append(apply(putFieldInstruction.getValue()));
         code.append("putfield").append(Space).append(types.getQualifiedNameFromClass(objectEl.getName())).append("/").append(fieldEL.getName()).append(Space).append(types.getTypeDescriptor(fieldEL.getType())).append(NL);
         return code.toString();
     }
-    private String getFieldInstruction (GetFieldInstruction getFieldInstruction) {
-        var code =new StringBuilder();
-        Operand fieldEL=getFieldInstruction.getField();
-        Operand objectEl= getFieldInstruction.getObject();
+
+    private String getFieldInstruction(GetFieldInstruction getFieldInstruction) {
+        var code = new StringBuilder();
+        Operand fieldEL = getFieldInstruction.getField();
+        Operand objectEl = getFieldInstruction.getObject();
         code.append(apply(objectEl));
-        var p=fieldEL.getName();
+        var p = fieldEL.getName();
         code.append("getfield").append(Space).append(types.getQualifiedNameFromClass(objectEl.getName())).append("/").append(fieldEL.getName()).append(Space).append(types.getTypeDescriptor(fieldEL.getType())).append(NL);
+        return code.toString();
+    }
+
+
+    private String generateSingleOpCondInstruction(SingleOpCondInstruction singleCondInst) {
+        StringBuilder code = new StringBuilder();
+
+        String true_label = singleCondInst.getLabel();
+
+        String cond = this.apply(singleCondInst.getCondition());
+
+        code.append(cond + NL);
+        code.append("ifne" + Space + true_label + NL);
+
+        return code.toString();
+    }
+
+
+    private String generateGotoInstruction(GotoInstruction gotoInst) {
+        StringBuilder code = new StringBuilder();
+
+        code.append("goto " + gotoInst.getLabel()).append(NL);
         return code.toString();
     }
 }
