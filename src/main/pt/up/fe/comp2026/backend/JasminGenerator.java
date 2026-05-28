@@ -71,6 +71,7 @@ public class JasminGenerator {
         generators.put(SingleOpCondInstruction.class, this::generateSingleOpCondInstruction);
         generators.put(GotoInstruction.class, this::generateGotoInstruction);
         generators.put(OpCondInstruction.class, this::generateOpCondInstruction);
+        generators.put(UnaryOpInstruction.class, this::generateUnaryOpInstruction);
     }
 
 
@@ -266,9 +267,10 @@ public class JasminGenerator {
         var typePrefix = types.getTypePrefix(binaryOp.getOperation().getTypeInfo());
         // apply operation
         var op = switch (binaryOp.getOperation().getOpType()) {
+            // emit arithmetic
             case ADD -> "add";
             case MUL -> "mul";
-            case LTH, LTE, GTH, GTE, EQ -> this.generateComparison(binaryOp.getOperation().getOpType());
+            case LTH, LTE, GTH, GTE, EQ, NEQ -> this.generateComparison(binaryOp.getOperation().getOpType());
             default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
         };
 
@@ -284,18 +286,24 @@ public class JasminGenerator {
     }
 
 
-    //hardcoded (not sure how to make different)
     private String generateComparison(OperationType operationType) {
-        StringBuilder code = new StringBuilder();
         String ifId = types.getIfInstructionCode(operationType);
+        return this.generateBooleanFromIf(ifId);
+    }
+
+    private String generateBooleanFromIf(String ifInstruction) {
+        StringBuilder code = new StringBuilder();
         String trueLabel = utils.nextLabel("jasmin_cmp_true");
         String endLabel = utils.nextLabel("jasmin_cmp_end");
+        String loadID = "iconst_";
+        String trueValue = loadID + "1";
+        String elseValue = loadID + "0";
 
-        code.append(ifId + Space + trueLabel + NL);
-        code.append("iconst_0" + NL);
+        code.append(ifInstruction + Space + trueLabel + NL);
+        code.append(elseValue + NL);
         code.append("goto" + Space + endLabel + NL);
         code.append(trueLabel + ":" + NL);
-        code.append("iconst_1" + NL);
+        code.append(trueValue + NL);
         code.append(endLabel + ":" + NL);
 
         return code.toString();
@@ -381,6 +389,14 @@ public class JasminGenerator {
         code.append("HEEERERERERERER");
         code.append(this.apply(cond));
         code.append(ifInst + Space + true_label + NL);
+        return code.toString();
+    }
+
+
+    private String generateUnaryOpInstruction(UnaryOpInstruction unaryOpInst) {
+        StringBuilder code = new StringBuilder();
+        code.append(this.apply(unaryOpInst.getOperand()));
+        code.append(this.generateBooleanFromIf("ifeq"));
         return code.toString();
     }
 }
