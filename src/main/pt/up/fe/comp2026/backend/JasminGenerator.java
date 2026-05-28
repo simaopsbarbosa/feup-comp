@@ -1,5 +1,6 @@
 package pt.up.fe.comp2026.backend;
 
+import com.sun.tools.jconsole.JConsoleContext;
 import org.specs.comp.ollir.*;
 import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.tree.TreeNode;
@@ -69,6 +70,7 @@ public class JasminGenerator {
         generators.put(GetFieldInstruction.class, this::getFieldInstruction);
         generators.put(SingleOpCondInstruction.class, this::generateSingleOpCondInstruction);
         generators.put(GotoInstruction.class, this::generateGotoInstruction);
+        generators.put(OpCondInstruction.class, this::generateOpCondInstruction);
     }
 
 
@@ -262,15 +264,39 @@ public class JasminGenerator {
 
 
         var typePrefix = types.getTypePrefix(binaryOp.getOperation().getTypeInfo());
-
         // apply operation
         var op = switch (binaryOp.getOperation().getOpType()) {
             case ADD -> "add";
             case MUL -> "mul";
+            case LTH, LTE, GTH, GTE, EQ -> this.generateComparison(binaryOp.getOperation().getOpType());
             default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
         };
 
-        code.append(typePrefix + op).append(NL);
+        OperationType opType = binaryOp.getOperation().getOpType();
+
+        //simple binary
+        if (opType == OperationType.ADD || opType == OperationType.MUL)
+            code.append(typePrefix + op).append(NL);
+        else
+            code.append(op).append(NL);
+
+        return code.toString();
+    }
+
+
+    //hardcoded (not sure how to make different)
+    private String generateComparison(OperationType operationType) {
+        StringBuilder code = new StringBuilder();
+        String ifId = types.getIfInstructionCode(operationType);
+        String trueLabel = utils.nextLabel("jasmin_cmp_true");
+        String endLabel = utils.nextLabel("jasmin_cmp_end");
+
+        code.append(ifId + Space + trueLabel + NL);
+        code.append("iconst_0" + NL);
+        code.append("goto" + Space + endLabel + NL);
+        code.append(trueLabel + ":" + NL);
+        code.append("iconst_1" + NL);
+        code.append(endLabel + ":" + NL);
 
         return code.toString();
     }
@@ -332,8 +358,7 @@ public class JasminGenerator {
         String true_label = singleCondInst.getLabel();
 
         String cond = this.apply(singleCondInst.getCondition());
-
-        code.append(cond + NL);
+        code.append(cond);
         code.append("ifne" + Space + true_label + NL);
 
         return code.toString();
@@ -344,6 +369,18 @@ public class JasminGenerator {
         StringBuilder code = new StringBuilder();
 
         code.append("goto " + gotoInst.getLabel()).append(NL);
+        return code.toString();
+    }
+
+    // i dont think this will ever be used/called
+    private String generateOpCondInstruction(OpCondInstruction opCondInst) {
+        StringBuilder code = new StringBuilder();
+        String true_label = opCondInst.getLabel();
+        OpInstruction cond = opCondInst.getCondition();
+        String ifInst = types.getIfInstructionCode(opCondInst.getCondition().getOperation().getOpType());
+        code.append("HEEERERERERERER");
+        code.append(this.apply(cond));
+        code.append(ifInst + Space + true_label + NL);
         return code.toString();
     }
 }

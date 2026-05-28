@@ -2,6 +2,7 @@ package pt.up.fe.comp2026.backend;
 
 import org.specs.comp.ollir.AccessModifier;
 import org.specs.comp.ollir.Descriptor;
+import org.specs.comp.ollir.OperationType;
 import org.specs.comp.ollir.type.ArrayType;
 import org.specs.comp.ollir.type.BuiltinType;
 import org.specs.comp.ollir.type.ClassType;
@@ -124,5 +125,21 @@ public class JasminUtils {
 
         return qualifiedName;
     }
+
+
+    public String getIfInstructionCode(OperationType opType) {
+        String id = "";
+
+        switch (opType) {
+            case LTH -> id = "lt";
+            case GTH -> id = "gt";
+            case EQ -> id = "eq";
+            case LTE -> id = "le";
+            case GTE -> id = "ge";
+        }
+
+        return "if_icmp" + id;
+    }
+
 
 }
