@@ -266,7 +266,7 @@ public class JasminGenerator {
 
         // apply operation
         var binCode = switch (binaryOp.getOperation().getOpType()) {
-            case ADD, MUL -> this.generateArithmeticOps(binaryOp.getOperation());
+            case ADD, MUL, SUB, DIV -> this.generateArithmeticOps(binaryOp.getOperation());
             case LTH, LTE, GTH, GTE, EQ, NEQ -> this.generateComparisonOps(binaryOp.getOperation().getOpType());
             default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
         };
@@ -285,6 +285,8 @@ public class JasminGenerator {
             + switch (opType) {
             case ADD -> "add";
             case MUL -> "mul";
+            case SUB -> "sub";
+            case DIV -> "div";
             default -> throw new IllegalStateException("Unexpected value: " + opType);
         };
     }
@@ -390,14 +392,13 @@ public class JasminGenerator {
         String true_label = opCondInst.getLabel();
         OpInstruction cond = opCondInst.getCondition();
 
-        // if (!a)
+        // if (!a) -> puts the boolean value in stack
         if (cond instanceof UnaryOpInstruction unaryInst) {
-            return this.generateUnaryOpInstruction(unaryInst);
+            code.append(this.generateUnaryOpInstruction(unaryInst));
         }
 
-        // i dont think this part can be reached based on our ollir gen
-        String ifInst = types.getIfInstructionCode(opCondInst.getCondition().getOperation().getOpType());
-        code.append(this.apply(cond));
+        // go to true label if generated boolean above is != 0
+        String ifInst = "ifne";
         code.append(ifInst).append(Space).append(true_label).append(NL);
 
         return code.toString();
