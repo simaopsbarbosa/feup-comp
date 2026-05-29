@@ -393,10 +393,14 @@ public class JasminGenerator {
             }
         }
 
+        // load arguments
+        invokeSpecialInst.getArguments().forEach(element -> code.append(this.apply(element)));
+
         code.append("invokespecial" + Space).append(initClassName).append("/<init>()V").append(NL);
 
         return code.toString();
     }
+    
 
     private String putFieldInstruction(PutFieldInstruction putFieldInstruction) {
         var code = new StringBuilder();
