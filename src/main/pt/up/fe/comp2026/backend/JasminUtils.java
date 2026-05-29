@@ -84,7 +84,12 @@ public class JasminUtils {
 
 
     public String getModifier(AccessModifier accessModifier) {
-        return accessModifier.name().toLowerCase() + " ";
+        String modifierName = accessModifier.name().toLowerCase();
+        //for some reason breaks with default
+        if (modifierName.equals("default")) {
+            return "";
+        }
+        return modifierName + " ";
     }
 
     public String getLoad(Descriptor reg) {

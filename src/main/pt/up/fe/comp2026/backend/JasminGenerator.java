@@ -172,22 +172,28 @@ public class JasminGenerator {
 
         code.append("\n.method ").append(modifier)
                 .append(staticMod)
-                .append(methodName)
-                .append("(" + params + ")" + returnType).append(NL);
+                .append(methodName).append("(").append(params).append(")").append(returnType).append(NL);
 
 
         var bodyCode = new StringBuilder();
-        for (var inst : method.getInstructions()) {
-
+        for (int i = 0; i < method.getInstructions().toArray().length; i++) {
+            Instruction inst = method.getInstr(i);
+            
             //generate label
             for (var label : method.getLabels(inst)) {
                 bodyCode.append(TAB).append(label).append(":").append(NL);
             }
 
-            var instCode = StringLines.getLines(apply(inst)).stream()
-                    .collect(Collectors.joining(NL + TAB, TAB, NL));
-
-            bodyCode.append(instCode);
+            // stack gets complicated with assign to new object
+            if (this.tryGenerateAssignNewObject(method, i, bodyCode)) {
+                //skips next instruction (invokespecial)
+                i += 1;
+            }
+            else {
+                var instCode = StringLines.getLines(apply(inst)).stream()
+                        .collect(Collectors.joining(NL + TAB, TAB, NL));
+                bodyCode.append(instCode);
+            }
         }
 
         // Add limits
@@ -204,6 +210,38 @@ public class JasminGenerator {
         return code.toString();
     }
 
+
+    private boolean tryGenerateAssignNewObject(Method method, int instIdx, StringBuilder code) {
+        Instruction inst = method.getInstr(instIdx);
+
+        // temp0 := new ...
+        if (inst instanceof AssignInstruction assignInstruction
+                && assignInstruction.getRhs() instanceof NewInstruction newInstruction)
+        {
+            //check out of bounds
+            if (instIdx + 1 >= method.getInstructions().size()) {
+                return false;
+            }
+
+            Instruction nextInst = method.getInstr(instIdx + 1);
+
+            if (nextInst instanceof InvokeSpecialInstruction invokeSpecialInstruction) {
+                this.isInsideAssignment = true;
+                //emit new
+                code.append(this.generateNewClass(newInstruction));
+                //emit invokespecial
+                code.append(this.generateInvokeSpecialInstruction(invokeSpecialInstruction));
+                //emit store
+                code.append(this.generateStore(assignInstruction.getDest()));
+                this.isInsideAssignment = false;
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private String generateField(Field field) {
         var code = new StringBuilder();
         code.append(".field").append(Space).append(field.getFieldAccessModifier().toString().toLowerCase()).append(Space).append("'").append(field.getFieldName()).append("'").append(Space).append(types.getTypeDescriptor(field.getFieldType())).append(NL).append(NL);
@@ -214,29 +252,24 @@ public class JasminGenerator {
         try {
             isInsideAssignment = true;
 
-
             var code = new StringBuilder();
-
-            // store value in the stack in destination
-            var lhs = assign.getDest();
 
             // generate code for loading what's on the right
             code.append(apply(assign.getRhs()));
 
-
-            // Assume Operand
-            var operand = (Operand) lhs;
-
-
-            // get register
-            var reg = currentMethod.getVarTable().get(operand.getName());
-
-            code.append(types.getStore(reg)).append(NL);
+            //generate store
+            code.append(this.generateStore(assign.getDest()));
 
             return code.toString();
         } finally {
             isInsideAssignment = false;
         }
+    }
+
+    private String generateStore(Element lhs) {
+        Operand operand = (Operand) lhs;
+        Descriptor reg = currentMethod.getVarTable().get(operand.getName());
+        return types.getStore(reg) + NL;
     }
 
     private String generateSingleOp(SingleOpInstruction singleOp) {
@@ -331,18 +364,38 @@ public class JasminGenerator {
     }
 
 
-    //may have to add dups
     private String generateNewClass(NewInstruction newInst) {
         var code = new StringBuilder();
 
         ClassType classType = (ClassType) newInst.getReturnType();
         String qualifiedName = types.getQualifiedNameFromClass(classType.getName());
         code.append("new ").append(qualifiedName).append(NL);
+
+        // needs to dup for store
+        if (isInsideAssignment) {
+            code.append("dup" + NL);
+        }
+
         return code.toString();
     }
 
+
     private String generateInvokeSpecialInstruction(InvokeSpecialInstruction invokeSpecialInst) {
-        return "";
+        StringBuilder code = new StringBuilder();
+        String initClassName = "java/lang/Object";
+
+        if (invokeSpecialInst.getSuperClass().isPresent()) {
+            initClassName = invokeSpecialInst.getSuperClass().get();
+        } else {
+            Element caller = invokeSpecialInst.getCaller();
+            if (caller.getType() instanceof ClassType classType) {
+                initClassName = types.getQualifiedNameFromClass(classType.getName());
+            }
+        }
+
+        code.append("invokespecial" + Space).append(initClassName).append("/<init>()V").append(NL);
+
+        return code.toString();
     }
 
     private String putFieldInstruction(PutFieldInstruction putFieldInstruction) {
