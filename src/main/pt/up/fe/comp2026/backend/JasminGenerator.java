@@ -264,32 +264,36 @@ public class JasminGenerator {
         code.append(apply(binaryOp.getRightOperand()));
 
 
-        var typePrefix = types.getTypePrefix(binaryOp.getOperation().getTypeInfo());
         // apply operation
-        var op = switch (binaryOp.getOperation().getOpType()) {
-            // emit arithmetic
-            case ADD -> "add";
-            case MUL -> "mul";
-            case LTH, LTE, GTH, GTE, EQ, NEQ -> this.generateComparison(binaryOp.getOperation().getOpType());
+        var binCode = switch (binaryOp.getOperation().getOpType()) {
+            case ADD, MUL -> this.generateArithmeticOps(binaryOp.getOperation());
+            case LTH, LTE, GTH, GTE, EQ, NEQ -> this.generateComparisonOps(binaryOp.getOperation().getOpType());
             default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
         };
 
-        OperationType opType = binaryOp.getOperation().getOpType();
 
-        //simple binary
-        if (opType == OperationType.ADD || opType == OperationType.MUL)
-            code.append(typePrefix + op).append(NL);
-        else
-            code.append(op).append(NL);
-
+        code.append(binCode + NL);
         return code.toString();
     }
 
 
-    private String generateComparison(OperationType operationType) {
+    private String generateArithmeticOps(Operation operation) {
+        String typePrefix = types.getTypePrefix(operation.getTypeInfo());
+        OperationType opType = operation.getOpType();
+
+        return typePrefix
+            + switch (opType) {
+            case ADD -> "add";
+            case MUL -> "mul";
+            default -> throw new IllegalStateException("Unexpected value: " + opType);
+        };
+    }
+
+    private String generateComparisonOps(OperationType operationType) {
         String ifId = types.getIfInstructionCode(operationType);
         return this.generateBooleanFromIf(ifId);
     }
+
 
     private String generateBooleanFromIf(String ifInstruction) {
         StringBuilder code = new StringBuilder();
@@ -362,7 +366,7 @@ public class JasminGenerator {
 
     private String generateGotoInstruction(GotoInstruction gotoInst) {
         StringBuilder code = new StringBuilder();
-        code.append("goto " + gotoInst.getLabel()).append(NL);
+        code.append("goto ").append(gotoInst.getLabel()).append(NL);
         return code.toString();
     }
 
@@ -386,12 +390,15 @@ public class JasminGenerator {
         String true_label = opCondInst.getLabel();
         OpInstruction cond = opCondInst.getCondition();
 
-        String ifInst = types.getIfInstructionCode(opCondInst.getCondition().getOperation().getOpType());
+        // if (!a)
         if (cond instanceof UnaryOpInstruction unaryInst) {
-            ifInst = "ifne";
+            return this.generateUnaryOpInstruction(unaryInst);
         }
+
+        // i dont think this part can be reached based on our ollir gen
+        String ifInst = types.getIfInstructionCode(opCondInst.getCondition().getOperation().getOpType());
         code.append(this.apply(cond));
-        code.append(ifInst + Space + true_label + NL);
+        code.append(ifInst).append(Space).append(true_label).append(NL);
 
         return code.toString();
     }
