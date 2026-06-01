@@ -165,13 +165,19 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         var code = new StringBuilder();
 
         String typeString = ollirTypes.toOllirType(thisType);
+        boolean isparam=false,islocal=false;
+        if(node.getAncestor(METHOD_DECL).isPresent()){
+            JmmNode method=node.getAncestor(METHOD_DECL).get();
+            isparam = method.getChildren(PARAM).stream().anyMatch(param -> param.get("name").equals(varName));
+            islocal= method.getChildren(VAR_DECL).stream().anyMatch(param -> param.get("name").equals(varName));
+        }
 
         if (varName.contains("[")) {
             code.append(rhs.getComputation());
             code.append(varName).append(SPACE)
                     .append(ASSIGN).append(typeString).append(SPACE)
                     .append(rhs.getCode()).append(END_STMT);
-        } else if (table.getField(varName).isPresent()) {
+        } else if (table.getField(varName).isPresent()&&!islocal&&!isparam) {
             varCode = ollirTypes.sanitizeId(varName) + typeString;
             code.append(rhs.getComputation());
             code.append("putfield(this,");

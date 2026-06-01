@@ -314,9 +314,15 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         JmmType type = types.getExprType(node);
         String ollirType = ollirTypes.toOllirType(type);
         var code = new StringBuilder();
-
+        boolean islocal=false,isparam=false;
+        if(node.getAncestor(METHOD_DECL).isPresent()){
+            var name=node.get("name");
+            JmmNode method=node.getAncestor(METHOD_DECL).get();
+            isparam = method.getChildren(PARAM).stream().anyMatch(param -> param.get("name").equals(name));
+            islocal= method.getChildren(VAR_DECL).stream().anyMatch(param -> param.get("name").equals(name));
+        }
         // fields need pre computation
-        if (table.getField(id).isPresent()) {
+        if (table.getField(id).isPresent()&&!islocal&&!isparam) {
             String temp = ollirTypes.nextTemp() + ollirType;
             String computation = temp + ASSIGN + ollirType + " getfield(this," + id + ollirType + ")" + ollirType + END_STMT;
             return new OllirExprResult(temp, computation);
