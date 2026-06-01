@@ -73,6 +73,7 @@ public class JasminGenerator {
         generators.put(OpCondInstruction.class, this::generateOpCondInstruction);
         generators.put(UnaryOpInstruction.class, this::generateUnaryOpInstruction);
         generators.put(InvokeVirtualInstruction.class,this::generateInvokeVirtualInstruction);
+        generators.put(InvokeStaticInstruction.class,this::generateInvokeStaticInstruction);
     }
 
 
@@ -419,6 +420,23 @@ public class JasminGenerator {
         code.append("invokevirtual"+Space).append(initClassName).append("/"+methodname).append("(").append(argtypes).append(")").append(types.getTypeDescriptor(invokeVirtualInst.getReturnType())).append(NL);
 
         return code.toString();
+    }
+    private String generateInvokeStaticInstruction(InvokeStaticInstruction invokeStaticInst){
+        StringBuilder code=new StringBuilder();
+        String initClassName = "java/lang/Object";
+        Element caller = invokeStaticInst.getCaller();
+        if (caller.getType() instanceof ClassType classType) {
+            initClassName = types.getQualifiedNameFromClass(classType.getName());
+        }
+
+        StringBuilder argtypes=new StringBuilder();
+        // load arguments
+        invokeStaticInst.getArguments().forEach(element ->{argtypes.append(types.getTypeDescriptor(element.getType()));
+            code.append(this.apply(element));});
+        var methodnamenode = invokeStaticInst.getMethodName().toString().split(":");
+        var methodname = methodnamenode[methodnamenode.length-1].split("\\.")[0].trim();
+        code.append("invokestatic"+Space).append(initClassName).append("/"+methodname).append("(").append(argtypes).append(")").append(types.getTypeDescriptor(invokeStaticInst.getReturnType())).append(NL);
+        return code .toString();
     }
     
 
