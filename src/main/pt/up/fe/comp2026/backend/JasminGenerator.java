@@ -72,6 +72,7 @@ public class JasminGenerator {
         generators.put(GotoInstruction.class, this::generateGotoInstruction);
         generators.put(OpCondInstruction.class, this::generateOpCondInstruction);
         generators.put(UnaryOpInstruction.class, this::generateUnaryOpInstruction);
+        generators.put(InvokeVirtualInstruction.class,this::generateInvokeVirtualInstruction);
     }
 
 
@@ -397,6 +398,25 @@ public class JasminGenerator {
         invokeSpecialInst.getArguments().forEach(element -> code.append(this.apply(element)));
 
         code.append("invokespecial" + Space).append(initClassName).append("/<init>()V").append(NL);
+
+        return code.toString();
+    }
+    private String generateInvokeVirtualInstruction (InvokeVirtualInstruction invokeVirtualInst) {
+        StringBuilder code = new StringBuilder();
+        String initClassName = "java/lang/Object";
+        Element caller = invokeVirtualInst.getCaller();
+        code.append(apply(caller));
+        if (caller.getType() instanceof ClassType classType) {
+            initClassName = types.getQualifiedNameFromClass(classType.getName());
+        }
+
+        StringBuilder argtypes=new StringBuilder();
+        // load arguments
+        invokeVirtualInst.getArguments().forEach(element ->{argtypes.append(types.getTypeDescriptor(element.getType()));
+            code.append(this.apply(element));});
+        var methodnamenode = invokeVirtualInst.getMethodName().toString().split(":");
+        var methodname = methodnamenode[methodnamenode.length-1].split("\\.")[0].trim();
+        code.append("invokevirtual"+Space).append(initClassName).append("/"+methodname).append("(").append(argtypes).append(")").append(types.getTypeDescriptor(invokeVirtualInst.getReturnType())).append(NL);
 
         return code.toString();
     }
