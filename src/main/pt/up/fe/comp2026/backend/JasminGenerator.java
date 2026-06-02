@@ -121,24 +121,11 @@ public class JasminGenerator {
             code.append(apply(field));
         }
 
-        // generate a single constructor method
-        var defaultConstructor = """
-                ;default constructor
-                .method public <init>()V
-                    aload_0
-                    invokespecial %s/<init>()V
-                    return
-                .end method
-                """.formatted(fullSuperClass);
-        code.append(defaultConstructor);
-
-        // generate code for all other methods
+        // generate code for methods
         for (var method : ollirResult.getOllirClass().getMethods()) {
 
-            // Ignore constructor, since there is always one constructor
-            // that receives no arguments, and has been already added
-            // previously
             if (method.isConstructMethod()) {
+                code.append(this.generateConstructor(method, fullSuperClass));
                 continue;
             }
 
@@ -147,6 +134,31 @@ public class JasminGenerator {
 
         return code.toString();
     }
+
+
+    private String generateConstructor(Method method, String fullSuperClass) {
+        StringBuilder code = new StringBuilder();
+        currentMethod = method;
+
+        code.append(";default constructor" + NL);
+        code.append(".method public <init>()V" + NL);
+        code.append(TAB).append(".limit stack 99").append(NL);
+        code.append(TAB).append(".limit locals 99").append(NL);
+        code.append(TAB + "aload_0" + NL);
+
+        for (Instruction inst : method.getInstructions()) {
+            code.append(TAB + this.apply(inst));
+        }
+
+        code.append(TAB + "return" + NL);
+        code.append(".end method" + NL);
+
+        method.getInstructions();
+
+        return code.toString();
+    }
+
+
 
     private String generateMethod(Method method) {
         //System.out.println("STARTING METHOD " + method.getMethodName());
