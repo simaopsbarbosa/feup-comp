@@ -399,7 +399,12 @@ public class JasminGenerator {
         // load arguments
         invokeSpecialInst.getArguments().forEach(element -> code.append(this.apply(element)));
 
-        code.append("invokespecial" + Space).append(initClassName).append("/<init>()V").append(NL);
+        //parameter descriptor
+        StringBuilder argDescriptors = new StringBuilder();
+        invokeSpecialInst.getArguments().forEach(element -> argDescriptors.append(types.getTypeDescriptor(element.getType())));
+
+        code.append("invokespecial" + Space).append(initClassName)
+                .append("/<init>(" + argDescriptors.toString() + ")V").append(NL);
 
         return code.toString();
     }
