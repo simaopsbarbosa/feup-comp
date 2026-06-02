@@ -4,6 +4,7 @@ import com.sun.tools.jconsole.JConsoleContext;
 import org.specs.comp.ollir.*;
 import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.tree.TreeNode;
+import org.specs.comp.ollir.type.ArrayType;
 import org.specs.comp.ollir.type.ClassType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
@@ -18,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.specs.comp.ollir.InstructionType.NOPER;
 
 /**
  * Generates Jasmin code from an OllirResult.
@@ -262,11 +265,13 @@ public class JasminGenerator {
 
             var code = new StringBuilder();
 
+
             // generate code for loading what's on the right
             code.append(apply(assign.getRhs()));
 
             //generate store
             code.append(this.generateStore(assign.getDest()));
+
 
             return code.toString();
         } finally {
@@ -289,10 +294,18 @@ public class JasminGenerator {
     }
 
     private String generateOperand(Operand operand) {
+        StringBuilder code = new StringBuilder();
+
         // get register
         var reg = currentMethod.getVarTable().get(operand.getName());
-
-        return types.getLoad(reg) + NL;
+        code.append(types.getLoad(reg)).append(NL);
+        if (operand instanceof ArrayOperand arrayOp) {
+            for (Element el : arrayOp.getIndexOperands()) {
+                code.append(this.apply(el));
+            }
+            code.append("iaload").append(NL);
+        }
+        return code.toString();
     }
 
 
