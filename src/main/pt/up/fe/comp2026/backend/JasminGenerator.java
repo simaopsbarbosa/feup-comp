@@ -265,9 +265,18 @@ public class JasminGenerator {
 
             var code = new StringBuilder();
 
+            if (assign.getDest() instanceof ArrayOperand arrayOp) {
+                var reg = currentMethod.getVarTable().get(arrayOp.getName());
+                code.append(types.getLoad(reg)).append(NL); // pushes arrayref
 
+                for (Element el : arrayOp.getIndexOperands()) {
+                    code.append(this.apply(el));            // pushes index
+                }
+
+            }
             // generate code for loading what's on the right
             code.append(apply(assign.getRhs()));
+
 
             //generate store
             code.append(this.generateStore(assign.getDest()));
@@ -282,6 +291,10 @@ public class JasminGenerator {
     private String generateStore(Element lhs) {
         Operand operand = (Operand) lhs;
         Descriptor reg = currentMethod.getVarTable().get(operand.getName());
+        StringBuilder code=new StringBuilder();
+        if(lhs instanceof ArrayOperand){
+            return  code.append("iastore").append(NL).toString();
+        }
         return types.getStore(reg) + NL;
     }
 
@@ -570,14 +583,14 @@ public class JasminGenerator {
                 maxStack = Math.max(maxStack, stackHeight);
             }
         }
-        return Math.max(1, maxStack);
+        return Math.max(10, maxStack);
     }
 
     private int calculateInstStackLimit(Instruction inst) {
         if (inst instanceof AssignInstruction assign) {
             return calculateInstStackLimit(assign.getRhs());
-        } else if (inst instanceof SingleOpInstruction) {
-            return 1;
+        } else if (inst instanceof SingleOpInstruction singleop) {
+            return singleop.getSingleOperand() instanceof ArrayOperand ? 2: 1;
         } else if (inst instanceof BinaryOpInstruction) {
             return 2;
         } else if (inst instanceof NewInstruction) {
