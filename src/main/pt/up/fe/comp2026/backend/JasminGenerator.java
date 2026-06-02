@@ -13,6 +13,7 @@ import pt.up.fe.specs.util.classmap.FunctionClassMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 import pt.up.fe.specs.util.utilities.StringLines;
 
+import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -64,7 +65,7 @@ public class JasminGenerator {
         generators.put(BinaryOpInstruction.class, this::generateBinaryOp);
         generators.put(ReturnInstruction.class, this::generateReturn);
         generators.put(Field.class, this::generateField);
-        generators.put(NewInstruction.class, this::generateNewClass);
+        generators.put(NewInstruction.class, this::generateNewObject);
         generators.put(InvokeSpecialInstruction.class, this::generateInvokeSpecialInstruction);
         generators.put(PutFieldInstruction.class, this::putFieldInstruction);
         generators.put(GetFieldInstruction.class, this::getFieldInstruction);
@@ -242,7 +243,7 @@ public class JasminGenerator {
             if (nextInst instanceof InvokeSpecialInstruction invokeSpecialInstruction) {
                 this.isInsideAssignment = true;
                 //emit new
-                code.append(this.generateNewClass(newInstruction));
+                code.append(this.generateNewObject(newInstruction));
                 //emit invokespecial
                 code.append(this.generateInvokeSpecialInstruction(invokeSpecialInstruction));
                 //emit store
@@ -379,17 +380,25 @@ public class JasminGenerator {
     }
 
 
-    private String generateNewClass(NewInstruction newInst) {
+    private String generateNewObject(NewInstruction newInst) {
         var code = new StringBuilder();
-
-        ClassType classType = (ClassType) newInst.getReturnType();
-        String qualifiedName = types.getQualifiedNameFromClass(classType.getName());
-        code.append("new ").append(qualifiedName).append(NL);
-
-        // needs to dup for store
-        if (isInsideAssignment) {
-            code.append("dup" + NL);
+        if(newInst.getReturnType() instanceof ClassType){
+            ClassType  classType = (ClassType) newInst.getReturnType();
+            String qualifiedName = types.getQualifiedNameFromClass(classType.getName());
+            code.append("new ").append(qualifiedName).append(NL);
+            // needs to dup for store
+            if (isInsideAssignment) {
+                code.append("dup" + NL);
+            }
         }
+        else{
+            System.out.println();
+            String size=this.apply(newInst.getArguments().getLast());
+            code.append(size).append(NL);
+            code.append("newarray ").append("int").append(NL);
+        }
+
+
 
         return code.toString();
     }
