@@ -60,7 +60,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     private boolean isfield(JmmNode node){
         var id="";
         var name="";
-        if(node.getKind()==ARRAY_ACCESS){
+        if(node.getKind()!=VAR_REF_EXPR){
             id= ollirTypes.sanitizeId(node.getChild(0).get("name"));
             name=node.getChild(0).get("name");
         }
@@ -107,7 +107,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                     .append(END_STMT);
         }
         if(this.isfield(child)){
-            var id =child.getKind()==ARRAY_ACCESS?ollirTypes.sanitizeId(child.getChild(0).get("name")):ollirTypes.sanitizeId(child.get("name"));
+            var id =child.getKind()!=VAR_REF_EXPR?ollirTypes.sanitizeId(child.getChild(0).get("name")):ollirTypes.sanitizeId(child.get("name"));
             var olltype = ollirTypes.toOllirType(types.getExprType(child));
             computation.append("putfield(this,").append(id+olltype).append(",").append(ls.getCode()).append(")").append(".V").append(END_STMT);
         }
@@ -138,7 +138,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
                     .append(END_STMT);
         }
         if(this.isfield(child)){
-            var id =child.getKind()==ARRAY_ACCESS?ollirTypes.sanitizeId(child.getChild(0).get("name")):ollirTypes.sanitizeId(child.get("name"));
+            var id =child.getKind()!=VAR_REF_EXPR?ollirTypes.sanitizeId(child.getChild(0).get("name")):ollirTypes.sanitizeId(child.get("name"));
             var olltype = ollirTypes.toOllirType(types.getExprType(child));
             computation.append("putfield(this,").append(id+olltype).append(",").append(ls.getCode()).append(")").append(".V").append(END_STMT);
         }
