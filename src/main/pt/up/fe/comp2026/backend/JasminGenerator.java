@@ -301,7 +301,7 @@ public class JasminGenerator {
 
         // apply operation
         var binCode = switch (binaryOp.getOperation().getOpType()) {
-            case ADD, MUL, SUB, DIV -> this.generateArithmeticOps(binaryOp.getOperation());
+            case ADD, MUL, SUB, DIV, REM -> this.generateArithmeticOps(binaryOp.getOperation());
             case LTH, LTE, GTH, GTE, EQ, NEQ -> this.generateComparisonOps(binaryOp.getOperation().getOpType());
             default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
         };
@@ -322,6 +322,7 @@ public class JasminGenerator {
             case MUL -> "mul";
             case SUB -> "sub";
             case DIV -> "div";
+            case REM -> "rem";
             default -> throw new IllegalStateException("Unexpected value: " + opType);
         };
     }
