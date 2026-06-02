@@ -142,8 +142,8 @@ public class JasminGenerator {
 
         code.append(";default constructor" + NL);
         code.append(".method public <init>()V" + NL);
-        code.append(TAB).append(".limit stack 99").append(NL);
-        code.append(TAB).append(".limit locals 99").append(NL);
+        code.append(TAB).append(".limit stack ").append(calculateStackLimit(method)).append(NL);
+        code.append(TAB).append(".limit locals ").append(calculateLimitLocals(method)).append(NL);
         code.append(TAB + "aload_0" + NL);
 
         for (Instruction inst : method.getInstructions()) {
@@ -211,8 +211,8 @@ public class JasminGenerator {
         }
 
         // Add limits
-        code.append(TAB).append(".limit stack 99").append(NL);
-        code.append(TAB).append(".limit locals 99").append(NL);
+        code.append(TAB).append(".limit stack ").append(calculateStackLimit(method)).append(NL);
+        code.append(TAB).append(".limit locals ").append(calculateLimitLocals(method)).append(NL);
 
         code.append(TAB).append(bodyCode);
 
@@ -523,5 +523,64 @@ public class JasminGenerator {
         code.append(this.apply(unaryOpInst.getOperand()));
         code.append(this.generateBooleanFromIf("ifeq"));
         return code.toString();
+    }
+
+    private int calculateLimitLocals(Method method) {
+        int maxReg = method.isStaticMethod() ? -1 : 0;
+        for (Descriptor descriptor : method.getVarTable().values()) {
+            maxReg = Math.max(maxReg, descriptor.getVirtualReg());
+        }
+        return maxReg + 1;
+    }
+
+    private int calculateStackLimit(Method method) {
+        int maxStack = 0;
+        List<Instruction> insts = method.getInstructions();
+        for (int i = 0; i < insts.size(); i++) {
+            Instruction inst = insts.get(i);
+            if (inst instanceof AssignInstruction assignInstruction
+                    && assignInstruction.getRhs() instanceof NewInstruction newInstruction
+                    && i + 1 < insts.size()
+                    && insts.get(i + 1) instanceof InvokeSpecialInstruction invokeSpecialInstruction) {
+                int stackHeight = 2 + invokeSpecialInstruction.getArguments().size();
+                maxStack = Math.max(maxStack, stackHeight);
+                i++; // Skip the next invokespecial instruction
+            } else {
+                int stackHeight = calculateInstStackLimit(inst);
+                maxStack = Math.max(maxStack, stackHeight);
+            }
+        }
+        return Math.max(1, maxStack);
+    }
+
+    private int calculateInstStackLimit(Instruction inst) {
+        if (inst instanceof AssignInstruction assign) {
+            return calculateInstStackLimit(assign.getRhs());
+        } else if (inst instanceof SingleOpInstruction) {
+            return 1;
+        } else if (inst instanceof BinaryOpInstruction) {
+            return 2;
+        } else if (inst instanceof NewInstruction) {
+            return 2;
+        } else if (inst instanceof InvokeSpecialInstruction invokeSpecial) {
+            return 1 + invokeSpecial.getArguments().size();
+        } else if (inst instanceof InvokeVirtualInstruction invokeVirtual) {
+            return 1 + invokeVirtual.getArguments().size();
+        } else if (inst instanceof InvokeStaticInstruction invokeStatic) {
+            return Math.max(1, invokeStatic.getArguments().size());
+        } else if (inst instanceof PutFieldInstruction) {
+            return 2;
+        } else if (inst instanceof GetFieldInstruction) {
+            return 1;
+        } else if (inst instanceof ReturnInstruction ret) {
+            return ret.getOperand().isPresent() ? 1 : 0;
+        } else if (inst instanceof SingleOpCondInstruction) {
+            return 1;
+        } else if (inst instanceof OpCondInstruction opCond) {
+            return calculateInstStackLimit(opCond.getCondition());
+        } else if (inst instanceof UnaryOpInstruction) {
+            return 1;
+        }
+        return 2;
     }
 }
