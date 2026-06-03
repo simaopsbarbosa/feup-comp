@@ -191,6 +191,7 @@ public class JasminGenerator {
         var bodyCode = new StringBuilder();
         for (int i = 0; i < method.getInstructions().toArray().length; i++) {
             Instruction inst = method.getInstr(i);
+            bodyCode.append("; ").append(inst.toString()).append(NL);
 
             //generate label
             for (var label : method.getLabels(inst)) {
@@ -568,34 +569,37 @@ public class JasminGenerator {
 
     private int calculateStackLimit(Method method) {
         int maxStack = 0;
+        int currentStack = 0;
         List<Instruction> insts = method.getInstructions();
         for (int i = 0; i < insts.size(); i++) {
             Instruction inst = insts.get(i);
-            if (inst instanceof AssignInstruction assignInstruction
-                    && assignInstruction.getRhs() instanceof NewInstruction newInstruction
-                    && i + 1 < insts.size()
-                    && insts.get(i + 1) instanceof InvokeSpecialInstruction invokeSpecialInstruction) {
-                int stackHeight = 2 + invokeSpecialInstruction.getArguments().size();
-                maxStack = Math.max(maxStack, stackHeight);
-                i++; // Skip the next invokespecial instruction
-            } else {
-                int stackHeight = calculateInstStackLimit(inst);
-                maxStack = Math.max(maxStack, stackHeight);
-            }
+            int stackHeight = calculateInstStackLimit(inst);
+            maxStack = Math.max(maxStack, stackHeight);
         }
-        return Math.max(10, maxStack);
+        return maxStack;
     }
 
     private int calculateInstStackLimit(Instruction inst) {
+        System.out.println(inst);
         if (inst instanceof AssignInstruction assign) {
-            return calculateInstStackLimit(assign.getRhs());
+            var cost =0;
+            if(assign.getDest() instanceof ArrayOperand){
+                cost+=2;
+            }
+            var t=calculateInstStackLimit(assign.getRhs());
+            System.out.println("this is"+t);
+            return  cost+calculateInstStackLimit(assign.getRhs());
         } else if (inst instanceof SingleOpInstruction singleop) {
             return singleop.getSingleOperand() instanceof ArrayOperand ? 2: 1;
         } else if (inst instanceof BinaryOpInstruction) {
             return 2;
         } else if (inst instanceof NewInstruction) {
-            return 2;
+            return 1;
         } else if (inst instanceof InvokeSpecialInstruction invokeSpecial) {
+
+            if (invokeSpecial.getMethodName().toString().contains("<init>")) {
+                return 2 + invokeSpecial.getArguments().size();
+            }
             return 1 + invokeSpecial.getArguments().size();
         } else if (inst instanceof InvokeVirtualInstruction invokeVirtual) {
             return 1 + invokeVirtual.getArguments().size();
