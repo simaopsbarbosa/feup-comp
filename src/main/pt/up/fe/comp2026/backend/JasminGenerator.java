@@ -415,7 +415,8 @@ public class JasminGenerator {
             System.out.println();
             String size = this.apply(newInst.getArguments().getLast());
             code.append(size).append(NL);
-            code.append("newarray ").append("int").append(NL);
+            String type= types.getType(newInst.getCaller().getType());
+            code.append("newarray ").append(type).append(NL);
         }
 
 

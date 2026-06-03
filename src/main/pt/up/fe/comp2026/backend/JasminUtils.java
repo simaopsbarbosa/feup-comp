@@ -149,6 +149,24 @@ public class JasminUtils {
 
         return "if_icmp" + id;
     }
+    public  String getType(Type type){
+
+        if(type instanceof ArrayType arrayType){
+            Type eleType=arrayType.getElementType();
+            if (eleType instanceof BuiltinType builtinType) {
+                return switch (builtinType.getKind()) {
+                    case INT32 -> "int";
+                    case BOOLEAN -> "boolean";
+                    default ->
+                            throw new RuntimeException("Not implemented for element type '" + builtinType.getKind() + "'");
+                };
+            }
+            if(eleType instanceof ClassType classType) {
+                return this.getQualifiedNameFromClass(classType.getName());
+            }
+        }
+        return "";
+    }
 
 
 }
