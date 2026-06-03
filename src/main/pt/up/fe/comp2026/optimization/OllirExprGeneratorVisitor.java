@@ -54,30 +54,95 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         addVisit(CLASS_INITIALIZATION, this::visitClassInit);
         addVisit(THIS, this::visitThisExpr);
         addVisit(PARENTESES, this::visitParenteses);
-        addVisit(RIGHT_UNARY_EXPR,this::visitRightUnary);
-        addVisit(LEFT_UNARY_EXPR,this::visitLeftUnary);
+        addVisit(RIGHT_UNARY_EXPR, this::visitRightUnary);
+        addVisit(LEFT_UNARY_EXPR, this::visitLeftUnary);
     }
-    private  OllirExprResult visitLeftUnary(JmmNode node, Void unused){
+    private boolean isfield(JmmNode node){
+        var id="";
+        var name="";
+        if(node.getKind()!=VAR_REF_EXPR){
+            id= ollirTypes.sanitizeId(node.getChild(0).get("name"));
+            name=node.getChild(0).get("name");
+        }
+        else{id=ollirTypes.sanitizeId(node.get("name")); name = node.get("name");}
+        boolean isparam=false, islocal=false;
+        if (node.getAncestor(METHOD_DECL).isPresent()) {
+
+            JmmNode method = node.getAncestor(METHOD_DECL).get();
+            String finalName = name;
+            isparam = method.getChildren(PARAM).stream().anyMatch(param -> param.get("name").equals(finalName));
+            islocal = method.getChildren(VAR_DECL).stream().anyMatch(param -> param.get("name").equals(finalName));
+        }
+        if (table.getField(id).isPresent() && !islocal && !isparam) {
+
+            return true;
+        }
+        return false;
+    }
+
+    private OllirExprResult visitLeftUnary(JmmNode node, Void unused) {
         StringBuilder computation = new StringBuilder();
-        String op= node.get("op").equals("++")?"+":"-";
-        String type=ollirTypes.toOllirType(types.getExprType(node.getChild(0)));
-        JmmNode child=node.getChild(0);
-        var ls=visit(child);
+        String op = node.get("op").equals("++") ? "+" : "-";
+        String type = ollirTypes.toOllirType(types.getExprType(node.getChild(0)));
+        JmmNode child = node.getChild(0);
+        var ls = visit(child);
         computation.append(ls.getComputation());
-        computation.append(ls.getCode()).append(SPACE).append(ASSIGN).append(type).append(SPACE).append(ls.getCode()).append(SPACE).append(op).append(type).append(SPACE).append("1.i32").append(END_STMT);
-        return  new OllirExprResult(ls.getCode(),computation);
+        computation.append(ls.getCode())
+                .append(SPACE).append(ASSIGN).append(type)
+                .append(SPACE).append(ls.getCode())
+                .append(SPACE).append(op)
+                .append(type).append(SPACE)
+                .append("1.i32").append(END_STMT);
+        if(child.getKind()==ARRAY_ACCESS){
+            String cleanComp = ls.getComputation().trim();
+            if (cleanComp.endsWith(";")) {
+                cleanComp = cleanComp.substring(0, cleanComp.length() - 1);
+            }
+            String[] parts = cleanComp.split(" ");
+            String arrayTarget = parts[parts.length - 1];
+
+            computation.append(arrayTarget)
+                    .append(SPACE).append(ASSIGN).append(type)
+                    .append(SPACE).append(ls.getCode())
+                    .append(END_STMT);
+        }
+        if(this.isfield(child)){
+            var id =child.getKind()!=VAR_REF_EXPR?ollirTypes.sanitizeId(child.getChild(0).get("name")):ollirTypes.sanitizeId(child.get("name"));
+            var olltype = ollirTypes.toOllirType(types.getExprType(child));
+            computation.append("putfield(this,").append(id+olltype).append(",").append(ls.getCode()).append(")").append(".V").append(END_STMT);
+        }
+        return new OllirExprResult(ls.getCode(), computation);
     }
+
     private OllirExprResult visitRightUnary(JmmNode node, Void unused) {
         StringBuilder computation = new StringBuilder();
-        String op= node.get("op").equals("++")?"+":"-";
-        String type=ollirTypes.toOllirType(types.getExprType(node.getChild(0)));
-        JmmNode child=node.getChild(0);
-        var ls=visit(child);
-        String temp= ollirTypes.nextTemp()+type;
+        String op = node.get("op").equals("++") ? "+" : "-";
+        String type = ollirTypes.toOllirType(types.getExprType(node.getChild(0)));
+        JmmNode child = node.getChild(0);
+        var ls = visit(child);
+        String temp = ollirTypes.nextTemp() + type;
         computation.append(ls.getComputation());
         computation.append(temp).append(SPACE).append(ASSIGN).append(type).append(SPACE).append(ls.getCode()).append(END_STMT);
         computation.append(ls.getCode()).append(SPACE).append(ASSIGN).append(type).append(SPACE).append(ls.getCode()).append(SPACE).append(op).append(type).append(SPACE).append("1.i32").append(END_STMT);
-        return  new OllirExprResult(temp,computation);
+        if(child.getKind()==ARRAY_ACCESS){
+            String cleanComp = ls.getComputation().trim();
+            if (cleanComp.endsWith(";")) {
+                cleanComp = cleanComp.substring(0, cleanComp.length() - 1);
+            }
+            String[] parts = cleanComp.split(" ");
+            String arrayTarget = parts[parts.length - 1];
+
+            computation.append(arrayTarget)
+                    .append(SPACE).append(ASSIGN).append(type)
+                    .append(SPACE).append(ls.getCode())
+                    .append(END_STMT);
+        }
+        if(this.isfield(child)){
+            var id =child.getKind()!=VAR_REF_EXPR?ollirTypes.sanitizeId(child.getChild(0).get("name")):ollirTypes.sanitizeId(child.get("name"));
+            var olltype = ollirTypes.toOllirType(types.getExprType(child));
+            computation.append("putfield(this,").append(id+olltype).append(",").append(ls.getCode()).append(")").append(".V").append(END_STMT);
+        }
+        return new OllirExprResult(temp, computation);
 
     }
 
@@ -106,7 +171,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         int skip = node.getKind() == IMPLICIT_METHOD_CALL ? 0 : 1;
         List<OllirExprResult> res = node.getChildren().stream().skip(skip).map(this::visit).toList();
         MethodSymbol method = types.getExplicitMethodCallSymbol(node);
-        List<String> parameters=method.parameters().stream().map(s->ollirTypes.toOllirType(s.type())).toList();
+        List<String> parameters = method.parameters().stream().map(s -> ollirTypes.toOllirType(s.type())).toList();
         if (node.getKind() == EXPLICIT_METHOD_CALL) {
             JmmNode calle = node.getChild(0);
             JmmClassType classtype = types.getExprType(calle).asClass();
@@ -128,18 +193,17 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
 
         code.append(SPACE).append(",").append(DOUBLE_Quote).append(methodname).append(DOUBLE_Quote);
         for (int i = 0; i < res.size(); i++) {
-            String actualT=parameters.get(i);
-            StringBuilder adtComp=new StringBuilder();
+            String actualT = parameters.get(i);
+            StringBuilder adtComp = new StringBuilder();
             OllirExprResult r = res.get(i);
-            List<String> code2 =Arrays.stream(r.getCode().split("\\.")).toList();
-            String passedT= code2.getLast();
-            if(!passedT.equals(actualT)){
+            List<String> code2 = Arrays.stream(r.getCode().split("\\.")).toList();
+            String passedT = code2.getLast();
+            if (!passedT.equals(actualT)) {
                 String tempVar = ollirTypes.nextTemp() + actualT;
                 adtComp.append(tempVar).append(SPACE).append(ASSIGN).append(actualT).append(SPACE).append(code2.getFirst()).append(".").append(code2.getLast()).append(END_STMT);
-                System.out.println("this is the actual Type:"+passedT+"expected type"+actualT);
+                System.out.println("this is the actual Type:" + passedT + "expected type" + actualT);
                 code.append(",").append(SPACE).append(tempVar);
-            }
-            else {
+            } else {
                 code.append(",").append(SPACE).append(r.getCode());
             }
             computation.append(r.getComputation());
@@ -161,7 +225,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         StringBuilder dims = new StringBuilder();
         JmmType type = types.getExprType(node);
         String t = ollirTypes.toOllirType(type);
-        node.getChildren().stream().skip(1).forEach(child-> {
+        node.getChildren().stream().skip(1).forEach(child -> {
             OllirExprResult res = visit(child);
             comp.append(res.getComputation());
             dims.append(res.getCode());
@@ -184,6 +248,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
         String currentRef = arrayExpr.getCode();
+        computation.append(arrayExpr.getComputation());
         JmmArrayType arrayType = types.getExprType(jmmNode.getChild(0)).asArray();
         var parent = jmmNode.getParent();
         boolean isAssignmentLHS = parent != null && parent.getKind() == ASSIGN_STMT && parent.getChild(0) == jmmNode;
@@ -209,7 +274,7 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
             }
             temp = ollirTypes.nextTemp() + type;
             computation.append(temp).append(ASSIGN).append(type).append(SPACE).append(current).append(END_STMT);
-            currentRef=temp;
+            currentRef = temp;
         }
         return new OllirExprResult(code.toString(), computation);
     }
@@ -314,15 +379,15 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
         JmmType type = types.getExprType(node);
         String ollirType = ollirTypes.toOllirType(type);
         var code = new StringBuilder();
-        boolean islocal=false,isparam=false;
-        if(node.getAncestor(METHOD_DECL).isPresent()){
-            var name=node.get("name");
-            JmmNode method=node.getAncestor(METHOD_DECL).get();
+        boolean islocal = false, isparam = false;
+        if (node.getAncestor(METHOD_DECL).isPresent()) {
+            var name = node.get("name");
+            JmmNode method = node.getAncestor(METHOD_DECL).get();
             isparam = method.getChildren(PARAM).stream().anyMatch(param -> param.get("name").equals(name));
-            islocal= method.getChildren(VAR_DECL).stream().anyMatch(param -> param.get("name").equals(name));
+            islocal = method.getChildren(VAR_DECL).stream().anyMatch(param -> param.get("name").equals(name));
         }
         // fields need pre computation
-        if (table.getField(id).isPresent()&&!islocal&&!isparam) {
+        if (table.getField(id).isPresent() && !islocal && !isparam) {
             String temp = ollirTypes.nextTemp() + ollirType;
             String computation = temp + ASSIGN + ollirType + " getfield(this," + id + ollirType + ")" + ollirType + END_STMT;
             return new OllirExprResult(temp, computation);
@@ -346,22 +411,21 @@ public class OllirExprGeneratorVisitor extends AJmmVisitor<Void, OllirExprResult
     // invoke(temp, init);
     private OllirExprResult visitClassInit(JmmNode classInit, Void unused) {
         StringBuilder computation = new StringBuilder();
-        StringBuilder var=new StringBuilder();
+        StringBuilder var = new StringBuilder();
         String className = classInit.get("name");
-        String temp= ollirTypes.nextTemp()+"."+className;
+        String temp = ollirTypes.nextTemp() + "." + className;
 
-        computation.append(temp).append(ASSIGN).append(".").append(className).append(" new(").append(className).append( ").").append(className).append(END_STMT);
-        List<JmmNode> children=classInit.getChildren();
-        List<OllirExprResult> res= children.stream().map(this::visit).toList();
-        for(int i=0; i<res.size();i++){
-            OllirExprResult child=res.get(i);
+        computation.append(temp).append(ASSIGN).append(".").append(className).append(" new(").append(className).append(").").append(className).append(END_STMT);
+        List<JmmNode> children = classInit.getChildren();
+        List<OllirExprResult> res = children.stream().map(this::visit).toList();
+        for (int i = 0; i < res.size(); i++) {
+            OllirExprResult child = res.get(i);
             computation.append(child.getComputation());
             var.append(",").append(SPACE);
             var.append(child.getCode());
         }
 
         computation.append("invokespecial(").append(temp).append(", ").append("\"<init>\"").append(var).append(")").append(".V").append(END_STMT);
-
 
 
         return new OllirExprResult(temp, computation);
