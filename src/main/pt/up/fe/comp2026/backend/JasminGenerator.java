@@ -5,6 +5,8 @@ import org.specs.comp.ollir.*;
 import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.tree.TreeNode;
 import org.specs.comp.ollir.type.ArrayType;
+import org.specs.comp.ollir.type.BuiltinKind;
+import org.specs.comp.ollir.type.BuiltinType;
 import org.specs.comp.ollir.type.ClassType;
 import pt.up.fe.comp.jmm.analysis.table.type.impls.JmmClassType;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
@@ -481,6 +483,13 @@ public class JasminGenerator {
         var methodname = methodnamenode[methodnamenode.length - 1].split("\\.")[0].trim();
         code.append("invokevirtual" + Space).append(initClassName).append("/" + methodname).append("(").append(argtypes).append(")").append(types.getTypeDescriptor(invokeVirtualInst.getReturnType())).append(NL);
 
+
+        if (!isInsideAssignment && invokeVirtualInst.getReturnType() instanceof BuiltinType builtinType
+                && !builtinType.getKind().equals(BuiltinKind.VOID))
+        {
+            code.append("pop" + NL);
+        }
+
         return code.toString();
     }
 
@@ -501,6 +510,13 @@ public class JasminGenerator {
         var methodnamenode = invokeStaticInst.getMethodName().toString().split(":");
         var methodname = methodnamenode[methodnamenode.length - 1].split("\\.")[0].trim();
         code.append("invokestatic" + Space).append(initClassName).append("/" + methodname).append("(").append(argtypes).append(")").append(types.getTypeDescriptor(invokeStaticInst.getReturnType())).append(NL);
+
+        if (!isInsideAssignment && invokeStaticInst.getReturnType() instanceof BuiltinType builtinType
+                && !builtinType.getKind().equals(BuiltinKind.VOID))
+        {
+            code.append("pop" + NL);
+        }
+
         return code.toString();
     }
 
