@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.specs.comp.ollir.InstructionType.NOPER;
 
@@ -292,9 +293,9 @@ public class JasminGenerator {
     private String generateStore(Element lhs) {
         Operand operand = (Operand) lhs;
         Descriptor reg = currentMethod.getVarTable().get(operand.getName());
-        StringBuilder code=new StringBuilder();
-        if(lhs instanceof ArrayOperand){
-            return  code.append("iastore").append(NL).toString();
+        StringBuilder code = new StringBuilder();
+        if (lhs instanceof ArrayOperand) {
+            return code.append("iastore").append(NL).toString();
         }
         return types.getStore(reg) + NL;
     }
@@ -412,11 +413,22 @@ public class JasminGenerator {
             }
 
         } else {
-            System.out.println();
-            String size = this.apply(newInst.getArguments().getLast());
-            code.append(size).append(NL);
-            String type= types.getType(newInst.getCaller().getType());
-            code.append("newarray ").append(type).append(NL);
+            String type;
+            int dimensions = newInst.getArguments().size();
+            if (newInst.getArguments().size() == 1) {
+                String size;
+                size = this.apply(newInst.getArguments().getLast());
+                code.append(size).append(NL);
+                type = types.getType(newInst.getCaller().getType());
+                code.append("newarray ").append(type).append(NL);
+            } else {
+                String sizes = newInst.getArguments().stream().map(this::apply).collect(Collectors.joining()).toString();
+                code.append(sizes);
+                type = types.getTypeDescriptor(newInst.getCaller().getType());
+                code.append("multianewarray ").append(type).append(Space).append(dimensions).append(NL);
+            }
+
+
         }
 
 
@@ -583,15 +595,15 @@ public class JasminGenerator {
     private int calculateInstStackLimit(Instruction inst) {
         System.out.println(inst);
         if (inst instanceof AssignInstruction assign) {
-            var cost =0;
-            if(assign.getDest() instanceof ArrayOperand){
-                cost+=2;
+            var cost = 0;
+            if (assign.getDest() instanceof ArrayOperand) {
+                cost += 2;
             }
-            var t=calculateInstStackLimit(assign.getRhs());
-            System.out.println("this is"+t);
-            return  cost+calculateInstStackLimit(assign.getRhs());
+            var t = calculateInstStackLimit(assign.getRhs());
+            System.out.println("this is" + t);
+            return cost + calculateInstStackLimit(assign.getRhs());
         } else if (inst instanceof SingleOpInstruction singleop) {
-            return singleop.getSingleOperand() instanceof ArrayOperand ? 2: 1;
+            return singleop.getSingleOperand() instanceof ArrayOperand ? 2 : 1;
         } else if (inst instanceof BinaryOpInstruction) {
             return 2;
         } else if (inst instanceof NewInstruction) {
