@@ -296,8 +296,14 @@ public class JasminGenerator {
         Operand operand = (Operand) lhs;
         Descriptor reg = currentMethod.getVarTable().get(operand.getName());
         StringBuilder code = new StringBuilder();
-        if (lhs instanceof ArrayOperand) {
-            return code.append("iastore").append(NL).toString();
+
+        // array generation
+        if (lhs instanceof ArrayOperand arrayOp) {
+            if (arrayOp.getType() instanceof ArrayType || arrayOp.getType() instanceof ClassType) {
+                return code.append("aastore").append(NL).toString();
+            } else {
+                return code.append("iastore").append(NL).toString();
+            }
         }
         return types.getStore(reg) + NL;
     }
@@ -320,7 +326,11 @@ public class JasminGenerator {
             for (Element el : arrayOp.getIndexOperands()) {
                 code.append(this.apply(el));
             }
-            code.append("iaload").append(NL);
+            if (arrayOp.getType() instanceof ArrayType || arrayOp.getType() instanceof ClassType) {
+                code.append("aaload").append(NL);
+            } else {
+                code.append("iaload").append(NL);
+            }
         }
         return code.toString();
     }
