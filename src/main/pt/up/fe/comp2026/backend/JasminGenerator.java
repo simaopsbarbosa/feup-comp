@@ -632,7 +632,10 @@ public class JasminGenerator {
             return singleop.getSingleOperand() instanceof ArrayOperand ? 2 : 1;
         } else if (inst instanceof BinaryOpInstruction) {
             return 2;
-        } else if (inst instanceof NewInstruction) {
+        } else if (inst instanceof NewInstruction newInst) {
+            if (newInst.getReturnType() instanceof ArrayType arrayType) {
+                return arrayType.getNumDimensions();
+            }
             return 1;
         } else if (inst instanceof InvokeSpecialInstruction invokeSpecial) {
 
