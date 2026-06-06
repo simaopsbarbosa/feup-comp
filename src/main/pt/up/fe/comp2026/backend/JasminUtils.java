@@ -149,26 +149,49 @@ public class JasminUtils {
         return false;
     }
 
-    public String getIfInstructionCode(OperationType opType, Element rhs) {
-        String id = "";
+    private String getComparisonSuffix(OperationType opType) {
+        String id = switch (opType) {
+            case LTH -> "lt";
+            case GTH -> "gt";
+            case EQ -> "eq";
+            case LTE -> "le";
+            case GTE -> "ge";
+            case NEQ -> "ne";
+            default -> "";
+        };
+        return id;
+    }
 
-        switch (opType) {
-            case LTH -> id = "lt";
-            case GTH -> id = "gt";
-            case EQ -> id = "eq";
-            case LTE -> id = "le";
-            case GTE -> id = "ge";
-            case NEQ -> id = "ne";
+    private OperationType invertComparison(OperationType opType) {
+        return switch (opType) {
+            case LTH -> OperationType.GTH;
+            case GTH -> OperationType.LTH;
+            case LTE -> OperationType.GTE;
+            case GTE -> OperationType.LTE;
+            default  -> opType;
+        };
+    }
 
-            case LOGICAL_AND -> id = "";
-            case LOGICAL_OR -> id = "";
+    public String getIfInstructionCode(OperationType opType, Element lhs, Element rhs) {
+        String suffix = this.getComparisonSuffix(opType);
+        boolean isLeftZero = this.isElementZero(lhs);
+        boolean isRightZero = this.isElementZero(rhs);
+
+
+        // no optimization
+        if (!isLeftZero && !isRightZero) {
+            return "if_icmp" + suffix;
         }
 
-        boolean isZero = this.isElementZero(rhs);
-        String ifInstCode = isZero? "if" :  "if_icmp";
+        if (isRightZero) {
+            return "if" + suffix;
+        }
 
-        return ifInstCode + id;
+        //lhs is 0 -> need to invert operation
+        OperationType invertedComparison = this.invertComparison(opType);
+        return "if" + this.getComparisonSuffix(invertedComparison);
     }
+
     public  String getType(Type type){
 
         if(type instanceof ArrayType arrayType){
