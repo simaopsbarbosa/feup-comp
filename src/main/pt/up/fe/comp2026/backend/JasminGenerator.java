@@ -337,23 +337,29 @@ public class JasminGenerator {
 
 
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
-
         var code = new StringBuilder();
+        Element lhs = binaryOp.getLeftOperand();
+        Element rhs = binaryOp.getRightOperand();
 
         // load values on the left and on the right
-        code.append(apply(binaryOp.getLeftOperand()));
-        code.append(apply(binaryOp.getRightOperand()));
+        code.append(apply(lhs));
 
+        //right is not loaded if cmp to 0
+        if (!types.isElementZero(rhs) || !types.isComparisonOp(binaryOp)) {
+            code.append(apply(rhs));
+        }
 
-        // apply operation
-        var binCode = switch (binaryOp.getOperation().getOpType()) {
-            case ADD, MUL, SUB, DIV, REM -> this.generateArithmeticOps(binaryOp.getOperation());
-            case LTH, LTE, GTH, GTE, EQ, NEQ -> this.generateComparisonOps(binaryOp.getOperation().getOpType());
-            default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
-        };
+        String binCode;
+        Operation op = binaryOp.getOperation();
+        if (types.isArithmeticOp(binaryOp)) {
+            binCode = this.generateArithmeticOps(op);
+        } else if (types.isComparisonOp(binaryOp)) {
+            binCode = this.generateComparisonOps(op.getOpType(), rhs);
+        } else {
+            throw new NotImplementedException(binaryOp.getOperation().getOpType());
+        }
 
-
-        code.append(binCode + NL);
+        code.append(binCode).append(NL);
         return code.toString();
     }
 
@@ -373,8 +379,8 @@ public class JasminGenerator {
         };
     }
 
-    private String generateComparisonOps(OperationType operationType) {
-        String ifId = types.getIfInstructionCode(operationType);
+    private String generateComparisonOps(OperationType operationType, Element rhs) {
+        String ifId = types.getIfInstructionCode(operationType, rhs);
         return this.generateBooleanFromIf(ifId);
     }
 

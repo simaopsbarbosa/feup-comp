@@ -1,8 +1,7 @@
 package pt.up.fe.comp2026.backend;
 
-import org.specs.comp.ollir.AccessModifier;
-import org.specs.comp.ollir.Descriptor;
-import org.specs.comp.ollir.OperationType;
+import org.specs.comp.ollir.*;
+import org.specs.comp.ollir.inst.BinaryOpInstruction;
 import org.specs.comp.ollir.type.ArrayType;
 import org.specs.comp.ollir.type.BuiltinType;
 import org.specs.comp.ollir.type.ClassType;
@@ -14,6 +13,8 @@ import pt.up.fe.comp.jmm.ollir.OllirResult;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.specs.comp.ollir.OperationType.*;
 
 public class JasminUtils {
 
@@ -131,8 +132,24 @@ public class JasminUtils {
         return qualifiedName;
     }
 
+    public boolean isArithmeticOp(BinaryOpInstruction binaryOp) {
+        OperationType type = binaryOp.getOperation().getOpType();
+        return (type == ADD || type == MUL || type == SUB || type == DIV || type == REM);
+    }
 
-    public String getIfInstructionCode(OperationType opType) {
+    public boolean isComparisonOp(BinaryOpInstruction binaryOp) {
+        OperationType type = binaryOp.getOperation().getOpType();
+        return (type == LTH || type == LTE || type == GTH || type == GTE || type == EQ || type == NEQ);
+    }
+
+    public boolean isElementZero(Element element) {
+        if (element instanceof LiteralElement literalElement) {
+            return literalElement.getLiteral().equals("0");
+        }
+        return false;
+    }
+
+    public String getIfInstructionCode(OperationType opType, Element rhs) {
         String id = "";
 
         switch (opType) {
@@ -147,7 +164,10 @@ public class JasminUtils {
             case LOGICAL_OR -> id = "";
         }
 
-        return "if_icmp" + id;
+        boolean isZero = this.isElementZero(rhs);
+        String ifInstCode = isZero? "if" :  "if_icmp";
+
+        return ifInstCode + id;
     }
     public  String getType(Type type){
 
