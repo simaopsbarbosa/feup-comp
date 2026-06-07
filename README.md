@@ -5,7 +5,7 @@ Project Self-assessment: 20
 | Name                         | Number    | Participation            | Self-assessment          | 
 | --------------------------   | --------- | ------------------------ | ------------------------ | 
 | Ana Belém Meireles Bilhoto   | 202305035 | 25%                      |      18                  | 
-| Micael Rotaru                | 202303869 | 25%                      |                          | 
+| Micael Rotaru                | 202303869 | 25%                      |      20                  | 
 | Pedro André Freitas Monteiro | 202307242 | 25%                      |                          | 
 | Simão Pedro Silva Barbosa    | 202306609 | 25%                      |                          | 
 
@@ -13,7 +13,7 @@ Project Self-assessment: 20
 | Work Group                | Feature                            |  Implemention Phases                           |
 |---------------            |-----------------------             |------------------------                        |
 | Declarations              | Arbitrary Position                 | All                                            |
-| Declarations              | Method Visibility                  | Parsing and Semantic Analysis/Symbol Table     |
+| Declarations              | Method Visibility                  | All                                            |
 | Declarations              | Field Initializer                  | All                                            |
 | Statements                | if without else                    | All                                            |
 | Statements                | for loop statement                 | All                                            |
