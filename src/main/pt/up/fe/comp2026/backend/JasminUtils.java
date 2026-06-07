@@ -96,15 +96,29 @@ public class JasminUtils {
     public String getLoad(Descriptor reg) {
         var prefix = getTypePrefix(reg.getVarType());
         var value = reg.getVirtualReg();
+        String loadID = "load";
 
-        return prefix + "load " + value;
+        if (value >= 0 && value <= 3) {
+            loadID += "_";
+        } else {
+            loadID += " ";
+        }
+
+        return prefix + loadID + value;
     }
 
     public String getStore(Descriptor reg) {
         var prefix = getTypePrefix(reg.getVarType());
         var value = reg.getVirtualReg();
+        String storeID = "store";
 
-        return prefix + "store " + value;
+        if (value >= 0 && value <= 3) {
+            storeID += "_";
+        } else {
+            storeID += " ";
+        }
+
+        return prefix + storeID + value;
     }
 
 

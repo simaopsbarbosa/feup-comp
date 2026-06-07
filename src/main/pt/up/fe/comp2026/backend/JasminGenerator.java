@@ -313,7 +313,22 @@ public class JasminGenerator {
     }
 
     private String generateLiteral(LiteralElement literal) {
-        return "ldc " + literal.getLiteral() + NL;
+        int val = Integer.parseInt(literal.getLiteral());
+
+        if (val == -1) {
+            return "iconst_m1" + NL;
+        }
+        if (val >= 0 && val <= 5) {
+            return "iconst_" + val + NL;
+        }
+        if (val >= -128 && val <= 127) {
+            return "bipush " + val + NL;
+        }
+        if (val >= -32768 && val <= 32767) {
+            return "sipush " + val + NL;
+        }
+
+        return "ldc " + val + NL;
     }
 
     private String generateOperand(Operand operand) {
