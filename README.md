@@ -4,9 +4,9 @@ Project Self-assessment: 20
 
 | Name                         | Number    | Participation            | Self-assessment          | 
 | --------------------------   | --------- | ------------------------ | ------------------------ | 
-| Ana Belém Meireles Bilhoto   | 202305035 | 25%                      |      20                  | 
-| Micael Rotaru                | 202303869 | 25%                      |      20                  | 
-| Pedro André Freitas Monteiro | 202307242 | 25%                      |                          | 
+| Ana Belém Meireles Bilhoto   | 202305035 | 30%                      |      20                  | 
+| Micael Rotaru                | 202303869 | 30%                      |      20                  | 
+| Pedro André Freitas Monteiro | 202307242 | 20%                      |      18                  | 
 | Simão Pedro Silva Barbosa    | 202306609 | 20%                      |      18                  | 
 
 ## Extensions
